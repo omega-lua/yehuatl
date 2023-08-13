@@ -54,7 +54,8 @@ local function loadUI()
         id = "buttonBack",
         label = "back",
         onEvent = handleButtonEvent,
-        fontSize = 30,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 25,
         labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
     })
 
@@ -64,7 +65,8 @@ local function loadUI()
         id = "buttonApplySettings",
         label = "Apply Settings",
         onEvent = handleButtonEvent,
-        fontSize = 30,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 25,
         labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
     })
 
@@ -74,7 +76,8 @@ local function loadUI()
         id = "buttonDiscardSettings",
         label = "Discard Settings",
         onEvent = handleButtonEvent,
-        fontSize = 30,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 25,
         labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
     })
 

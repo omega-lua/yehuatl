@@ -48,8 +48,9 @@ function scene:create( event )
         id = "buttonPlay",
         label = "Play",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30,
-        labelColor = { default={ 255, 255, 255, 1}},
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
         }
     )
     local buttonSettings = widget.newButton(
@@ -59,8 +60,9 @@ function scene:create( event )
         id = "buttonSettings",
         label = "Settings",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30,
-        labelColor = { default={ 255, 255, 255, 1}},
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
         }
     )
     

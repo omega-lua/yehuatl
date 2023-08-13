@@ -157,6 +157,7 @@ local function LoadUI()
         id = "buttonSaveSlot1",
         label = "Save 1",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1}}
     })
@@ -168,6 +169,7 @@ local function LoadUI()
         id = "buttonSaveSlot2",
         label = "Save 2",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
         })
@@ -180,6 +182,7 @@ local function LoadUI()
         id = "buttonSaveSlot3",
         label = "Save 3",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -190,6 +193,7 @@ local function LoadUI()
         id = "newSaveSlot1",
         label = "new",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -200,6 +204,7 @@ local function LoadUI()
         id = "newSaveSlot2",
         label = "new",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -210,6 +215,7 @@ local function LoadUI()
         id = "newSaveSlot3",
         label = "new",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -220,6 +226,7 @@ local function LoadUI()
         id = "deleteSaveSlot1",
         label = "delete",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -230,6 +237,7 @@ local function LoadUI()
         id = "deleteSaveSlot2",
         label = "delete",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -241,6 +249,7 @@ local function LoadUI()
         id = "deleteSaveSlot3",
         label = "delete",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 25,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
@@ -248,10 +257,11 @@ local function LoadUI()
     -- Back button
     buttonBack = widget.newButton({
         x = display.contentCenterX*0.1,
-        y = display.contentCenterY*0.1,
+        y = display.contentCenterY*0.2,
         id = "buttonBack",
         label = "Back",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30,
         labelColor = { default={ 255, 255, 255, 1 }},
     })
