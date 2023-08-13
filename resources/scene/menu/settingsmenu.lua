@@ -77,12 +77,16 @@ local function handleButtonEvent(event)
 
         elseif (event.target.id == 'buttonApplySettings') then
             scene:applySettings(scene.tmpSettings)
+            
+            scene:showToast("Settings applied!")
 
             scene.isSaved = true
 
         elseif (event.target.id == 'buttonResetSettings') then
             scene:resetSettings()
             scene:reload()
+            
+            scene:showToast("Settings applied!")
             
             scene.isSaved = true
         end
