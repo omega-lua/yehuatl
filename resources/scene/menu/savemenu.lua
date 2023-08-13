@@ -18,7 +18,7 @@ local function refreshUI()
 
     if (save1 == false) then
         buttonSaveSlot1:setEnabled( false )
-        buttonSaveSlot1:setLabel( "-" )
+        buttonSaveSlot1:setLabel( "" )
 
         -- Disable delete button, because there is nothing to delete
         deleteSaveSlot1:setEnabled( false )
@@ -40,7 +40,7 @@ local function refreshUI()
     
     if (save2 == false) then
         buttonSaveSlot2:setEnabled( false )
-        buttonSaveSlot2:setLabel( "-" )
+        buttonSaveSlot2:setLabel( "" )
 
         -- Disable delete button, because there is nothing to delete
         deleteSaveSlot2:setEnabled( false )
@@ -62,7 +62,7 @@ local function refreshUI()
 
     if (save3 == false) then
         buttonSaveSlot3:setEnabled( false )
-        buttonSaveSlot3:setLabel( "-" )
+        buttonSaveSlot3:setLabel( "" )
 
         -- Disable delete button, because there is nothing to delete
         deleteSaveSlot3:setEnabled( false )
@@ -109,28 +109,26 @@ local function handleButtonEvent(event)
 
         if (event.target.id == 'newSaveSlot1') then
             library.newSaveFile('save1.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         elseif (event.target.id == 'newSaveSlot2') then
             library.newSaveFile('save2.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         elseif (event.target.id == 'newSaveSlot3') then
             library.newSaveFile('save3.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot1') then
             library.deleteFile('save1.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot2') then
             library.deleteFile('save2.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot3') then
             library.deleteFile('save3.json')
-            timer.performWithDelay( 20, refreshUI())
+            timer.performWithDelay( 30, refreshUI())
         end
     end
 end
 
-
--- Verbesserungspotential hinsichtlich Optimierung
 local function loadUI() 
     -- Check if any savefiles are found -------------------------------------------------
     save1 = doesFileExist( "save1.json", system.DocumentsDirectory)

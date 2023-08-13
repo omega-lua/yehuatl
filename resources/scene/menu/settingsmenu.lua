@@ -2,8 +2,8 @@
 
 local widget = require( "widget" )
 local composer = require( "composer" )
+local library = require("library")
 local scene = composer.newScene()
-local library = library
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -173,7 +173,21 @@ function scene:show( event )
 
         -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
-        
+
+        print("----------------------")
+        minD = 10000
+        distances = {}
+        sqrt = math.sqrt
+        min = math.min
+        currPosX, currPosY = 100, display.contentCenterY
+        navigationInput = "right"
+        --listOfObjects = {buttonApplySettings, buttonDiscardSettings, buttonResetSettings}
+        listOfObjects = {}
+        listOfObjects[1] = buttonApplySettings
+        listOfObjects[2] = buttonBack
+        print("oli:", listOfObjects[2])
+        library.navigateMenu()
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
