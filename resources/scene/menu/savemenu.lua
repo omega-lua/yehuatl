@@ -131,7 +131,7 @@ end
 
 
 -- Verbesserungspotential hinsichtlich Optimierung
-local function LoadUI() 
+local function loadUI() 
     -- Check if any savefiles are found -------------------------------------------------
     save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
     save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
@@ -300,7 +300,7 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        LoadUI()
+        loadUI()
         refreshUI()
  
     elseif ( phase == "did" ) then
