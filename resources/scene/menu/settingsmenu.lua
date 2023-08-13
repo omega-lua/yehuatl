@@ -15,6 +15,29 @@ function scene:reload()
     composer.gotoScene( currScene )
 end
 
+function scene:showToast(message)
+    local toast = display.newText({
+        text = message,     
+        x = display.contentCenterX,
+        y = display.contentCenterX*0.1,
+        width = 256,
+        font = native.systemFont,   
+        fontSize = 18,
+        align = "center"  -- Alignment parameter
+    })
+ 
+    local params = {
+        time = 1000,
+        tag = "toast",
+        transition = easing.outQuart,
+        delay = 1500,
+        alpha = 0
+    }
+    
+    toast:setFillColor(0, 255, 0)
+    transition.to(toast, params)
+end
+
 function scene:applySettings()
     -- Save to file
     library.saveSettings(scene.tmpSettings)
@@ -25,7 +48,7 @@ function scene:applySettings()
     -- Set variable
     scene.isSaved = true
 
-    print("settings applied!")
+    scene:showToast("Settings applied!")
 end
 
 function scene:resetSettings()
@@ -37,7 +60,7 @@ function scene:resetSettings()
 
     scene.isSaved = true
 
-    print("settings resetted!")
+    scene:showToast("Settings reset!")
 end
 
 local function handleButtonEvent(event)
