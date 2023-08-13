@@ -20,8 +20,6 @@ else
     local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
     print("--settings.json found--")
     local data = library.getSettings(path)
-    print("data:")
-    library.printTable(data)
     library.initiateSettings(data)
     runtime["settings"] = data
 end
