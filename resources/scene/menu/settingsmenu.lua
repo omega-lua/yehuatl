@@ -9,6 +9,12 @@ local library = library
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
 
+-- Not the most elegant way.
+function scene:reload()
+    local currScene = composer.getSceneName( "current" )
+    composer.gotoScene( currScene )
+end
+
 function scene:applySettings()
     -- Save to file
     library.saveSettings(scene.tmpSettings)
@@ -53,7 +59,8 @@ local function handleButtonEvent(event)
 
         elseif (event.target.id == 'buttonResetSettings') then
             scene:resetSettings()
-
+            scene:reload()
+            
             scene.isSaved = true
         end
     end 
@@ -74,9 +81,6 @@ local function handleSliderEvent(event)
 end
 
 local function loadUI()
-    
-    print("loudnessMusic in loadUI():")
-    print(scene.tmpSettings.loudnessMusic)
     local sceneGroup = scene.view
 
     local buttonBack = widget.newButton({
@@ -94,23 +98,34 @@ local function loadUI()
         x = display.contentCenterX,
         y = display.contentCenterY,
         width = 400,
-        value = scene.tmpSettings.loudnessMusic,
+        value = loudnessMusic,
         listener = handleSliderEvent
     })
 
     local buttonApplySettings = widget.newButton({
-        x = display.contentCenterX,
+        x = display.contentCenterX*0.7,
         y = display.contentCenterY*1.8,
         id = "buttonApplySettings",
         label = "Apply Settings",
         onEvent = handleButtonEvent,
-        fontSize = 30,
-        labelColor = { default={ 255, 255, 255, 1}}
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
+    })
+
+    local buttonResetSettings = widget.newButton({
+        x = display.contentCenterX*1.4,
+        y = display.contentCenterY*1.8,
+        id = "buttonResetSettings",
+        label = "Reset Settings",
+        onEvent = handleButtonEvent,
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
     })
 
     sceneGroup:insert(buttonBack)
     sceneGroup:insert(sliderLoudnessMusic)
     sceneGroup:insert(buttonApplySettings)
+    sceneGroup:insert(buttonResetSettings)
 end
 
 -- create()
@@ -118,12 +133,8 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
     
-    print("last change:")
-    print(settings._lastChange)
-    print("aus settings heraus:")
-    print(settings.loudnessMusic)
     local s = settings 
-    scene.tmpSettings = s  
+    scene.tmpSettings = settings 
     scene.isSaved = true
 
     -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().

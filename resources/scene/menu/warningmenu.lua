@@ -24,7 +24,7 @@ local function handleButtonEvent(event)
             print("Settings applied!")
         elseif (event.target.id == "buttonDiscardSettings") then
             parent.isSaved = true
-            parent.tmpSettings = nil
+            parent.tmpSettings = {}
             
             composer.hideOverlay("fade", 200)
             library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 100,})
