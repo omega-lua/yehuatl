@@ -328,6 +328,62 @@ function terminatePhysics()
     physics.stop()
 end
 
+function navigateMenu()
+    -- maybe define a table with the data for each menu, instead of calculating it everytime.
+    for i, object in ipairs(listOfObjects) do
+        local x, y = object.x, object.y
+        
+        if (navigationInput == "up") and (y <= currPosY) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "down") and (y >= currPosY)then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "left") and (x <= currPosX) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "right") and (x >= currPosX) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+        else
+            local delta = 1000
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+        end
+    end
+    local index = table.indexOf( distances, minD )
+    local nearestObj = listOfObjects[index]
+    currPosX, currPosY = nearestObj:localToContent(0,0)
+end
+
+function hoverObject()
+    --
+end
+
 -- Muss noch herausfinden, wie was gesteuert werden kann.
 function keyboardControl(event)
     -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
@@ -497,6 +553,7 @@ library.resetSettings = resetSettings
 library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
 library.keyboardControl = keyboardControl
+library.navigateMenu = navigateMenu
 library.touchscreenControl = touchscreenControl
 library.handleSceneChange = handleSceneChange
 library.saveUserDataJSON = saveUserDataJSON
