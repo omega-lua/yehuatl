@@ -417,9 +417,9 @@ function handleSceneChange(goTo, sceneType, options)
 
     elseif (currType == 'game') and (sceneType == 'menu') then
         terminatePhysics()
-        composer.removeScene( "resources.scene.game.game", true )
+        composer.removeScene("resources.scene.game.game", true)
     end
-
+    
     composer.gotoScene(goTo, options)
 end
 

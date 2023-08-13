@@ -18,19 +18,21 @@ local function handleButtonEvent(event)
             composer.hideOverlay("fade", 500)
         elseif (event.target.id == "buttonApplySettings") then
             parent:applySettings()
-            composer.hideOverlay("fade", 200)
             
             -- Message
-            print("Settings applied!")
+            parent:showToast("Settings applied!")
+
+            composer.hideOverlay("fade", 200)
+
         elseif (event.target.id == "buttonDiscardSettings") then
             parent.isSaved = true
             parent.tmpSettings = {}
+
+            -- Message
+            parent:showToast("Settings discarded!")
             
             composer.hideOverlay("fade", 200)
             library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 100,})
-
-            -- Message
-            print("Settings discarded!")
         end
     end
 end
@@ -106,7 +108,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
+        
     end
 end
  

@@ -9,10 +9,9 @@ local library = library
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
 
--- Not the most elegant way.
+-- Still not so elegant, but better than before.
 function scene:reload()
-    local currScene = composer.getSceneName( "current" )
-    composer.gotoScene( currScene )
+    sliderLoudnessMusic:setValue( loudnessMusic )
 end
 
 function scene:showToast(message)
@@ -58,6 +57,8 @@ function scene:resetSettings()
     -- Initiate Settings
     library.initiateSettings(data)
 
+    scene:reload()
+
     scene.isSaved = true
 
     scene:showToast("Settings reset!")
@@ -76,17 +77,12 @@ local function handleButtonEvent(event)
             end
 
         elseif (event.target.id == 'buttonApplySettings') then
-            scene:applySettings(scene.tmpSettings)
-            
-            scene:showToast("Settings applied!")
+            scene:applySettings(scene.tmpSettings) 
 
             scene.isSaved = true
 
         elseif (event.target.id == 'buttonResetSettings') then
             scene:resetSettings()
-            scene:reload()
-            
-            scene:showToast("Settings applied!")
             
             scene.isSaved = true
         end
@@ -101,16 +97,14 @@ local function handleSliderEvent(event)
 
             -- Set variable
             scene.isSaved = false
-            
-            --print("loudness:", scene.tmpSettings.loudnessMusic)
         end
     end
 end
 
-local function loadUI()
+function scene:loadUI()
     local sceneGroup = scene.view
 
-    local buttonBack = widget.newButton({
+    buttonBack = widget.newButton({
         x = display.contentCenterX*0.1,
         y = display.contentCenterY*0.2,
         id = "buttonBack",
@@ -120,7 +114,7 @@ local function loadUI()
         labelColor = { default={ 255, 255, 255, 1}}
     })
 
-    local sliderLoudnessMusic = widget.newSlider({
+    sliderLoudnessMusic = widget.newSlider({
         id = "sliderLoudnessMusic", 
         x = display.contentCenterX,
         y = display.contentCenterY,
@@ -129,7 +123,7 @@ local function loadUI()
         listener = handleSliderEvent
     })
 
-    local buttonApplySettings = widget.newButton({
+    buttonApplySettings = widget.newButton({
         x = display.contentCenterX*0.7,
         y = display.contentCenterY*1.8,
         id = "buttonApplySettings",
@@ -139,7 +133,7 @@ local function loadUI()
         labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
     })
 
-    local buttonResetSettings = widget.newButton({
+    buttonResetSettings = widget.newButton({
         x = display.contentCenterX*1.4,
         y = display.contentCenterY*1.8,
         id = "buttonResetSettings",
@@ -159,25 +153,23 @@ end
 function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    
-    local s = settings 
-    scene.tmpSettings = settings 
+    scene.tmpSettings = runtime.settings
     scene.isSaved = true
-
-    -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
-    loadUI()
 end
  
- 
+
 -- show()
 function scene:show( event )
  
     
-    local sceneGroup = self.view
+    --local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+
+        -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
+        scene:loadUI()
         
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
@@ -197,10 +189,7 @@ function scene:hide( event )
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
 
-        scene.tmpSettings = nil
-        scene.isSaved = true
-
-        composer.removeScene("resources.scene.menu.settingsmenu" )
+        composer.removeScene("resources.scene.menu.settingsmenu")
     end
 end
  
