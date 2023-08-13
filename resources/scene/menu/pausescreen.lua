@@ -37,6 +37,7 @@ function scene:create( event )
         top = (display.actualContentHeight / 2),
         id = "buttonResume",
         label = "Resume",
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30, 
         onEvent = handleButtonEvent, 
         labelColor = { default={ 255, 255, 255, 1}}
@@ -47,6 +48,7 @@ function scene:create( event )
         top = (display.actualContentHeight / 2),
         id = "buttonExit",
         label = "Exit",
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30, 
         onEvent = handleButtonEvent, 
         labelColor = { default={ 255, 255, 255, 1}}
@@ -57,6 +59,7 @@ function scene:create( event )
         top = (display.actualContentHeight / 2),
         id = "buttonSave",
         label = "Save",
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30, 
         onEvent = handleButtonEvent, 
         labelColor = { default={ 255, 255, 255, 1}}

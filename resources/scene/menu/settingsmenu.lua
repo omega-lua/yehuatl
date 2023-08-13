@@ -20,7 +20,7 @@ function scene:showToast(message)
         x = display.contentCenterX,
         y = display.contentCenterX*0.1,
         width = 256,
-        font = native.systemFont,   
+        font = "fonts/BULKYPIX.TTF",   
         fontSize = 18,
         align = "center"  -- Alignment parameter
     })
@@ -110,8 +110,9 @@ function scene:loadUI()
         id = "buttonBack",
         label = "back",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 30,
-        labelColor = { default={ 255, 255, 255, 1}}
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
     sliderLoudnessMusic = widget.newSlider({
@@ -129,8 +130,9 @@ function scene:loadUI()
         id = "buttonApplySettings",
         label = "Apply Settings",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
     buttonResetSettings = widget.newButton({
@@ -139,8 +141,9 @@ function scene:loadUI()
         id = "buttonResetSettings",
         label = "Reset Settings",
         onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
     sceneGroup:insert(buttonBack)
