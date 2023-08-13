@@ -94,7 +94,7 @@ local function loadUI()
         x = display.contentCenterX,
         y = display.contentCenterY,
         width = 400,
-        value = scene.tmpSettings.loudnessMusic,
+        value = loudnessMusic,
         listener = handleSliderEvent
     })
 
@@ -118,12 +118,8 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
     
-    print("last change:")
-    print(settings._lastChange)
-    print("aus settings heraus:")
-    print(settings.loudnessMusic)
     local s = settings 
-    scene.tmpSettings = s  
+    scene.tmpSettings = settings 
     scene.isSaved = true
 
     -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
