@@ -10,14 +10,82 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
--- Nicht so schön...
-local function reloadScene()
-    local currScene = composer.getSceneName( "current" )
-    composer.removeScene(currScene)
-    composer.gotoScene( currScene )
+local function refreshUI()
+    -- Check if any savefiles are found -------------------------------------------------
+    local save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
+    local save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
+    local save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
+
+    if (save1 == false) then
+        buttonSaveSlot1:setEnabled( false )
+        buttonSaveSlot1:setLabel( "-" )
+
+        -- Disable delete button, because there is nothing to delete
+        deleteSaveSlot1:setEnabled( false )
+        deleteSaveSlot1:setLabel( "" )
+
+        -- enable new button, because there is nothing to load
+        newSaveSlot1:setEnabled( true )
+        newSaveSlot1:setLabel( "new" )
+    else
+        buttonSaveSlot1:setEnabled( true )
+        buttonSaveSlot1:setLabel( "Save 1" )
+        
+        deleteSaveSlot1:setEnabled( true )
+        deleteSaveSlot1:setLabel( "delete" )
+        
+        newSaveSlot1:setEnabled( false )
+        newSaveSlot1:setLabel( "" )
+    end
+    
+    if (save2 == false) then
+        buttonSaveSlot2:setEnabled( false )
+        buttonSaveSlot2:setLabel( "-" )
+
+        -- Disable delete button, because there is nothing to delete
+        deleteSaveSlot2:setEnabled( false )
+        deleteSaveSlot2:setLabel( "" )
+
+        -- enable new button, because there is nothing to load
+        newSaveSlot2:setEnabled( true )
+        newSaveSlot2:setLabel( "new" )
+    else
+        buttonSaveSlot2:setEnabled( true )
+        buttonSaveSlot2:setLabel( "Save 2" )
+        
+        deleteSaveSlot2:setEnabled( true )
+        deleteSaveSlot2:setLabel( "delete" )
+        
+        newSaveSlot2:setEnabled( false )
+        newSaveSlot2:setLabel( "" )
+    end
+
+    if (save3 == false) then
+        buttonSaveSlot3:setEnabled( false )
+        buttonSaveSlot3:setLabel( "-" )
+
+        -- Disable delete button, because there is nothing to delete
+        deleteSaveSlot3:setEnabled( false )
+        deleteSaveSlot3:setLabel( "" )
+
+        -- enable new button, because there is nothing to load
+        newSaveSlot3:setEnabled( true )
+        newSaveSlot3:setLabel( "new" )
+    else
+        buttonSaveSlot3:setEnabled( true )
+        buttonSaveSlot3:setLabel( "Save 3" )
+        
+        deleteSaveSlot3:setEnabled( true )
+        deleteSaveSlot3:setLabel( "delete" )
+        
+        newSaveSlot3:setEnabled( false )
+        newSaveSlot3:setLabel( "" )
+    end
+
 end
 
 local function handleButtonEvent(event)
+    print("handleButtonEvent")
     -- Kann man sehr wahrscheinlich schöner machen...
     if (event.phase == 'ended') then
         if (event.target.id == 'buttonBack') then
@@ -41,22 +109,22 @@ local function handleButtonEvent(event)
 
         if (event.target.id == 'newSaveSlot1') then
             library.newSaveFile('save1.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         elseif (event.target.id == 'newSaveSlot2') then
             library.newSaveFile('save2.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         elseif (event.target.id == 'newSaveSlot3') then
             library.newSaveFile('save3.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot1') then
             library.deleteFile('save1.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot2') then
             library.deleteFile('save2.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         elseif (event.target.id == 'deleteSaveSlot3') then
             library.deleteFile('save3.json')
-            reloadScene()
+            timer.performWithDelay( 20, refreshUI())
         end
     end
 end
@@ -84,8 +152,8 @@ local function LoadUI()
 
     -- button for loading save1.json
     buttonSaveSlot1 = widget.newButton({
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)+300,
-        top = (display.actualContentHeight / 2) - 100,
+        x = display.contentCenterX*1.8,
+        y = display.contentCenterY*0.6,
         id = "buttonSaveSlot1",
         label = "Save 1",
         onEvent = handleButtonEvent,
@@ -95,8 +163,8 @@ local function LoadUI()
 
     -- button for loading save2.json
     buttonSaveSlot2 = widget.newButton({
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)+300,
-        top = (display.actualContentHeight / 2),
+        x = display.contentCenterX*1.8,
+        y = display.contentCenterY*1,
         id = "buttonSaveSlot2",
         label = "Save 2",
         onEvent = handleButtonEvent,
@@ -107,8 +175,8 @@ local function LoadUI()
 
     -- button for loading save3.json
     buttonSaveSlot3 = widget.newButton({
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)+300,
-        top = (display.actualContentHeight / 2) + 100,
+        x = display.contentCenterX*1.8,
+        y = display.contentCenterY*1.4,
         id = "buttonSaveSlot3",
         label = "Save 3",
         onEvent = handleButtonEvent,
@@ -116,90 +184,71 @@ local function LoadUI()
         labelColor = { default={ 255, 255, 255, 1 }},
     })
 
-    if (save1 == false) then
-        buttonSaveSlot1:setEnabled( false )  -- The button will no longer receive touch events.
-        buttonSaveSlot1:setLabel( "-" )
-        newSaveSlot1 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2) - 100,
-            id = "newSaveSlot1",
-            label = "new",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(newSaveSlot1)
-    elseif (save1 == true) then
-        deleteSaveSlot1 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2) - 100,
-            id = "deleteSaveSlot1",
-            label = "delete",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(deleteSaveSlot1)
-    end
+    newSaveSlot1 = widget.newButton({
+        x = display.contentCenterX*1.4,
+        y = display.contentCenterY*0.6,
+        id = "newSaveSlot1",
+        label = "new",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
 
-    if (save2 == false) then
-        buttonSaveSlot2:setEnabled( false )  -- The button will no longer receive touch events.
-        buttonSaveSlot2:setLabel( "-" )
-        newSaveSlot2 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2),
-            id = "newSaveSlot2",
-            label = "new",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(newSaveSlot2)
-    elseif (save2 == true) then
-        deleteSaveSlot2 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2),
-            id = "deleteSaveSlot2",
-            label = "delete",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(deleteSaveSlot2)
-    end
+    newSaveSlot2 = widget.newButton({
+        x = display.contentCenterX*1.4,
+        y = display.contentCenterY*1,
+        id = "newSaveSlot2",
+        label = "new",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
 
-    if (save3 == false) then
-        print("3: false")
-        buttonSaveSlot3:setEnabled( false )  -- The button will no longer receive touch events.
-        buttonSaveSlot3:setLabel( "-" )
-        newSaveSlot3 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2)+100,
-            id = "newSaveSlot3",
-            label = "new",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(newSaveSlot3)
-    elseif (save3 == true) then
-        print("3: true")
-        deleteSaveSlot3 = widget.newButton({
-            left = ((display.viewableContentWidth+display.screenOriginX)/2)+180,
-            top = (display.actualContentHeight / 2)+100,
-            id = "deleteSaveSlot3",
-            label = "delete",
-            onEvent = handleButtonEvent,
-            fontSize = 25,
-            labelColor = { default={ 255, 255, 255, 1 }},
-        })
-        sceneGroup:insert(deleteSaveSlot3)
-    end
+    newSaveSlot3 = widget.newButton({
+        x = display.contentCenterX*1.4,
+        y = display.contentCenterY*1.4,
+        id = "newSaveSlot3",
+        label = "new",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
+
+    deleteSaveSlot1 = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*0.6,
+        id = "deleteSaveSlot1",
+        label = "delete",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
+
+    deleteSaveSlot2 = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1,
+        id = "deleteSaveSlot2",
+        label = "delete",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
+
+
+    deleteSaveSlot3 = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1.4,
+        id = "deleteSaveSlot3",
+        label = "delete",
+        onEvent = handleButtonEvent,
+        fontSize = 25,
+        labelColor = { default={ 255, 255, 255, 1 }},
+    })
 
     -- Back button
     buttonBack = widget.newButton({
-        left = 100,
-        top = 200,
+        x = display.contentCenterX*0.1,
+        y = display.contentCenterY*0.1,
         id = "buttonBack",
         label = "Back",
         onEvent = handleButtonEvent,
@@ -207,10 +256,15 @@ local function LoadUI()
         labelColor = { default={ 255, 255, 255, 1 }},
     })
 
-
     sceneGroup:insert( buttonSaveSlot1 )
     sceneGroup:insert( buttonSaveSlot2 )
     sceneGroup:insert( buttonSaveSlot3 )
+    sceneGroup:insert( deleteSaveSlot1 )
+    sceneGroup:insert( deleteSaveSlot2 )
+    sceneGroup:insert( deleteSaveSlot3 )
+    sceneGroup:insert( newSaveSlot1 )
+    sceneGroup:insert( newSaveSlot2 )
+    sceneGroup:insert( newSaveSlot3 )
     sceneGroup:insert( buttonBack )
 end
 
@@ -237,6 +291,7 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         LoadUI()
+        refreshUI()
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen

@@ -6,7 +6,8 @@
 library = require("library")
 local composer = require("composer")
 
---runtime["currentSaveFile"] = "save1"
+runtime = {}
+runtime["currentSaveFile"] = nil
 
 -- settingsfiles Setup and Initialication
 local state = library.doesFileExist("settings.json", system.DocumentsDirectory)
@@ -14,6 +15,7 @@ if (state == false) then
     print("--settings.json not found--")
     local data = library.resetSettings()
     library.initiateSettings(data)
+    runtime["settings"] = data
 else
     local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
     print("--settings.json found--")
@@ -21,6 +23,7 @@ else
     print("data:")
     library.printTable(data)
     library.initiateSettings(data)
+    runtime["settings"] = data
 end
 
 
@@ -34,4 +37,3 @@ end
 composer.gotoScene( "resources.scene.menu.mainmenu")
 
 Runtime:addEventListener("key", handleKeyInput)
-
