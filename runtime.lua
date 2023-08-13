@@ -29,7 +29,7 @@ end
 
 movF, movB, movJ, interact = false, false, false, false
 function handleKeyInput(event)
-    keyboardControl(event)
+    library.keyboardControl(event)
 end
 
 
