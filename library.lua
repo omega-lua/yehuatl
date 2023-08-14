@@ -470,7 +470,7 @@ function navigateMenu(event)
         if (keyName == "i") then
             local nextObj = data[1]
             if nextObj then
-                sce.currentObj = nextObj
+                scene.currentObj = nextObj
                 scene:hoverObj(nextObj)
             end
 
