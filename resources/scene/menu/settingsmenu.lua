@@ -11,7 +11,7 @@ local scene = composer.newScene()
 
 -- Still not so elegant, but better than before.
 function scene:reload()
-    sliderLoudnessMusic:setValue( loudnessMusic )
+    --sliderLoudnessMusic:setValue( loudnessMusic )
 end
 
 function scene:showToast(message)
@@ -69,6 +69,12 @@ function scene:interactWithObj(object)
         scene:resetSettings()
     elseif (object == "buttonApplySettings") then
         scene:applySettings(scene.tmpSettings)
+    elseif (object == "buttonControlSettings") then
+        library.handleSceneChange("resources.scene.menu.controlsettingsmenu", "menu", { effect = "fade", time = 400,})
+    elseif (object == "buttonSoundSettings") then
+        -- library.handleSceneChange()
+    elseif (object == "buttonVisualSettings") then
+        -- library.handleSceneChange()
     end
 end
 
@@ -144,41 +150,65 @@ function scene:loadUI()
     local sceneGroup = scene.view
 
     buttonBack = widget.newButton({
-        x = display.contentCenterX*0.1,
+        x = display.contentCenterX*0,
         y = display.contentCenterY*0.2,
         id = "buttonBack",
         label = "back",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 30,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-    })
-
-    sliderLoudnessMusic = widget.newSlider({
-        id = "sliderLoudnessMusic", 
-        x = display.contentCenterX,
-        y = display.contentCenterY,
-        width = 400,
-        value = loudnessMusic,
-        listener = handleSliderEvent
-    })
-
-    buttonApplySettings = widget.newButton({
-        x = display.contentCenterX*0.7,
-        y = display.contentCenterY*1.8,
-        id = "buttonApplySettings",
-        label = "Apply Settings",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
         labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
+    buttonApplySettings = widget.newButton({
+        x = display.contentCenterX*0.6,
+        y = display.contentCenterY*1.9,
+        id = "buttonApplySettings",
+        label = "Apply Settings",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 15,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+    })
+
     buttonResetSettings = widget.newButton({
-        x = display.contentCenterX*1.4,
-        y = display.contentCenterY*1.8,
+        x = display.contentCenterX*1.5,
+        y = display.contentCenterY*1.9,
         id = "buttonResetSettings",
         label = "Reset Settings",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 15,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    buttonControlSettings = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*0.6,
+        id = "buttonControlSettings",
+        label = "Controls",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    buttonSoundSettings = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1,
+        id = "buttonSoundSettings",
+        label = "Sound",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    buttonVisualSettings = widget.newButton({
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1.4,
+        id = "buttonVisualSettings",
+        label = "Visual",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
@@ -186,9 +216,11 @@ function scene:loadUI()
     })
 
     sceneGroup:insert(buttonBack)
-    sceneGroup:insert(sliderLoudnessMusic)
     sceneGroup:insert(buttonApplySettings)
     sceneGroup:insert(buttonResetSettings)
+    sceneGroup:insert(buttonControlSettings)
+    sceneGroup:insert(buttonSoundSettings)
+    sceneGroup:insert(buttonVisualSettings)
 end
 
 -- create()
@@ -217,15 +249,21 @@ function scene:show( event )
         scene:loadUI()
         
         scene.objectMatrix = {
-            ["center"] = {"buttonBack", "buttonResetSettings", nil, "buttonBack"},
-            ["buttonBack"] = {nil, "buttonApplySettings", "buttonApplySettings", "buttonResetSettings"},
-            ["buttonApplySettings"] = {"buttonBack", "buttonResetSettings", nil, "buttonBack"},
-            ["buttonResetSettings"] = {"buttonBack", "buttonBack", nil, "buttonApplySettings"},
+            ["center"] = {"buttonControlSettings", "buttonSoundSettings", "buttonVisualSettings", "buttonSoundSettings"},
+            ["buttonBack"] = {"buttonApplySettings","buttonControlSettings", "buttonControlSettings", "buttonResetSettings"},
+            ["buttonApplySettings"] = {"buttonVisualSettings", "buttonResetSettings", "buttonBack", "buttonBack"},
+            ["buttonResetSettings"] = {"buttonVisualSettings", "buttonBack", "buttonBack", "buttonApplySettings"},
+            ["buttonControlSettings"] = {"buttonBack", "buttonResetSettings", "buttonSoundSettings", "buttonBack"},
+            ["buttonSoundSettings"] = {"buttonControlSettings", "buttonResetSettings", "buttonVisualSettings", "buttonBack"},
+            ["buttonVisualSettings"] = {"buttonSoundSettings", "buttonResetSettings", "buttonApplySettings", "buttonBack"},
             }
         scene.objTable = {["center"]=nil,
             ["buttonBack"] = buttonBack,
             ["buttonApplySettings"] = buttonApplySettings,
             ["buttonResetSettings"] = buttonResetSettings,
+            ["buttonControlSettings"] = buttonControlSettings,
+            ["buttonSoundSettings"] = buttonSoundSettings,
+            ["buttonVisualSettings"] = buttonVisualSettings
         }
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
