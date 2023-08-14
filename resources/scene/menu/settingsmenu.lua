@@ -37,12 +37,47 @@ function scene:showToast(message)
     transition.to(toast, params)
 end
 
-function scene:applySettings()
+function scene:hoverObj(nextObj)
+    for k,o in pairs(scene.objTable) do
+        if (k == nextObj) then
+            local params = {
+                time = 200,
+                transition = easing.outQuint,
+                xScale = 1.5,
+                yScale = 1.5,
+            }
+            
+            transition.to(o, params)
+        elseif (k== nil) then
+            
+        else
+            local params = {
+                time = 200,
+                transition = easing.outQuint,
+                xScale = 1,
+                yScale = 1,
+            }
+            transition.to(o, params)
+        end
+    end
+end
+
+function scene:interactWithObj(object)
+    if (object == "buttonBack") then
+        scene:back()
+    elseif (object == "buttonResetSettings") then
+        scene:resetSettings()
+    elseif (object == "buttonApplySettings") then
+        scene:applySettings(scene.tmpSettings)
+    end
+end
+
+function scene:applySettings(tmp)
     -- Save to file
-    library.saveSettings(scene.tmpSettings)
+    library.saveSettings(tmp)
 
     -- Initiate Settings
-    library.initiateSettings(scene.tmpSettings)
+    library.initiateSettings(tmp)
 
     -- Set variable
     scene.isSaved = true
@@ -64,27 +99,31 @@ function scene:resetSettings()
     scene:showToast("Settings reset!")
 end
 
+function scene:back()
+    if (scene.isSaved == false) then
+        -- Darken scene behind...
+        
+        -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
+        composer.showOverlay("resources.scene.menu.warningmenu")
+    else
+        -- if settings are saved
+        library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
+    end
+end
+
 local function handleButtonEvent(event)
     if (event.phase == 'ended') then
         if (event.target.id == 'buttonBack') then
-            if (scene.isSaved == false) then
-                -- Darken scene behind...
-                
-                -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
-                composer.showOverlay("resources.scene.menu.warningmenu")
-            else
-                library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
-            end
+            scene:back()
+            return
 
         elseif (event.target.id == 'buttonApplySettings') then
             scene:applySettings(scene.tmpSettings) 
-
-            scene.isSaved = true
+            return
 
         elseif (event.target.id == 'buttonResetSettings') then
             scene:resetSettings()
-            
-            scene.isSaved = true
+            return
         end
     end 
 end
@@ -158,6 +197,9 @@ function scene:create( event )
     -- Code here runs when the scene is first created but has not yet appeared on screen
     scene.tmpSettings = runtime.settings
     scene.isSaved = true
+
+    -- Only the first time in center; if reshown, then last state
+    scene.currentObj = "center"
 end
  
 
@@ -173,21 +215,21 @@ function scene:show( event )
 
         -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
-
-        print("----------------------")
-        minD = 10000
-        distances = {}
-        sqrt = math.sqrt
-        min = math.min
-        currPosX, currPosY = 100, display.contentCenterY
-        navigationInput = "right"
-        --listOfObjects = {buttonApplySettings, buttonDiscardSettings, buttonResetSettings}
-        listOfObjects = {}
-        listOfObjects[1] = buttonApplySettings
-        listOfObjects[2] = buttonBack
-        print("oli:", listOfObjects[2])
-        library.navigateMenu()
-
+        
+        scene.objectMatrix = {
+            ["center"] = {"buttonBack", "buttonResetSettings", nil, "buttonBack"},
+            ["buttonBack"] = {nil, "buttonApplySettings", "buttonApplySettings", "buttonResetSettings"},
+            ["buttonApplySettings"] = {"buttonBack", "buttonResetSettings", nil, "buttonBack"},
+            ["buttonResetSettings"] = {"buttonBack", "buttonBack", nil, "buttonApplySettings"},
+            }
+        scene.objTable = {["center"]=nil,
+            ["buttonBack"] = buttonBack,
+            ["buttonApplySettings"] = buttonApplySettings,
+            ["buttonResetSettings"] = buttonResetSettings,
+        }
+        runtime.currentScene = scene
+        runtime.currentSceneType = "menu"
+    
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
