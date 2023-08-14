@@ -2,12 +2,10 @@
 
 -- Lokalisieren
 
--- Library nicht lokalisieren??????
+-- Library nicht lokalisieren?????? Ausserdem ist require ja jedesmal ein File-read => Stromverbauch...
 library = require("library")
 local composer = require("composer")
-
 runtime = {}
-runtime["currentSaveFile"] = nil
 
 -- settingsfiles Setup and Initialication
 local state = library.doesFileExist("settings.json", system.DocumentsDirectory)
@@ -24,14 +22,14 @@ else
     runtime["settings"] = data
 end
 
+runtime["currentSaveFile"] = nil
+runtime.currentScene = nil
+runtime.currentSceneType = nil
+runtime.selectedInputDevice = runtime.settings.selectedInputDevice
 
+-- Maybe store as player.variable
 movF, movB, movJ, interact = false, false, false, false
-function handleKeyInput(event)
-    library.keyboardControl(event)
-end
-
 
 -- Gotoscene()
-composer.gotoScene( "resources.scene.menu.mainmenu")
-
-Runtime:addEventListener("key", handleKeyInput)
+composer.gotoScene("resources.scene.menu.mainmenu")
+library.setControlMode("menu")
