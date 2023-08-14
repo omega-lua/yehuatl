@@ -328,7 +328,7 @@ function terminatePhysics()
     physics.stop()
 end
 
-function navigateMenu()
+function findNearestObj()
     -- maybe define a table with the data for each menu, instead of calculating it everytime.
     for i, object in ipairs(listOfObjects) do
         local x, y = object.x, object.y
@@ -368,7 +368,7 @@ function navigateMenu()
                 minD = delta
             end
         else
-            local delta = 1000
+            local delta = 10000
             distances[i] = delta
             if delta < minD then
                 minD = delta
@@ -378,10 +378,6 @@ function navigateMenu()
     local index = table.indexOf( distances, minD )
     local nearestObj = listOfObjects[index]
     currPosX, currPosY = nearestObj:localToContent(0,0)
-end
-
-function hoverObject()
-    --
 end
 
 -- Muss noch herausfinden, wie was gesteuert werden kann.
@@ -460,23 +456,92 @@ function touchscreenControl(event)
     end
 end
 
-function controllerControl(event)
-    -- Maybe need a better name
+-- inmenu navigation with key-event as input
+function navigateMenu(event)
+    if (event.phase == "up") then
+
+        -- Localize
+        local scene = composer.getScene(composer.getSceneName("current"))
+        local keyName = event.keyName
+        local objectMatrix = scene.objectMatrix
+        local currentObj = scene.currentObj
+        local data = objectMatrix[currentObj]
+        
+        if (keyName == "i") then
+            local nextObj = data[1]
+            if nextObj then
+                sce.currentObj = nextObj
+                scene:hoverObj(nextObj)
+            end
+
+        elseif (keyName == "l") then
+            local nextObj = data[2]
+            if nextObj then
+                scene.currentObj = nextObj
+                scene:hoverObj(nextObj)
+            end
+
+        elseif (keyName == "k") then
+            local nextObj = data[3]
+            if nextObj then
+                scene.currentObj = nextObj
+                scene:hoverObj(nextObj)
+            end
+
+        elseif (keyName == "j") then
+            local nextObj = data[4]
+            if nextObj then
+                scene.currentObj = nextObj
+                scene:hoverObj(nextObj)
+            end
+        
+        -- User wants to enter selected/hovered menu.
+        elseif (keyName == "space") then
+            scene:interactWithObj(scene.currentObj)
+        end
+    end 
 end
 
-function handleSceneChange(goTo, sceneType, options)
+function setControlMode(sceneType)
+    Runtime:removeEventListener("key", library.navigateMenu)
+    --Runtime:removeEventListener()
+    --Runtime:removeEventListener()
+    
+    print(runtime.selectedInputDevice)
+    if (runtime.selectedInputDevice == "keyboard") then
+        if (sceneType == "menu") then
+            print("eventListener added.")
+            Runtime:addEventListener("key", library.navigateMenu)
+            runtime.currentSceneType = "menu"
+        elseif (sceneType == "game") then
+            runtime.currentSceneType = "game"
+            -- scene:navigateGame()
+        end
+    
+    elseif (runtime.selectedInputDevice == "touchscreen") then
+        if (sceneType == "menu") then
+            runtime.currentSceneType = "menu"
+            -- Touch navigation (??)
+        elseif (sceneType == "game") then
+            runtime.currentSceneType = "game"
+            -- Touch navigation (??)
+        end
+    end
+end
+
+function handleSceneChange(goTo, nextType, options)
     local currScene = composer.getSceneName( "current" )
     local currType = currScene:sub(17, 20) -- Crappy. Otherwise: https://docs.coronalabs.com/api/library/global/select.html
 
-    if (currType == 'menu') and (sceneType == 'game') then
+    if (currType == 'menu') and (nextType == 'game') then
         initiatePhysics()
 
-    elseif (currType == 'game') and (sceneType == 'menu') then
+    elseif (currType == 'game') and (nextType == 'menu') then
         terminatePhysics()
         composer.removeScene("resources.scene.game.game", true)
     end
-    
     composer.gotoScene(goTo, options)
+    library.setControlMode(nextType)
 end
 
 -- DEBUG: To make the initial.json if lost.
@@ -552,9 +617,13 @@ library.saveSettings = saveSettings
 library.resetSettings = resetSettings
 library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
+library.findNearestObj = findNearestObj
+library.findNearestObjV2 = findNearestObjV2
+library.hoverObj = hoverObj
 library.keyboardControl = keyboardControl
-library.navigateMenu = navigateMenu
 library.touchscreenControl = touchscreenControl
+library.navigateMenu = navigateMenu
+library.setControlMode = setControlMode
 library.handleSceneChange = handleSceneChange
 library.saveUserDataJSON = saveUserDataJSON
 
