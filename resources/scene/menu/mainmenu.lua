@@ -61,6 +61,8 @@ function scene:interactWithObj(object)
         library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,})
     elseif (object == "buttonSettings") then
         library.handleSceneChange( "resources.scene.menu.settingsmenu", "menu",{ effect = "fade", time = 400,})
+    elseif (object == "buttonSettings") then
+        library.handleSceneChange( "resources.scene.menu.creditsmenu", "menu",{ effect = "fade", time = 400,})
     end
 end
  
@@ -69,8 +71,8 @@ function scene:loadUI()
     
     buttonPlay = widget.newButton(
         {
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)+200, --display.pixelWidth/2
-        top = display.contentCenterY, -- Nicht ganz genau in Mitte, wegen Textfeld-Anchorpoint vorher: top = display.actualContentHeight/2
+        x = display.contentCenterX*1.4, 
+        y = display.contentCenterY,
         id = "buttonPlay",
         label = "Play",
         onEvent = handleButtonEvent,
@@ -81,10 +83,23 @@ function scene:loadUI()
     )
     buttonSettings = widget.newButton(
         {
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)-200, --display.pixelWidth/2
-        top = display.contentCenterY, -- Nicht ganz genau in Mitte, wegen Textfeld-Anchorpoint vorher: top = display.actualContentHeight/2
+        x = display.contentCenterX*0.6,
+        y = display.contentCenterY, 
         id = "buttonSettings",
         label = "Settings",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 30,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        }
+    )
+
+    buttonCredits = widget.newButton(
+        {
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1.4, 
+        id = "buttonCredits",
+        label = "Credits",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 30,
@@ -94,6 +109,7 @@ function scene:loadUI()
     
     sceneGroup:insert( buttonPlay )
     sceneGroup:insert( buttonSettings )
+    sceneGroup:insert( buttonCredits )
 end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -122,11 +138,17 @@ function scene:show( event )
         -- where the hover starts, normally in center of screen.
         scene.currentObj = "center"
         scene.objectMatrix = {
-            ["center"] = {nil, "buttonPlay", nil, "buttonSettings"},
-            ["buttonPlay"] = {nil, "buttonSettings", nil, "buttonSettings"},
-            ["buttonSettings"] = {nil, "buttonPlay", nil, "buttonPlay"},
+            ["center"] = {"buttonPlay", "buttonPlay", "buttonCredits", "buttonSettings"},
+            ["buttonPlay"] = {"buttonCredits", "buttonSettings", "buttonCredits", "buttonSettings"},
+            ["buttonSettings"] = {"buttonCredits", "buttonPlay", "buttonCredits", "buttonPlay"},
+            ["buttonCredits"] = {"buttonPlay", "buttonPlay", "buttonPlay", "buttonSettings"},
             }
-        scene.objTable = {["center"]=nil, ["buttonPlay"]=buttonPlay, ["buttonSettings"]=buttonSettings,}
+        scene.objTable = {
+            ["center"] = nil,
+            ["buttonPlay"] = buttonPlay,
+            ["buttonSettings"] = buttonSettings,
+            ["buttonCredits"] = buttonCredits,
+        }
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
 
