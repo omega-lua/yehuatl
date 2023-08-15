@@ -232,7 +232,7 @@ function getSettings(path)
 end
 
 function initiateSettings(table)
-    if (table[1] == "testVariableKeineAhnungWie") then
+    if (table == {}) then
         print("ERROR: Received empty Table.")
     else
         -- Ist zwar globaler Table, wird aber nur einmal bei Startup gemacht.
@@ -253,8 +253,8 @@ function initiateSettings(table)
         keybindSelect = settings.keybindSelect
         keybindAbility  = settings.keybindAbility
         keybindBlock  = settings.keybindBlock
-        loudnessMusic = settings.loudnessMusic
-        loudnessSoundEffects = settings.loudnessSoundEffects
+        volumeMusic = settings.volumeMusic
+        volumeSoundEffects = settings.volumeSoundEffects
         selectedOutputDevice = settings.selectedOutputDevice
         otherOutputDevices = settings.otherOutputDevices
         playStereo = settings.playStereo
@@ -281,8 +281,8 @@ function setUpInitialSettings()
         ["keybindSelect"] = "enter",
         ["keybindAbility"] = "z",
         ["keybindBlock"] = "b",
-        ["loudnessMusic"] = 0.5,
-        ["loudnessSoundEffects"] = 0.4,
+        ["volumeMusic"] = 0.5,
+        ["volumeSoundEffects"] = 0.4,
         ["selectedOutputDevice"] = "EmptyTable",
         ["otherOutputDevices"] = "EmptyTable",
         ["playStereo"] = true,
@@ -403,7 +403,6 @@ function keyboardControl(event)
             player:MeleeAttack()
         elseif  (event.keyName == keybindEscape) then
             -- Problem: Durch diesen Weg wird status immer "pause", egal ob Overlay geöffnet ist oder nicht.
-            print("keybindEscape-event")
             handlePauseScreen()
         end
         
@@ -456,49 +455,38 @@ function touchscreenControl(event)
     end
 end
 
--- inmenu navigation with key-event as input
 function navigateMenu(event)
     if (event.phase == "up") then
-
-        -- Localize
-        local scene = composer.getScene(composer.getSceneName("current"))
         local keyName = event.keyName
-        local currentObj = scene.currentObj
-        local data = scene.navigationMatrix[currentObj]
+        local settings = runtime.settings
+        local scene = composer.getScene(composer.getSceneName("current"))
+        local currObject = scene.currObject
+        local table = scene.matrix[currObject]
+        local entry = nil
         
-        if (keyName == "i") then
-            local nextObj = data[1]
-            if nextObj then
-                scene.currentObj = nextObj
-                scene:hoverObj(nextObj)
-            end
-
-        elseif (keyName == "l") then
-            local nextObj = data[2]
-            if nextObj then
-                scene.currentObj = nextObj
-                scene:hoverObj(nextObj)
-            end
-
-        elseif (keyName == "k") then
-            local nextObj = data[3]
-            if nextObj then
-                scene.currentObj = nextObj
-                scene:hoverObj(nextObj)
-            end
-
-        elseif (keyName == "j") then
-            local nextObj = data[4]
-            if nextObj then
-                scene.currentObj = nextObj
-                scene:hoverObj(nextObj)
-            end
-        
-        -- User wants to enter selected/hovered menu.
+        if (keyName == "right") then
+            entry = table[1]
+        elseif (keyName == "down") then
+            entry = table[2]
+        elseif (keyName == "left") then
+            entry = table[3]
+        elseif (keyName == "up") then
+            entry = table[4]
         elseif (keyName == "space") then
-            scene:interactWithObj(scene.currentObj)
+            -- Maybe not working bcz of nil value in table
+            scene.functionsTable[currObject]()
         end
-    end 
+
+        if entry then
+            if (string.len(entry) > 2) then
+                -- When number ist longer than 2: exec fc()
+                scene.functionsTable[entry]()
+            else
+                scene.currObject = entry
+                scene:hoverObj()
+            end
+        end
+    end
 end
 
 function setControlMode(sceneType)
