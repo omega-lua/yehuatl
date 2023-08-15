@@ -12,7 +12,6 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
  
 local function handleButtonEvent(event)
-    print("opened handleButtonEvent")
     if (event.phase == 'ended') then
         if (event.target.id == "buttonBack") then
             composer.hideOverlay("fade", 500)
