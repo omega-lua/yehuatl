@@ -13,56 +13,39 @@ local scene = composer.newScene()
 
 -- Function to handle button events
 local function handleButtonEvent( event )
-    if (event.target.id == 'buttonPlay') then
-        if ( event.phase == "ended") then
-            local goTo = "resources.scene.menu.savemenu"
-            local sceneType = "menu"
-            local options = { effect = "fade", time = 400,}
-            library.handleSceneChange(goTo, sceneType, options)
+    if ( event.phase == "ended") then
+        if (event.target.id == 'buttonPlay') then
+            scene:handleObjectInteraction("buttonPlay")
 
-        end
-    elseif (event.target.id == 'buttonSettings') then
-        if ( event.phase == "ended" ) then
-            local goTo = "resources.scene.menu.settingsmenu"
-            local sceneType = "menu"
-            local options = { effect = "fade", time = 400,}
-            library.handleSceneChange(goTo, sceneType, options)
+        elseif (event.target.id == 'buttonSettings') then
+            scene:handleObjectInteraction("buttonSettings")
+
+        elseif (event.target.id == 'buttonCredits') then
+            scene:handleObjectInteraction("buttonCredits")
         end
     end
 end
  
-function scene:hoverObj(nextObj)
-    for k,o in pairs(scene.objTable) do
-        if (k == nextObj) then
-            local params = {
-                time = 200,
-                transition = easing.outQuint,
-                xScale = 1.5,
-                yScale = 1.5,
-            }
-            
-            transition.to(o, params)
-        elseif (k== nil) then
-            
+function scene:hoverObj()
+    local currObject = scene.currObject
+    for k,o in pairs(scene.referenceTable) do
+        local params = {}
+        if (k == currObject) then
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5,}     
         else
-            local params = {
-                time = 200,
-                transition = easing.outQuint,
-                xScale = 1,
-                yScale = 1,
-            }
-            transition.to(o, params)
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,}
         end
+        transition.to(o, params)
     end
 end
 
-function scene:interactWithObj(object)
+function scene:handleObjectInteraction(object)
     if (object == "buttonPlay") then
         library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,})
     elseif (object == "buttonSettings") then
-        library.handleSceneChange( "resources.scene.menu.settingsmenu", "menu",{ effect = "fade", time = 400,})
-    elseif (object == "buttonSettings") then
-        library.handleSceneChange( "resources.scene.menu.creditsmenu", "menu",{ effect = "fade", time = 400,})
+        library.handleSceneChange( "resources.scene.menu.settingsmenu", "menu", { effect = "fade", time = 400,})
+    elseif (object == "buttonCredits") then
+        library.handleSceneChange("resources.scene.menu.creditsmenu", "menu", { effect = "fade", time = 400,})
     end
 end
  
@@ -136,26 +119,33 @@ function scene:show( event )
         
         -- Scene variables have to be set here, otherwise some would be empty.
         -- where the hover starts, normally in center of screen.
-        scene.currentObj = "center"
-        scene.navigationMatrix = {
-            ["center"] = {"buttonPlay", "buttonPlay", "buttonCredits", "buttonSettings"},
-            ["buttonPlay"] = {"buttonCredits", "buttonSettings", "buttonCredits", "buttonSettings"},
-            ["buttonSettings"] = {"buttonCredits", "buttonPlay", "buttonCredits", "buttonPlay"},
-            ["buttonCredits"] = {"buttonPlay", "buttonPlay", "buttonPlay", "buttonSettings"},
-            }
-        scene.objTable = {
-            ["center"] = nil,
-            ["buttonPlay"] = buttonPlay,
-            ["buttonSettings"] = buttonSettings,
-            ["buttonCredits"] = buttonCredits,
+        scene.currObject = 1
+        
+        scene.matrix = {
+            {3, 2, 3, 2},
+            {1, 1, 3, 1},
+            {1, 2, 1, 2},
+        }
+        scene.referenceTable = {
+            [1] = buttonPlay,
+            [2] = buttonCredits,
+            [3] = buttonSettings,
+        }
+
+        scene.functionsTable = {
+            [1] = function() library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,}) end,
+            [2] = function() library.handleSceneChange("resources.scene.menu.creditsmenu","menu", { effect = "fade", time = 400,}) end,
+            [3] = function() library.handleSceneChange("resources.scene.menu.settingsmenu","menu", { effect = "fade", time = 400,}) end,
         }
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
 
- 
+        -- Refresh
+        scene:hoverObj()
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
+
     end
 end
 
