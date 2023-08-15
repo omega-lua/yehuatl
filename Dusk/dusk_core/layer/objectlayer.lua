@@ -176,8 +176,6 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 				layer.object[obj._name] = nil
 				layer.object[objData.objectIndex] = nil
-				print("CULLING")
-
 				objData.constructedObject = nil
 			end
 		end
