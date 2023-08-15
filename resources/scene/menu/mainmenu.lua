@@ -5,32 +5,95 @@ local widget = require( "widget" )
 local composer = require( "composer" )
 local scene = composer.newScene()
 
+
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
- 
+
 -- Function to handle button events
 local function handleButtonEvent( event )
-    if (event.target.id == 'buttonPlay') then
-        if ( event.phase == "ended") then
-            local goTo = "resources.scene.menu.savemenu"
-            local sceneType = "menu"
-            local options = { effect = "fade", time = 400,}
-            library.handleSceneChange(goTo, sceneType, options)
+    if ( event.phase == "ended") then
+        if (event.target.id == 'buttonPlay') then
+            scene:handleObjectInteraction("buttonPlay")
 
-        end
-    elseif (event.target.id == 'buttonSettings') then
-        if ( event.phase == "ended" ) then
-            local goTo = "resources.scene.menu.settingsmenu"
-            local sceneType = "menu"
-            local options = { effect = "fade", time = 400,}
-            library.handleSceneChange(goTo, sceneType, options)
+        elseif (event.target.id == 'buttonSettings') then
+            scene:handleObjectInteraction("buttonSettings")
+
+        elseif (event.target.id == 'buttonCredits') then
+            scene:handleObjectInteraction("buttonCredits")
         end
     end
 end
  
+function scene:hoverObj()
+    local currObject = scene.currObject
+    for k,o in pairs(scene.referenceTable) do
+        local params = {}
+        if (k == currObject) then
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5,}     
+        else
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,}
+        end
+        transition.to(o, params)
+    end
+end
+
+function scene:handleObjectInteraction(object)
+    if (object == "buttonPlay") then
+        library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,})
+    elseif (object == "buttonSettings") then
+        library.handleSceneChange( "resources.scene.menu.settingsmenu", "menu", { effect = "fade", time = 400,})
+    elseif (object == "buttonCredits") then
+        library.handleSceneChange("resources.scene.menu.creditsmenu", "menu", { effect = "fade", time = 400,})
+    end
+end
  
+function scene:loadUI()
+    local sceneGroup = scene.view
+    
+    buttonPlay = widget.newButton(
+        {
+        x = display.contentCenterX*1.4, 
+        y = display.contentCenterY,
+        id = "buttonPlay",
+        label = "Play",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 30,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        }
+    )
+    buttonSettings = widget.newButton(
+        {
+        x = display.contentCenterX*0.6,
+        y = display.contentCenterY, 
+        id = "buttonSettings",
+        label = "Settings",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 30,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        }
+    )
+
+    buttonCredits = widget.newButton(
+        {
+        x = display.contentCenterX*1,
+        y = display.contentCenterY*1.4, 
+        id = "buttonCredits",
+        label = "Credits",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 30,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        }
+    )
+    
+    sceneGroup:insert( buttonPlay )
+    sceneGroup:insert( buttonSettings )
+    sceneGroup:insert( buttonCredits )
+end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -41,33 +104,7 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    local buttonPlay = widget.newButton(
-        {
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)+200, --display.pixelWidth/2
-        top = display.contentCenterY, -- Nicht ganz genau in Mitte, wegen Textfeld-Anchorpoint vorher: top = display.actualContentHeight/2
-        id = "buttonPlay",
-        label = "Play",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 30,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-        }
-    )
-    local buttonSettings = widget.newButton(
-        {
-        left = ((display.viewableContentWidth+display.screenOriginX)/2)-200, --display.pixelWidth/2
-        top = display.contentCenterY, -- Nicht ganz genau in Mitte, wegen Textfeld-Anchorpoint vorher: top = display.actualContentHeight/2
-        id = "buttonSettings",
-        label = "Settings",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 30,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-        }
-    )
-    
-    sceneGroup:insert( buttonPlay )
-    sceneGroup:insert( buttonSettings )
+    scene:loadUI()
 end
  
  
@@ -79,10 +116,36 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
- 
+        
+        -- Scene variables have to be set here, otherwise some would be empty.
+        -- where the hover starts, normally in center of screen.
+        scene.currObject = 1
+        
+        scene.matrix = {
+            {3, 2, 3, 2},
+            {1, 1, 3, 1},
+            {1, 2, 1, 2},
+        }
+        scene.referenceTable = {
+            [1] = buttonPlay,
+            [2] = buttonCredits,
+            [3] = buttonSettings,
+        }
+
+        scene.functionsTable = {
+            [1] = function() library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,}) end,
+            [2] = function() library.handleSceneChange("resources.scene.menu.creditsmenu","menu", { effect = "fade", time = 400,}) end,
+            [3] = function() library.handleSceneChange("resources.scene.menu.settingsmenu","menu", { effect = "fade", time = 400,}) end,
+        }
+        runtime.currentScene = scene
+        runtime.currentSceneType = "menu"
+
+        -- Refresh
+        scene:hoverObj()
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
+
     end
 end
 

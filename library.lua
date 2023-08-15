@@ -232,7 +232,7 @@ function getSettings(path)
 end
 
 function initiateSettings(table)
-    if (table[1] == "testVariableKeineAhnungWie") then
+    if (table == {}) then
         print("ERROR: Received empty Table.")
     else
         -- Ist zwar globaler Table, wird aber nur einmal bei Startup gemacht.
@@ -253,8 +253,8 @@ function initiateSettings(table)
         keybindSelect = settings.keybindSelect
         keybindAbility  = settings.keybindAbility
         keybindBlock  = settings.keybindBlock
-        loudnessMusic = settings.loudnessMusic
-        loudnessSoundEffects = settings.loudnessSoundEffects
+        volumeMusic = settings.volumeMusic
+        volumeSoundEffects = settings.volumeSoundEffects
         selectedOutputDevice = settings.selectedOutputDevice
         otherOutputDevices = settings.otherOutputDevices
         playStereo = settings.playStereo
@@ -281,8 +281,8 @@ function setUpInitialSettings()
         ["keybindSelect"] = "enter",
         ["keybindAbility"] = "z",
         ["keybindBlock"] = "b",
-        ["loudnessMusic"] = 0.5,
-        ["loudnessSoundEffects"] = 0.4,
+        ["volumeMusic"] = 0.5,
+        ["volumeSoundEffects"] = 0.4,
         ["selectedOutputDevice"] = "EmptyTable",
         ["otherOutputDevices"] = "EmptyTable",
         ["playStereo"] = true,
@@ -328,6 +328,58 @@ function terminatePhysics()
     physics.stop()
 end
 
+function findNearestObj()
+    -- maybe define a table with the data for each menu, instead of calculating it everytime.
+    for i, object in ipairs(listOfObjects) do
+        local x, y = object.x, object.y
+        
+        if (navigationInput == "up") and (y <= currPosY) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "down") and (y >= currPosY)then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "left") and (x <= currPosX) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            --distances[object] = delta
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+
+        elseif (navigationInput == "right") and (x >= currPosX) then
+            local dx, dy = (currPosX-x), (currPosY-y)
+            local delta = sqrt((dx*dx)+(dy*dy))
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+        else
+            local delta = 10000
+            distances[i] = delta
+            if delta < minD then
+                minD = delta
+            end
+        end
+    end
+    local index = table.indexOf( distances, minD )
+    local nearestObj = listOfObjects[index]
+    currPosX, currPosY = nearestObj:localToContent(0,0)
+end
+
 -- Muss noch herausfinden, wie was gesteuert werden kann.
 function keyboardControl(event)
     -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
@@ -351,7 +403,6 @@ function keyboardControl(event)
             player:MeleeAttack()
         elseif  (event.keyName == keybindEscape) then
             -- Problem: Durch diesen Weg wird status immer "pause", egal ob Overlay geöffnet ist oder nicht.
-            print("keybindEscape-event")
             handlePauseScreen()
         end
         
@@ -404,23 +455,80 @@ function touchscreenControl(event)
     end
 end
 
-function controllerControl(event)
-    -- Maybe need a better name
+function navigateMenu(event)
+    if (event.phase == "up") then
+        local keyName = event.keyName
+        local settings = runtime.settings
+        local scene = composer.getScene(composer.getSceneName("current"))
+        local currObject = scene.currObject
+        local table = scene.matrix[currObject]
+        local entry = nil
+        
+        if (keyName == "right") then
+            entry = table[1]
+        elseif (keyName == "down") then
+            entry = table[2]
+        elseif (keyName == "left") then
+            entry = table[3]
+        elseif (keyName == "up") then
+            entry = table[4]
+        elseif (keyName == "space") then
+            -- Maybe not working bcz of nil value in table
+            scene.functionsTable[currObject]()
+        end
+
+        if entry then
+            if (string.len(entry) > 2) then
+                -- When number ist longer than 2: exec fc()
+                scene.functionsTable[entry]()
+            else
+                scene.currObject = entry
+                scene:hoverObj()
+            end
+        end
+    end
 end
 
-function handleSceneChange(goTo, sceneType, options)
+function setControlMode(sceneType)
+    Runtime:removeEventListener("key", library.navigateMenu)
+    --Runtime:removeEventListener()
+    --Runtime:removeEventListener()
+    
+    print(runtime.selectedInputDevice)
+    if (runtime.selectedInputDevice == "keyboard") then
+        if (sceneType == "menu") then
+            print("eventListener added.")
+            Runtime:addEventListener("key", library.navigateMenu)
+            runtime.currentSceneType = "menu"
+        elseif (sceneType == "game") then
+            runtime.currentSceneType = "game"
+            -- scene:navigateGame()
+        end
+    
+    elseif (runtime.selectedInputDevice == "touchscreen") then
+        if (sceneType == "menu") then
+            runtime.currentSceneType = "menu"
+            -- Touch navigation (??)
+        elseif (sceneType == "game") then
+            runtime.currentSceneType = "game"
+            -- Touch navigation (??)
+        end
+    end
+end
+
+function handleSceneChange(goTo, nextType, options)
     local currScene = composer.getSceneName( "current" )
     local currType = currScene:sub(17, 20) -- Crappy. Otherwise: https://docs.coronalabs.com/api/library/global/select.html
 
-    if (currType == 'menu') and (sceneType == 'game') then
+    if (currType == 'menu') and (nextType == 'game') then
         initiatePhysics()
 
-    elseif (currType == 'game') and (sceneType == 'menu') then
+    elseif (currType == 'game') and (nextType == 'menu') then
         terminatePhysics()
         composer.removeScene("resources.scene.game.game", true)
     end
-    
     composer.gotoScene(goTo, options)
+    library.setControlMode(nextType)
 end
 
 -- DEBUG: To make the initial.json if lost.
@@ -496,8 +604,13 @@ library.saveSettings = saveSettings
 library.resetSettings = resetSettings
 library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
+library.findNearestObj = findNearestObj
+library.findNearestObjV2 = findNearestObjV2
+library.hoverObj = hoverObj
 library.keyboardControl = keyboardControl
 library.touchscreenControl = touchscreenControl
+library.navigateMenu = navigateMenu
+library.setControlMode = setControlMode
 library.handleSceneChange = handleSceneChange
 library.saveUserDataJSON = saveUserDataJSON
 
