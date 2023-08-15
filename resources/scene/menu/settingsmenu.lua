@@ -9,11 +9,6 @@ local scene = composer.newScene()
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
 
--- Still not so elegant, but better than before.
-function scene:reload()
-    --sliderLoudnessMusic:setValue( loudnessMusic )
-end
-
 function scene:showToast(message)
     local toast = display.newText({
         text = message,     
@@ -37,64 +32,149 @@ function scene:showToast(message)
     transition.to(toast, params)
 end
 
-local function handleScrollView(k,o)     
-    if (k ~= "buttonBack")  and (k ~= "buttonResetSettings") and (k ~= "buttonApplySettings")then
-        local x,y = o:localToContent(0,0)
-        if (y+10 <= display.contentCenterY - scrollView.height*0.5) then
-            scrollView:scrollToPosition({y=o.y, time=750} ) 
-        elseif (y+10 >= display.contentCenterY + scrollView.height*0.5) then
-            scrollView:scrollToPosition({y=-(o.y-50), time=750} )
-        end
+local function handleScrollView(i,o)     
+    if (i == 1) or (i == 10) or (i == 11) then
+        -- We dont want to scroll because these buttons arent in the scrollView
+        return
+    end
+    
+    local m, n = scrollView:getContentPosition()
+    local x,y = o:localToContent(0,0)
+    -- Upscrolling
+    if (y <= display.contentCenterY - scrollView.height*0.5) then
+        scrollView:scrollToPosition({y=-(o.y-110), time=1000} ) 
+    -- Downscrolling
+    elseif (y+20 >= display.contentCenterY + scrollView.height*0.5) then
+        scrollView:scrollToPosition({y=-(o.y-110), time=1000} )
     end
 end
 
-function scene:hoverObj(nextObj)
-    for k,o in pairs(scene.objTable) do
-        if (k == nextObj) then
-            handleScrollView(k,o)
-            local params = {
-                time = 200,
-                transition = easing.outQuint,
-                xScale = 1.5,
-                yScale = 1.5,
-            }
-            transition.to(o, params)
-        elseif (k== nil) then
-            
+function scene:hoverObj()
+    local currObject = scene.currObject
+    for i,object in pairs(scene.referenceTable) do
+        local params = {}
+        if (i == currObject) then
+            handleScrollView(i,object)
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5,}     
         else
-            local params = {
-                time = 200,
-                transition = easing.outQuint,
-                xScale = 1,
-                yScale = 1,
-            }
-            transition.to(o, params)
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,}
+        end
+        transition.to(object, params)
+    end
+end
+
+function scene:back()
+    if (scene.isSaved == false) then
+        -- Darken scene behind...
+        
+        -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
+        composer.showOverlay("resources.scene.menu.warningmenu")
+    else
+        -- if settings are saved
+        library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
+    end
+end
+
+function scene:handleSegment(index, value)
+    if (index == 4) then
+        local old = tmpSettings.volumeMusic
+        local check = old + value
+        if (check <= 4 ) and (check >= 0 ) then
+            tmpSettings.volumeMusic = check
+            segmentMusicVolume:setActiveSegment(tmpSettings.volumeMusic + 1) -- +1 because the segment needs minimum "1"
+            scene.isSaved = false
+        end
+    elseif (index == 5) then
+        local old = tmpSettings.volumeSoundEffects
+        local check = old + value
+        if (check <= 4 ) and (check >= 0 ) then
+            tmpSettings.volumeSoundEffects = check
+            segmentEffectsVolume:setActiveSegment(tmpSettings.volumeSoundEffects + 1) -- +1 because the segment needs minimum "1"
+            scene.isSaved = false
+        end
+    elseif (index == 9) then
+        local old = tmpSettings.difficulty
+        local check = old + value
+        if (check <= 3 ) and (check >= 1 ) then
+            tmpSettings.difficulty = check
+            segmentDifficulty:setActiveSegment(tmpSettings.difficulty) -- +1 because the segment needs minimum "1"
+            scene.isSaved = false
         end
     end
 end
 
-function scene:interactWithObj(object)
+function scene:handleSwitch(index, boolean)
+    if (index == 7) then
+        local status = tmpSettings.playStereo
+        if status and not boolean then
+            switchStereo:setState( {isOn = false, isAnimated = true} )
+            tmpSettings.playStereo = false 
+            scene.isSaved = false
+        elseif not status and boolean then
+            switchStereo:setState( {isOn = true, isAnimated = true} )
+            tmpSettings.playStereo = true 
+            scene.isSaved = false
+        end
+    elseif (index == 8) then
+        local status = tmpSettings.renderParticles
+        if status and not boolean then
+            switchParticles:setState( {isOn = false, isAnimated = true} )
+            tmpSettings.renderParticles = false 
+            scene.isSaved = false
+        elseif not status and boolean then
+            switchParticles:setState( {isOn = true, isAnimated = true} )
+            tmpSettings.renderParticles = true 
+            scene.isSaved = false
+        end
+    end
+end
+
+local function handleButtonEvent(event)
+    if (event.phase == 'ended') then
+        local id = event.target.id
+        if (id == 'buttonBack') then
+            scene:handleObjectInteraction('buttonBack')
+            return
+
+        elseif (id == 'buttonApplySettings') then
+            scene:handleObjectInteraction('buttonApplySettings')
+            return
+
+        elseif (id == 'buttonResetSettings') then
+            scene:handleObjectInteraction('buttonResetSettings')
+            return
+        end
+    end 
+end
+
+function scene:handleObjectInteraction(object, param)
     if (object == "buttonBack") then
         scene:back()
     elseif (object == "buttonResetSettings") then
         scene:resetSettings()
     elseif (object == "buttonApplySettings") then
         scene:applySettings(scene.tmpSettings)
-    elseif (object == "buttonControlSettings") then
-        library.handleSceneChange("resources.scene.menu.controlsettingsmenu", "menu", { effect = "fade", time = 400,})
-    elseif (object == "buttonSoundSettings") then
-        -- library.handleSceneChange()
-    elseif (object == "buttonVisualSettings") then
-        -- library.handleSceneChange()
+    elseif (object == "buttonKeybinds") then
+        -- composer.showOverlay(keybindsoverlay.lua)
+    elseif (object == "buttonInputDevice") then
+        -- composer.showOverlay(inputdeviceoverlay.lua)
+    elseif (object == "segmentMusicVolume") then
+        scene:handleSegment(param)
+    elseif (object == "segmentEffectsVolume") then
+        scene:handleSegment(param)
+    elseif (object == "switchParticles") then
+        scene:handleSwitch(param)
+    elseif (object == "segmentDifficulty") then
+        scene:handleSegment(param)
     end
 end
 
-function scene:applySettings(tmp)
+function scene:applySettings(tmpSettings)
     -- Save to file
-    library.saveSettings(tmp)
+    library.saveSettings(tmpSettings)
 
     -- Initiate Settings
-    library.initiateSettings(tmp)
+    library.initiateSettings(tmpSettings)
 
     -- Set variable
     scene.isSaved = true
@@ -114,35 +194,6 @@ function scene:resetSettings()
     scene.isSaved = true
 
     scene:showToast("Settings reset!")
-end
-
-function scene:back()
-    if (scene.isSaved == false) then
-        -- Darken scene behind...
-        
-        -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
-        composer.showOverlay("resources.scene.menu.warningmenu")
-    else
-        -- if settings are saved
-        library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
-    end
-end
-
-local function handleButtonEvent(event)
-    if (event.phase == 'ended') then
-        if (event.target.id == 'buttonBack') then
-            scene:back()
-            return
-
-        elseif (event.target.id == 'buttonApplySettings') then
-            scene:applySettings(scene.tmpSettings) 
-            return
-
-        elseif (event.target.id == 'buttonResetSettings') then
-            scene:resetSettings()
-            return
-        end
-    end 
 end
 
 function scene:loadUI()
@@ -274,7 +325,7 @@ function scene:loadUI()
         id = "segmentMusicVolume",
         segmentWidth = 35,
         segments = { "0", "1", "2", "3", "4" },
-        -- defaultSegment = settings.musicVolume oder so.
+        defaultSegment = tmpSettings.volumeMusic+1,
         labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
         labelFont = "fonts/BULKYPIX.TTF",
     })
@@ -293,9 +344,36 @@ function scene:loadUI()
         id = "segmentEffectsVolume",
         segmentWidth = 35,
         segments = { "0", "1", "2", "3", "4" },
-        -- defaultSegment = settings.musicVolume oder so.
+        defaultSegment = tmpSettings.volumeSoundEffects,
         labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
         labelFont = "fonts/BULKYPIX.TTF",
+    })
+
+    buttonOutputDevice = widget.newButton({
+        x = 240,
+        y = 350,
+        id = "buttonOutputDevice",
+        label = "Output Device",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1}, over={ 1, 1, 1, 0.5 } }
+    })
+
+    switchStereo = widget.newSwitch({
+        id = "switchStereo",
+        x = 310,
+        y = 400,
+        initialSwitchState = tmpSettings.playStereo,
+        -- onRelease (for Touchcontrol)
+    })
+
+    textStero = display.newText({
+        text = "Stereo",
+        x = 190,
+        y = 400,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
     })
 
     line3 = display.newLine(100,200,190,200)
@@ -306,6 +384,9 @@ function scene:loadUI()
     scrollView:insert(segmentMusicVolume)
     scrollView:insert(textEffectsVolume)
     scrollView:insert(segmentEffectsVolume)
+    scrollView:insert(buttonOutputDevice)
+    scrollView:insert(switchStereo)
+    scrollView:insert(textStero)
     scrollView:insert(line3)
     scrollView:insert(line4)
     ------------------------------------------------------
@@ -313,7 +394,7 @@ function scene:loadUI()
     ------------------------------------------------------
     buttonVisualSettings = widget.newButton({
         x = 250,
-        y = 350,
+        y = 450,
         id = "buttonVisualSettings",
         label = "Visual",
         onEvent = handleButtonEvent,
@@ -325,21 +406,21 @@ function scene:loadUI()
     switchParticles = widget.newSwitch({
         id = "switchParticles",
         x = 310,
-        y = 400,
-        initialSwitchState = false, --from settings
+        y = 500,
+        initialSwitchState = tmpSettings.renderParticles,
         -- onRelease (for Touchcontrol)
     })
 
     textParticles = display.newText({
         text = "Particles",
         x = 190,
-        y = 400,
+        y = 500,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
     })
 
-    line5 = display.newLine(100,350,190,350)
-    line6 = display.newLine(300,350,400,350)
+    line5 = display.newLine(100,450,190,450)
+    line6 = display.newLine(300,450,400,450)
 
     scrollView:insert(buttonVisualSettings)
     scrollView:insert(switchParticles)
@@ -351,7 +432,7 @@ function scene:loadUI()
     ------------------------------------------------------
     buttonIngameSettings = widget.newButton({
         x = 250,
-        y = 450,
+        y = 550,
         id = "buttonIngameSettings",
         label = "Ingame",
         onEvent = handleButtonEvent,
@@ -362,11 +443,11 @@ function scene:loadUI()
 
     segmentDifficulty = widget.newSegmentedControl({
         x = 330,
-        y = 500,
+        y = 600,
         id = "segmentDifficulty",
         segmentWidth = 35,
         segments = {"1", "2", "3"},
-        -- defaultSegment = settings.musicVolume oder so.
+        defaultSegment = tmpSettings.difficulty,
         labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
         labelFont = "fonts/BULKYPIX.TTF",
     })
@@ -374,13 +455,13 @@ function scene:loadUI()
     textDifficulty = display.newText({
         text = "Difficulty",
         x = 190,
-        y = 500,
+        y = 600,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
     })
 
-    line7 = display.newLine(100, 450, 190, 450)
-    line8 = display.newLine(310, 450, 400, 450)
+    line7 = display.newLine(100, 550, 190, 550)
+    line8 = display.newLine(310, 550, 400, 550)
 
     scrollView:insert(buttonIngameSettings)
     scrollView:insert(segmentDifficulty)
@@ -398,11 +479,11 @@ end
 function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    scene.tmpSettings = runtime.settings
+    tmpSettings = runtime.settings
     scene.isSaved = true
 
     -- Only the first time in center; if reshown, then last state
-    scene.currentObj = "center"
+    scene.currObject = 2
 end
  
 
@@ -419,28 +500,56 @@ function scene:show( event )
         -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
 
-        scene.navigationMatrix = {
-            ["center"] = {"buttonKeybinds", "buttonKeybinds", "buttonKeybinds", "buttonBack"},
-            ["buttonBack"] = {"buttonApplySettings","buttonKeybinds", "buttonApplySettings", "buttonResetSettings"},
-            ["buttonApplySettings"] = {"buttonKeybinds", "buttonResetSettings", "buttonBack", "buttonBack"},
-            ["buttonResetSettings"] = {"buttonKeybinds", "buttonBack", "buttonBack", "buttonApplySettings"},
-            ["buttonKeybinds"] = {"buttonBack", "buttonResetSettings", "buttonInputDevice", "buttonBack"},
-            ["buttonInputDevice"] = {"buttonKeybinds", "buttonResetSettings", "segmentMusicVolume", "buttonBack"},
-            ["segmentMusicVolume"] = {"buttonInputDevice", "____", "segmentEffectsVolume", "_____"},
-            ["segmentEffectsVolume"] = {"segmentMusicVolume", "_____", "switchParticles", "_____"},
-            ["switchParticles"] = {"segmentEffectsVolume", "____", "segmentDifficulty", "____"},
-            ["segmentDifficulty"] = {"switchParticles", "____", "buttonApplySettings", "____"}
-            }
-        scene.objTable = {["center"]=nil,
-            ["buttonBack"] = buttonBack,
-            ["buttonApplySettings"] = buttonApplySettings,
-            ["buttonResetSettings"] = buttonResetSettings,
-            ["buttonKeybinds"] = buttonKeybinds,
-            ["buttonInputDevice"] = buttonInputDevice,
-            ["segmentMusicVolume"] = segmentMusicVolume,
-            ["segmentEffectsVolume"] = segmentEffectsVolume,
-            ["switchParticles"] = switchParticles,
-            ["segmentDifficulty"] = segmentDifficulty,
+        scene.matrix = {
+            {2, 2, 2, 10},
+            {1, 3, 1, 1},
+            {nil, 4, 1, 2},
+            {4.2, 5, 4.1, 3},
+            {5.2, 6, 5.1, 4},
+            {nil, 7, nil, 5},
+            {7.2, 8, 7.1, 6},
+            {8.2, 9, 8.1, 7},
+            {9.2, 10, 9.1, 8},
+            {11, 1, 1, 1},
+            {10, 1, 10, 9}
+        }
+
+        scene.referenceTable = {
+            [1] = buttonBack,
+            [2] = buttonKeybinds,
+            [3] = buttonInputDevice,
+            [4] = segmentMusicVolume,
+            [5] = segmentEffectsVolume,
+            [6] = buttonOutputDevice,
+            [7] = switchStereo,
+            [8] = switchParticles,
+            [9] = segmentDifficulty,
+            [10] = buttonApplySettings,
+            [11] = buttonResetSettings,
+        }
+        -- Things to run when object is confirmed
+        scene.functionsTable = {
+            [1] = function() scene:back() end,
+            [2] = function() composer.showOverlay("resources.scene.menu.keybindoverlay", {isModal=true, effect="fade", time=400}) end,
+            [3] = function() composer.showOverlay("resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400}) end,
+            [4] = nil,
+            [4.1] = function() scene:handleSegment(4, -1) end,
+            [4.2] = function() scene:handleSegment(4, 1) end,
+            [5] = nil,
+            [5.1] = function() scene:handleSegment(5, -1) end,
+            [5.2] = function() scene:handleSegment(5, 1) end,
+            [6] = function() composer.showOverlay("resources.scene.menu.outputdeviceoverlay", {isModal=true, effect="fade", time=400}) end,
+            [7] = nil,
+            [7.1] = function() scene:handleSwitch(7, false) end,
+            [7.2] = function() scene:handleSwitch(7, true) end,
+            [8] = nil,
+            [8.1] = function() scene:handleSwitch(8, false) end,
+            [8.2] = function() scene:handleSwitch(8, true) end,
+            [9] = nil,
+            [9.1] = function() scene:handleSegment(9, -1) end,
+            [9.2] = function() scene:handleSegment(9, 1) end,
+            [10] = function() scene:applySettings(tmpSettings) end,
+            [11] = function() scene:resetSettings() end,
         }
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
