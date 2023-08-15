@@ -37,16 +37,27 @@ function scene:showToast(message)
     transition.to(toast, params)
 end
 
+local function handleScrollView(k,o)     
+    if (k ~= "buttonBack")  and (k ~= "buttonResetSettings") and (k ~= "buttonApplySettings")then
+        local x,y = o:localToContent(0,0)
+        if (y+10 <= display.contentCenterY - scrollView.height*0.5) then
+            scrollView:scrollToPosition({y=o.y, time=750} ) 
+        elseif (y+10 >= display.contentCenterY + scrollView.height*0.5) then
+            scrollView:scrollToPosition({y=-(o.y-50), time=750} )
+        end
+    end
+end
+
 function scene:hoverObj(nextObj)
     for k,o in pairs(scene.objTable) do
         if (k == nextObj) then
+            handleScrollView(k,o)
             local params = {
                 time = 200,
                 transition = easing.outQuint,
                 xScale = 1.5,
                 yScale = 1.5,
             }
-            
             transition.to(o, params)
         elseif (k== nil) then
             
@@ -134,21 +145,24 @@ local function handleButtonEvent(event)
     end 
 end
 
-local function handleSliderEvent(event)
-    if (event.phase == 'moved' or 'ended') then
-        if (event.target.id == 'sliderLoudnessMusic') then
-            -- Change value in tempSettings
-            scene.tmpSettings.loudnessMusic = event.value
-
-            -- Set variable
-            scene.isSaved = false
-        end
-    end
-end
-
 function scene:loadUI()
     local sceneGroup = scene.view
 
+    ------------------------------------------------------
+    -- Other Widgets
+    ------------------------------------------------------
+    scrollView = widget.newScrollView({
+        id="scrollView",
+        x = display.contentCenterX,
+        y = display.contentCenterY,
+        width = 500,
+        height = 300,
+        horizontalScrollDisabled = true,
+        scrollWidth = 500,
+        scrollHeight = 1000,
+        backgroundColor = { 0.1, 0.1, 0.1 },
+    })
+    
     buttonBack = widget.newButton({
         x = display.contentCenterX*0,
         y = display.contentCenterY*0.2,
@@ -182,45 +196,202 @@ function scene:loadUI()
         labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
+    sceneGroup:insert(buttonBack)
+    sceneGroup:insert(buttonApplySettings)
+    sceneGroup:insert(buttonResetSettings)
+    
+    ------------------------------------------------------
+    -- Control Settings Widgets
+    ------------------------------------------------------
+
     buttonControlSettings = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*0.6,
+        x = 250, 
+        y = 50,
         id = "buttonControlSettings",
         label = "Controls",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
+        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    buttonKeybinds = widget.newButton({
+        x = 250,
+        y = 100,
+        id = "buttonKeybinds",
+        label = "Keybinds",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
         labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
     })
 
+    buttonInputDevice = widget.newButton({
+        x = 250,
+        y = 150,
+        id = "buttonInputDevice",
+        label = "Input Device",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    line1 = display.newLine(100,50,180,50)
+    line2 = display.newLine(320,50,400,50)
+
+    scrollView:insert(buttonControlSettings)
+    scrollView:insert(buttonKeybinds)
+    scrollView:insert(buttonInputDevice)
+    scrollView:insert(line1)
+    scrollView:insert(line2)
+    
+    ------------------------------------------------------
+    -- Sound Settings Widgets
+    ------------------------------------------------------
     buttonSoundSettings = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*1,
+        x = 250,
+        y = 200,
         id = "buttonSoundSettings",
         label = "Sound",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
     })
 
+    textMusicVolume = display.newText({
+        text = "Music Volume",
+        x = 150,
+        y = 250,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+    })
+
+    segmentMusicVolume = widget.newSegmentedControl({
+        x = 350,
+        y = 250,
+        id = "segmentMusicVolume",
+        segmentWidth = 35,
+        segments = { "0", "1", "2", "3", "4" },
+        -- defaultSegment = settings.musicVolume oder so.
+        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+        labelFont = "fonts/BULKYPIX.TTF",
+    })
+
+    textEffectsVolume = display.newText({
+        text = "Effects Volume",
+        x = 140,
+        y = 300,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+    })
+
+    segmentEffectsVolume = widget.newSegmentedControl({
+        x = 350,
+        y = 300,
+        id = "segmentEffectsVolume",
+        segmentWidth = 35,
+        segments = { "0", "1", "2", "3", "4" },
+        -- defaultSegment = settings.musicVolume oder so.
+        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+        labelFont = "fonts/BULKYPIX.TTF",
+    })
+
+    line3 = display.newLine(100,200,190,200)
+    line4 = display.newLine(300,200,400,200)
+
+    scrollView:insert(buttonSoundSettings)
+    scrollView:insert(textMusicVolume)
+    scrollView:insert(segmentMusicVolume)
+    scrollView:insert(textEffectsVolume)
+    scrollView:insert(segmentEffectsVolume)
+    scrollView:insert(line3)
+    scrollView:insert(line4)
+    ------------------------------------------------------
+    -- Visual Settings Widgets
+    ------------------------------------------------------
     buttonVisualSettings = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*1.4,
+        x = 250,
+        y = 350,
         id = "buttonVisualSettings",
         label = "Visual",
         onEvent = handleButtonEvent,
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
     })
 
-    sceneGroup:insert(buttonBack)
-    sceneGroup:insert(buttonApplySettings)
-    sceneGroup:insert(buttonResetSettings)
-    sceneGroup:insert(buttonControlSettings)
-    sceneGroup:insert(buttonSoundSettings)
-    sceneGroup:insert(buttonVisualSettings)
+    switchParticles = widget.newSwitch({
+        id = "switchParticles",
+        x = 310,
+        y = 400,
+        initialSwitchState = false, --from settings
+        -- onRelease (for Touchcontrol)
+    })
+
+    textParticles = display.newText({
+        text = "Particles",
+        x = 190,
+        y = 400,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+    })
+
+    line5 = display.newLine(100,350,190,350)
+    line6 = display.newLine(300,350,400,350)
+
+    scrollView:insert(buttonVisualSettings)
+    scrollView:insert(switchParticles)
+    scrollView:insert(textParticles)
+    scrollView:insert(line5)
+    scrollView:insert(line6)
+    ------------------------------------------------------
+    -- Ingame Settings Widgets
+    ------------------------------------------------------
+    buttonIngameSettings = widget.newButton({
+        x = 250,
+        y = 450,
+        id = "buttonIngameSettings",
+        label = "Ingame",
+        onEvent = handleButtonEvent,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
+    })
+
+    segmentDifficulty = widget.newSegmentedControl({
+        x = 330,
+        y = 500,
+        id = "segmentDifficulty",
+        segmentWidth = 35,
+        segments = {"1", "2", "3"},
+        -- defaultSegment = settings.musicVolume oder so.
+        labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+        labelFont = "fonts/BULKYPIX.TTF",
+    })
+
+    textDifficulty = display.newText({
+        text = "Difficulty",
+        x = 190,
+        y = 500,
+        font = "fonts/BULKYPIX.TTF",
+        fontSize = 20,
+    })
+
+    line7 = display.newLine(100, 450, 190, 450)
+    line8 = display.newLine(310, 450, 400, 450)
+
+    scrollView:insert(buttonIngameSettings)
+    scrollView:insert(segmentDifficulty)
+    scrollView:insert(textDifficulty)
+    scrollView:insert(line7)
+    scrollView:insert(line8)
+
+    ------------------------------------------------------
+    -- sceneGroup:insert()
+    ------------------------------------------------------
+    sceneGroup:insert(scrollView)
 end
 
 -- create()
@@ -247,27 +418,33 @@ function scene:show( event )
 
         -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
-        
-        scene.objectMatrix = {
-            ["center"] = {"buttonControlSettings", "buttonSoundSettings", "buttonVisualSettings", "buttonSoundSettings"},
-            ["buttonBack"] = {"buttonApplySettings","buttonControlSettings", "buttonControlSettings", "buttonResetSettings"},
-            ["buttonApplySettings"] = {"buttonVisualSettings", "buttonResetSettings", "buttonBack", "buttonBack"},
-            ["buttonResetSettings"] = {"buttonVisualSettings", "buttonBack", "buttonBack", "buttonApplySettings"},
-            ["buttonControlSettings"] = {"buttonBack", "buttonResetSettings", "buttonSoundSettings", "buttonBack"},
-            ["buttonSoundSettings"] = {"buttonControlSettings", "buttonResetSettings", "buttonVisualSettings", "buttonBack"},
-            ["buttonVisualSettings"] = {"buttonSoundSettings", "buttonResetSettings", "buttonApplySettings", "buttonBack"},
+
+        scene.navigationMatrix = {
+            ["center"] = {"buttonKeybinds", "buttonKeybinds", "buttonKeybinds", "buttonBack"},
+            ["buttonBack"] = {"buttonApplySettings","buttonKeybinds", "buttonApplySettings", "buttonResetSettings"},
+            ["buttonApplySettings"] = {"buttonKeybinds", "buttonResetSettings", "buttonBack", "buttonBack"},
+            ["buttonResetSettings"] = {"buttonKeybinds", "buttonBack", "buttonBack", "buttonApplySettings"},
+            ["buttonKeybinds"] = {"buttonBack", "buttonResetSettings", "buttonInputDevice", "buttonBack"},
+            ["buttonInputDevice"] = {"buttonKeybinds", "buttonResetSettings", "segmentMusicVolume", "buttonBack"},
+            ["segmentMusicVolume"] = {"buttonInputDevice", "____", "segmentEffectsVolume", "_____"},
+            ["segmentEffectsVolume"] = {"segmentMusicVolume", "_____", "switchParticles", "_____"},
+            ["switchParticles"] = {"segmentEffectsVolume", "____", "segmentDifficulty", "____"},
+            ["segmentDifficulty"] = {"switchParticles", "____", "buttonApplySettings", "____"}
             }
         scene.objTable = {["center"]=nil,
             ["buttonBack"] = buttonBack,
             ["buttonApplySettings"] = buttonApplySettings,
             ["buttonResetSettings"] = buttonResetSettings,
-            ["buttonControlSettings"] = buttonControlSettings,
-            ["buttonSoundSettings"] = buttonSoundSettings,
-            ["buttonVisualSettings"] = buttonVisualSettings
+            ["buttonKeybinds"] = buttonKeybinds,
+            ["buttonInputDevice"] = buttonInputDevice,
+            ["segmentMusicVolume"] = segmentMusicVolume,
+            ["segmentEffectsVolume"] = segmentEffectsVolume,
+            ["switchParticles"] = switchParticles,
+            ["segmentDifficulty"] = segmentDifficulty,
         }
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
-    
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
