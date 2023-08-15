@@ -56,7 +56,7 @@ function scene:hoverObj(nextObj)
 end
 
 -- OUTDATED
-function scene:interactWithObj(object)
+function scene:handleObjectInteraction(object)
     if (object == "buttonBack") then
         library.handleSceneChange("resources.scene.menu.settingsmenu", "menu", { effect = "fade", time = 400,})
     elseif (object == "buttonInputDevice") then
