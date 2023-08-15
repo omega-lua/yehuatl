@@ -85,7 +85,6 @@ local function refreshUI()
 end
 
 local function handleButtonEvent(event)
-    print("handleButtonEvent")
     -- Kann man sehr wahrscheinlich schöner machen...
     if (event.phase == 'ended') then
         if (event.target.id == 'buttonBack') then
