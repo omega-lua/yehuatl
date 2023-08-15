@@ -137,7 +137,7 @@ function scene:show( event )
         -- Scene variables have to be set here, otherwise some would be empty.
         -- where the hover starts, normally in center of screen.
         scene.currentObj = "center"
-        scene.objectMatrix = {
+        scene.navigationMatrix = {
             ["center"] = {"buttonPlay", "buttonPlay", "buttonCredits", "buttonSettings"},
             ["buttonPlay"] = {"buttonCredits", "buttonSettings", "buttonCredits", "buttonSettings"},
             ["buttonSettings"] = {"buttonCredits", "buttonPlay", "buttonCredits", "buttonPlay"},
