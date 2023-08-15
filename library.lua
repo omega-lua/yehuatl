@@ -463,9 +463,8 @@ function navigateMenu(event)
         -- Localize
         local scene = composer.getScene(composer.getSceneName("current"))
         local keyName = event.keyName
-        local objectMatrix = scene.objectMatrix
         local currentObj = scene.currentObj
-        local data = objectMatrix[currentObj]
+        local data = scene.navigationMatrix[currentObj]
         
         if (keyName == "i") then
             local nextObj = data[1]
