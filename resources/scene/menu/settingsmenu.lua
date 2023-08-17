@@ -165,7 +165,7 @@ function scene:handleObjectInteraction(object, param)
     elseif (object == "switchParticles") then
         scene:handleSwitch(param)
     elseif (object == "segmentDifficulty") then
-        scene:handleSegment(param)
+        scene:handleSegment(param) ------------------------- wo andere Variable?
     end
 end
 
@@ -196,8 +196,21 @@ function scene:resetSettings()
     scene:showToast("Settings reset!")
 end
 
+function scene:showOverlay(overlay)
+    composer.showOverlay(overlay, {isModal=true, effect="fade", time=400})
+    transition.fadeOut( sceneGroup, {time=1000, transition=easing.inOutCubic} )
+    print("DARKER")
+end
+
+function scene:hideOverlay()
+    -- We dont hive Overlay here but directly in the overlay.
+    -- This functions only purpose is to change alpha of scene.
+    composer.hideOverlay({isModal=true, effect="fade", time=400})
+    transition.fadeIn( sceneGroup, {time=1000, transition=easing.inOutCubic} )
+end
+
 function scene:loadUI()
-    local sceneGroup = scene.view
+    sceneGroup = scene.view
 
     ------------------------------------------------------
     -- Other Widgets
@@ -489,9 +502,6 @@ end
 
 -- show()
 function scene:show( event )
- 
-    
-    --local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
@@ -530,15 +540,15 @@ function scene:show( event )
         -- Things to run when object is confirmed
         scene.functionsTable = {
             [1] = function() scene:back() end,
-            [2] = function() composer.showOverlay("resources.scene.menu.keybindoverlay", {isModal=true, effect="fade", time=400}) end,
-            [3] = function() composer.showOverlay("resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400}) end,
+            [2] = function() scene:showOverlay("resources.scene.menu.keybindoverlay") end,
+            [3] = function() scene:showOverlay("resources.scene.menu.inputdeviceoverlay") end,
             [4] = nil,
             [4.1] = function() scene:handleSegment(4, -1) end,
             [4.2] = function() scene:handleSegment(4, 1) end,
             [5] = nil,
             [5.1] = function() scene:handleSegment(5, -1) end,
             [5.2] = function() scene:handleSegment(5, 1) end,
-            [6] = function() composer.showOverlay("resources.scene.menu.outputdeviceoverlay", {isModal=true, effect="fade", time=400}) end,
+            [6] = function() scene:showOverlay("resources.scene.menu.outputdeviceoverlay") end,
             [7] = nil,
             [7.1] = function() scene:handleSwitch(7, false) end,
             [7.2] = function() scene:handleSwitch(7, true) end,

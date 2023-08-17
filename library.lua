@@ -459,9 +459,13 @@ function navigateMenu(event)
     if (event.phase == "up") then
         local keyName = event.keyName
         local settings = runtime.settings
-        local scene = composer.getScene(composer.getSceneName("current"))
+        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
+        print("scene name:", composer.getSceneName("overlay") or composer.getSceneName("current"))
+        print("scene:", scene)
         local currObject = scene.currObject
+        print("currObject:", currObject)
         local table = scene.matrix[currObject]
+        print("table:", table)
         local entry = nil
         
         if (keyName == "right") then
@@ -483,6 +487,7 @@ function navigateMenu(event)
                 scene.functionsTable[entry]()
             else
                 scene.currObject = entry
+                print("check")
                 scene:hoverObj()
             end
         end
