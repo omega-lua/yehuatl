@@ -33,12 +33,7 @@ function scene:showToast(message)
 end
 
 local function handleScrollView(i,o)     
-    if (i == 1) or (i == 10) or (i == 11) then
-        -- We dont want to scroll because these buttons arent in the scrollView
-        return
-    end
-    
-    local m, n = scrollView:getContentPosition()
+    --local m, n = scrollView:getContentPosition()
     local x,y = o:localToContent(0,0)
     -- Upscrolling
     if (y <= display.contentCenterY - scrollView.height*0.5) then
@@ -50,28 +45,26 @@ local function handleScrollView(i,o)
 end
 
 function scene:hoverObj()
-    print("check2")
-    local currObject = scene.currObject
-    for i,object in pairs(scene.referenceTable) do
-        print("i:", i)
-        print("currObj:", currObject)
+    local widgetIndex = scene.widgetIndex
+    for i,widget in pairs(scene.widgetsTable) do
         local params = {}
-        if (i == currObject) then
-            print("check3")
-            handleScrollView(i,object)
-            params = {time = 200, transition = easing.outQuint, xScale = 1.3, yScale = 1.3,}     
+        if (i == widgetIndex) then
+            params = {time = 200, transition = easing.outQuint, xScale = 1.3, yScale = 1.3,alpha=1}     
         else
-            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,}
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,alpha=0.7}
         end
-        transition.to(object, params)
+        transition.to(widget.pointer, params)
     end
 end
 
+function scene:handleKeybindChange()
+    --
+end
 
---------------------------------------------------------------------------
--- Jede Spalte ist ein groupOObject. jedes groupoject wird x,y angepasst. Jedoch ist es nicht mehr zentral, wenn sich die Breite des Groupobjects ändert (wenn man anderen Keybind abspeichert).
--- Vlt. sollte man irgendwie die Breite des Groupobjects/BreiteScrollView oder so, damit groupObject wirklich zentriert ist.
--------------------------------------------------------------------------
+function scene:setKeybind(keybind, keyName)
+    tmpSettings.keybind = keyName
+end
+
 function scene:loadUI()
     local sceneGroup = scene.view
 
@@ -79,282 +72,26 @@ function scene:loadUI()
         id="scrollView",
         x = display.contentCenterX,
         y = display.contentCenterY,
-        width = 600,
-        height = 350,
+        width = 800,
+        height = 400,
         horizontalScrollDisabled = true,
-        scrollWidth = 600,
+        scrollWidth = 800,
         scrollHeight = 1200,
-        backgroundColor = { 0.1, 0.1, 0.1 },
+        backgroundColor = { 0, 0, 0},
     })
 
-    buttonBack = widget.newButton({
-        x = display.contentCenterX*0,
-        y = display.contentCenterY*0.2,
-        id = "buttonBack",
-        label = "back",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-    })
-
-    textKeybinds = display.newText({
-        text = "Keybinds",
-        x = 180,
-        y = 20,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 28,
-    })
-
-    textCurrent = display.newText({
-        text = "Current",
-        x = 420,
-        y = 20,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 28,
-    })
-
-    scrollView:insert(textKeybinds)
-    scrollView:insert(textCurrent)
-
-    -----------
-    groupEscape = display.newGroup()
-
-    textKeybindEscape = display.newText({
-        x = 150, 
-        y = 100,
-        text = "Escape",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindEscapeCurrent = display.newText({
-        x = 450,
-        y = 100,
-        text = tmpSettings.keybindEscape,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindEscape)
-    scrollView:insert(textKeybindEscapeCurrent)
-    -----------
-
-    textKeybindInteract = display.newText({
-        x = 150,
-        y = 150,
-        text = "Interact",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindInteractCurrent = display.newText({
-        x = 450,
-        y = 150,
-        text = tmpSettings.keybindInteract,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindInteract)
-    scrollView:insert(textKeybindInteractCurrent)
-    
-    -----------
-
-    textKeybindForward = display.newText({
-        x = 150,
-        y = 200,
-        text = "Forward",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindForwardCurrent = display.newText({
-        x = 450,
-        y = 200,
-        text = "halohalohalohalo", --tmpSettings.keybindForward,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindForward)
-    scrollView:insert(textKeybindForwardCurrent)
-    -----------
-
-    textKeybindBackward = display.newText({
-        x = 150,
-        y = 250,
-        text = "Backward",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindBackwardCurrent = display.newText({
-        x = 450,
-        y = 250,
-        text = tmpSettings.keybindBackward,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindBackward)
-    scrollView:insert(textKeybindBackwardCurrent)
-    -----------
-
-    textKeybindJump = display.newText({
-        x = 150,
-        y = 300,
-        text = "Jump",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindJumpCurrent = display.newText({
-        x = 450,
-        y = 300,
-        text = tmpSettings.keybindJump,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindJump)
-    scrollView:insert(textKeybindJumpCurrent)
-
-    -----------
-
-    textKeybindSneak = display.newText({
-        x = 150,
-        y = 350,
-        text = "Sneak",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindSneakCurrent = display.newText({
-        x = 450,
-        y = 350,
-        text = tmpSettings.keybindSneak,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindSneak)
-    scrollView:insert(textKeybindSneakCurrent)
-
-    -----------
-
-    textKeybindPrimaryWeapon = display.newText({
-        x = 150,
-        y = 400,
-        text = "Primary Weapon",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindPrimaryWeaponCurrent = display.newText({
-        x = 450,
-        y = 400,
-        text = tmpSettings.keybindPrimaryWeapon,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindPrimaryWeapon)
-    scrollView:insert(textKeybindPrimaryWeaponCurrent)
-
-    -----------
-
-    textKeybindSecondaryWeapon = display.newText({
-        x = 150,
-        y = 450,
-        text = "Secondary Weapon",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindSecondaryWeaponCurrent = display.newText({
-        x = 450,
-        y = 450,
-        text = tmpSettings.keybindSecondaryWeapon,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindSecondaryWeapon)
-    scrollView:insert(textKeybindSecondaryWeaponCurrent)
-
-    -----------
-
-
-    textKeybindBlock = display.newText({
-        x = 150,
-        y = 500,
-        text = "Block",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindBlockCurrent = display.newText({
-        x = 450,
-        y = 500,
-        text = tmpSettings.keybindBlock,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindBlock)
-    scrollView:insert(textKeybindBlockCurrent)
-
-    -----------
-
-    textKeybindAbility = display.newText({
-        x = 150,
-        y = 550,
-        text = "Ability",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindAbilityCurrent = display.newText({
-        x = 450,
-        y = 550,
-        text = tmpSettings.keybindAbility,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindAbility)
-    scrollView:insert(textKeybindAbilityCurrent)
-
-    -----------
-
-    textKeybindInventory = display.newText({
-        x = 150,
-        y = 600,
-        text = "Inventory",
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    textKeybindInventoryCurrent = display.newText({
-        x = 450,
-        y = 600,
-        text = tmpSettings.keybindInventory,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 20,
-    })
-
-    scrollView:insert(textKeybindInventory)
-    scrollView:insert(textKeybindInventoryCurrent)
-
-    ----------
+    -- Create widgets
+    for i, widget in pairs(scene.widgetsTable) do
+        local type = widget.type
+        if (type == "text") then
+            scene.widgetsTable[i].pointer = display.newText( widget.creation )
+            scrollView:insert(scene.widgetsTable[i].pointer)
+        elseif (type == "button") then
+            --
+        end
+    end
 
     sceneGroup:insert(scrollView)
-    sceneGroup:insert(buttonBack)
-end
- 
-function scene:changeKeybind()
-    --
 end
 
 -- -----------------------------------------------------------------------------------
@@ -367,7 +104,7 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    scene.currObject = 2
+    scene.currObject = 1
 end
  
  
@@ -381,83 +118,200 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-
-        scene:loadUI()
         
-        scene.widgetsTable = {
-            [1] = {
-                ["creation"] = {x,y,label},
-                ["function"] = function() print("hi samurai") end,
-                ["navigation"] = {1,2,3,4},
-                ["pointer"] = {buttonBlabla},
-                ["type"] = ["button"],
-            },
-            [2] = {
-                ["creation"] = {x,y,label},
-                ["function"] = function() print("hi samurai") end,
-                ["navigation"] = {1,2,3,4},
-                ["pointer"] = {buttonBlabla},
-                ["type"] = ["button"],
-            },
-            [3] = {
-                ["creation"] = {x,y,label},
-                ["function"] = function() print("hi samurai") end,
-                ["navigation"] = {1,2,3,4},
-                ["pointer"] = {buttonBlabla},
-                ["type"] = ["button"],
-            },
-            [4] = {
-                ["creation"] = {x,y,label},
-                ["function"] = function() print("hi samurai") end,
-                ["navigation"] = {1,2,3,4},
-                ["pointer"] = {buttonBlabla},
-                ["type"] = ["button"],
-            },
-        }
-
-
-
-        scene.matrix = {
-            {2, 2, 2, 12},
-            {nil, 3, nil, 1},
-            {nil, 4, nil, 2},
-            {nil, 5, nil, 3},
-            {nil, 6, nil, 4},
-            {nil, 7, nil, 5},
-            {nil, 8, nil, 6},
-            {nil, 9, nil, 7},
-            {nil, 10, nil, 8},
-            {nil, 11, nil, 9},
-            {nil, 12, nil, 10},
-            {nil, 1, nil, 11}
-
-        }
-        scene.referenceTable = {
-            [1] = buttonBack,
-            [2] = groupEscape,
-            [3] = groupInteract,
-            [4] = groupForward,
-            [5] = groupBackward,
-            [6] = groupJump,
-            [7] = groupSneak,
-            [8] = groupPrimaryWeapon,
-            [9] = groupSecondaryWeapon,
-            [10] = groupBlock,
-            [11] = groupAbility,
-            [12] = groupInventory,
-        }
-
-        scene.functionsTable = {
-            [1] = "test"
-        }
-
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
+        scene.widgetsTable = {
+            [1] = {
+                ["creation"] = {x=50,y=display.contentCenterY*0.2,text="back",font="fonts/BULKYPIX.TTF",fontSize=20,},
+                ["function"] = function() scene:hideOverlay() end,
+                ["navigation"] = {nil,5,nil,25},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [2] = {
+                ["creation"] = {x=280,y=80,text="Keybinds",font="fonts/BULKYPIX.TTF",fontSize=28},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [3] = {
+                ["creation"] = {x=520,y=80,text="Current",font="fonts/BULKYPIX.TTF",fontSize=28},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [4] = {
+                ["creation"] = {x=280,y=150,text="Escape",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [5] = {
+                ["creation"] = {x=520,y=150,text=tmpSettings.keybindEscape,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,7,nil,1},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [6] = {
+                ["creation"] = {x=280,y=200,text="Interact",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [7] = {
+                ["creation"] = {x=520,y=200,text=tmpSettings.keybindInteract,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,9,nil,5},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [8] = {
+                ["creation"] = {x=280,y=250,text="Forward",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [9] = {
+                ["creation"] = {x=520,y=250,text=tmpSettings.keybindForward,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,11,nil,7},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [10] = {
+                ["creation"] = {x=280,y=300,text="Backward",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [11] = {
+                ["creation"] = {x=520,y=300,text=tmpSettings.keybindBackward,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,13,nil,9},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [12] = {
+                ["creation"] = {x=280,y=350,text="Jump",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [13] = {
+                ["creation"] = {x=520,y=350,text=tmpSettings.keybindJump,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,15,nil,11},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [14] = {
+                ["creation"] = {x=280,y=400,text="Sneak",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [15] = {
+                ["creation"] = {x=520,y=400,text=tmpSettings.keybindSneak,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,17,nil,13},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [16] = {
+                ["creation"] = {x=280,y=450,text="Primary Weapon",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [17] = {
+                ["creation"] = {x=520,y=450,text=tmpSettings.keybindPrimaryWeapon,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,19,nil,15},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [18] = {
+                ["creation"] = {x=280,y=500,text="Secondary Weapon",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [19] = {
+                ["creation"] = {x=520,y=500,text=tmpSettings.keybindSecondaryWeapon,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,21,nil,17},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [20] = {
+                ["creation"] = {x=280,y=550,text="Block",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [21] = {
+                ["creation"] = {x=520,y=550,text=tmpSettings.keybindBlock,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,23,nil,19},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [22] = {
+                ["creation"] = {x=280,y=600,text="Ability",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [23] = {
+                ["creation"] = {x=520,y=600,text=tmpSettings.keybindAbility,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,25,nil,21},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [24] = {
+                ["creation"] = {x=280,y=650,text="Inventory",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [25] = {
+                ["creation"] = {x=520,y=650,text=tmpSettings.keybindInventory,font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = function() scene:changeKeybind() end,
+                ["navigation"] = {nil,27,nil,23},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [26] = {
+                ["creation"] = {x=520,y=750,text="",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["function"] = nil,
+                ["navigation"] = {nil,nil,nil,nil},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+
+        }
+
+        scene:loadUI()
+
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-
-
     end
 end
  
@@ -483,7 +337,6 @@ function scene:destroy( event )
  
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
  
  
