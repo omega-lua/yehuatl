@@ -210,6 +210,61 @@ function scene:hideOverlay()
 end
 
 function scene:loadUI()
+    local sceneGroup = scene.view
+
+    scrollView = widget.newScrollView({
+        id="scrollView",
+        x = display.contentCenterX,
+        y = display.contentCenterY,
+        width = 800,
+        height = 400,
+        horizontalScrollDisabled = true,
+        scrollWidth = 800,
+        scrollHeight = 1200,
+        backgroundColor = { 0, 0, 0},
+    })
+
+    -- Create widgets
+    for i, object in pairs(scene.widgetsTable) do
+        local type = object.type
+        print(i,",type:", type)
+
+        if (type == "text") then
+            scene.widgetsTable[i].pointer = display.newText( object.creation )
+            scrollView:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setFillColor(unpack(object.color))
+            end
+
+        elseif (type == "line") then
+            scene.widgetsTable[i].pointer = display.newLine(unpack(object.creation))
+            scrollView:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setStrokeColor(unpack(object.color))
+            end
+        
+        elseif (type == "button") then
+            scene.widgetsTable[i].pointer = widget.newButton( object.creation )
+            scrollView:insert(scene.widgetsTable[i].pointer)
+
+        elseif (type == "segment") then
+            scene.widgetsTable[i].pointer = widget.newSegmentedControl( object.creation )
+            scrollView:insert(scene.widgetsTable[i].pointer)
+
+        elseif (type == "switch") then
+            scene.widgetsTable[i].pointer = widget.newSwitch( object.creation )
+            scrollView:insert(scene.widgetsTable[i].pointer)
+
+        elseif (type == nil) then
+            print("ERROR: Widget",i,"has no type attribute.")
+        end
+    end
+    sceneGroup:insert(scrollView)
+end
+
+function scene:loadUI_OLD()
+    
+    
     sceneGroup = scene.view
 
     ------------------------------------------------------
@@ -408,12 +463,9 @@ function scene:loadUI()
     buttonVisualSettings = widget.newButton({
         x = 250,
         y = 450,
-        id = "buttonVisualSettings",
-        label = "Visual",
-        onEvent = handleButtonEvent,
+        text = "Visual",
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
     })
 
     switchParticles = widget.newSwitch({
@@ -446,12 +498,9 @@ function scene:loadUI()
     buttonIngameSettings = widget.newButton({
         x = 250,
         y = 550,
-        id = "buttonIngameSettings",
-        label = "Ingame",
-        onEvent = handleButtonEvent,
+        text = "Ingame",
         font = "fonts/BULKYPIX.TTF",
         fontSize = 20,
-        labelColor = { default={ 1, 1, 1, 0.7 }, over={ 1, 1, 1, 0.5 } }
     })
 
     segmentDifficulty = widget.newSegmentedControl({
@@ -507,9 +556,6 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
-        scene:loadUI()
-
         scene.matrix = {
             {2, 2, 2, 10},
             {1, 3, 1, 1},
@@ -561,6 +607,366 @@ function scene:show( event )
             [10] = function() scene:applySettings(tmpSettings) end,
             [11] = function() scene:resetSettings() end,
         }
+
+        scene.widgetsTable = {
+            [1] = {
+                ["creation"] = {
+                    x = 50,
+                    y = 50,
+                    id = "buttonBack",
+                    label = "back",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:back() end,
+                ["navigation"] = {5,5,5,27},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [2] = {
+                ["creation"] = {100,50,320,50},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [3] = {
+                ["creation"] = {
+                    x = 400, 
+                    y = 50,
+                    id = "textControls",
+                    text = "Controls",
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+                ["color"] = { 1, 1, 1, 0.6}
+            },
+            [4] = {
+                ["creation"] = {480,50,700,50},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [5] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 100,
+                    id = "buttonKeybinds",
+                    label = "Keybinds",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:showOverlay("resources.scene.menu.keybindoverlay") end,
+                ["navigation"] = {nil,6,nil,1},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [6] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 150,
+                    id = "buttonInputDevice",
+                    label = "Input Device",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:showOverlay("resources.scene.menu.inputdeviceoverlay") end,
+                ["navigation"] = {nil,10,nil,5},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [7] = {
+                ["creation"] = {100,200,340,200},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [8] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 200,
+                    text = "Sound",
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+                ["color"] = { 1, 1, 1, 0.6}
+            },
+            [9] = {
+                ["creation"] = {460,200,700,200},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [10] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 350,
+                    id = "buttonOutputDevice",
+                    label = "Output Device",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1}, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:showOverlay("resources.scene.menu.outputdeviceoverlay") end,
+                ["navigation"] = {nil,12,nil,6},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [11] = {
+                ["creation"] = {
+                    text = "Music Volume",
+                    x = 280,
+                    y = 250,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [12] = {
+                ["creation"] = {
+                    x = 520,
+                    y = 250,
+                    id = "segmentMusicVolume",
+                    segmentWidth = 35,
+                    segments = { "0", "1", "2", "3", "4" },
+                    defaultSegment = tmpSettings.volumeMusic+1,
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    labelFont = "fonts/BULKYPIX.TTF",
+                },
+                ["function"] = function()  end,
+                ["navigation"] = {nil,14,nil,10},
+                ["pointer"] = {},
+                ["type"] = "segment",
+            },
+            [13] = {
+                ["creation"] = {
+                    text = "Effects Volume",
+                    x = 280,
+                    y = 300,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [14] = {
+                ["creation"] = {
+                    x = 520,
+                    y = 300,
+                    id = "segmentEffectsVolume",
+                    segmentWidth = 35,
+                    segments = { "0", "1", "2", "3", "4" },
+                    defaultSegment = tmpSettings.volumeSoundEffects,
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    labelFont = "fonts/BULKYPIX.TTF",
+                },
+                ["function"] = nil,
+                ["navigation"] = {fc_, 16, fc_,12},
+                ["pointer"] = {},
+                ["type"] = "segment",
+            },
+            [15] = {
+                ["creation"] = {
+                    text = "Stereo",
+                    x = 320,
+                    y = 400,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [16] = {
+                ["creation"] = {
+                    id = "switchStereo",
+                    x = 480,
+                    y = 400,
+                    initialSwitchState = tmpSettings.playStereo,
+                    -- onRelease (for Touchcontrol)
+                },
+                ["function"] = nil,
+                ["navigation"] = {fc_,21,fc_,14},
+                ["pointer"] = {},
+                ["type"] = "switch",
+            },
+            [17] = {
+                ["creation"] = {100,450,340,450},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [18] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 450,
+                    text = "Visual",
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [19] = {
+                ["creation"] = {460,450,700,450},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [20] = {
+                ["creation"] = {
+                    text = "Particles",
+                    x = 320,
+                    y = 500,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [21] = {
+                ["creation"] = {
+                    id = "switchParticles",
+                    x = 480,
+                    y = 500,
+                    initialSwitchState = tmpSettings.renderParticles,
+                    -- onRelease (for Touchcontrol)
+                },
+                ["function"] = nil,
+                ["navigation"] = {fc_,26,fc_,16},
+                ["pointer"] = {},
+                ["type"] = "switch",
+            },
+            [22] = {
+                ["creation"] = {100,550,340,550},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [23] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 550,
+                    text = "Ingame",
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [24] = {
+                ["creation"] = {460,550,700,550},
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "line",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [25] = {
+                ["creation"] = {
+                    text = "Difficulty",
+                    x = 320,
+                    y = 600,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "text",
+            },
+            [26] = {
+                ["creation"] = {
+                    x = 480,
+                    y = 600,
+                    id = "segmentDifficulty",
+                    segmentWidth = 35,
+                    segments = {"1", "2", "3"},
+                    defaultSegment = tmpSettings.difficulty,
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    labelFont = "fonts/BULKYPIX.TTF",
+                },
+                ["function"] = nil,
+                ["navigation"] = {fc_,27,fc_,21},
+                ["pointer"] = {},
+                ["type"] = "segment",
+            },
+            [27] = {
+                ["creation"] = {
+                    x = 250,
+                    y = 700,
+                    id = "buttonApplySettings",
+                    label = "Apply Settings",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:applySettings(tmpSettings) end,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [28] = {
+                ["creation"] = {
+                    x = 550,
+                    y = 700,
+                    id = "buttonResetSettings",
+                    label = "Reset Settings",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:resetSettings() end,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+        }
+
+        -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
+        scene:loadUI()
+
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
 
