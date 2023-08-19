@@ -75,6 +75,58 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
+    scene.widgetsTable = {
+        [1] = {
+            ["creation"] = {
+                x = display.contentCenterX*1.4, 
+                y = display.contentCenterY,
+                id = "buttonPlay",
+                label = "Play",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 30,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = function() library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,}) end,
+            ["navigation"] = {2,3,2,3},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [2] = {
+            ["creation"] = {
+                x = display.contentCenterX*0.6,
+                y = display.contentCenterY, 
+                id = "buttonSettings",
+                label = "Settings",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 30,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = function() library.handleSceneChange("resources.scene.menu.settingsmenu","menu", { effect = "fade", time = 400,}) end,
+            ["navigation"] = {1,3,1,3},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [3] = {
+            ["creation"] = {
+                x = display.contentCenterX*1,
+                y = display.contentCenterY*1.4, 
+                id = "buttonCredits",
+                label = "Credits",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 30,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = function() library.handleSceneChange("resources.scene.menu.creditsmenu","menu", { effect = "fade", time = 400,}) end,
+            ["navigation"] = {1,1,2,1},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+    }
+
+    scene:loadUI()
     scene.widgetIndex = 1
 end
  
@@ -91,59 +143,9 @@ function scene:show( event )
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
 
-        scene.widgetsTable = {
-            [1] = {
-                ["creation"] = {
-                    x = display.contentCenterX*1.4, 
-                    y = display.contentCenterY,
-                    id = "buttonPlay",
-                    label = "Play",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 30,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = function() library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,}) end,
-                ["navigation"] = {2,3,2,3},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [2] = {
-                ["creation"] = {
-                    x = display.contentCenterX*0.6,
-                    y = display.contentCenterY, 
-                    id = "buttonSettings",
-                    label = "Settings",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 30,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = function() library.handleSceneChange("resources.scene.menu.settingsmenu","menu", { effect = "fade", time = 400,}) end,
-                ["navigation"] = {1,3,1,3},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [3] = {
-                ["creation"] = {
-                    x = display.contentCenterX*1,
-                    y = display.contentCenterY*1.4, 
-                    id = "buttonCredits",
-                    label = "Credits",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 30,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = function() library.handleSceneChange("resources.scene.menu.creditsmenu","menu", { effect = "fade", time = 400,}) end,
-                ["navigation"] = {1,1,2,1},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-        }
+        
 
         -- Refresh
-        scene:loadUI()
         scene:hoverObj()
 
     elseif ( phase == "did" ) then
