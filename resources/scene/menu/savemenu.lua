@@ -10,6 +10,84 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
+function scene:back()
+    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
+end
+
+function scene:checkSaveFiles()
+    -- Check if any savefiles are found -------------------------------------------------
+    scene.save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
+    scene.save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
+    scene.save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
+end
+
+function scene:extend()
+    local widgetIndex = scene.widgetIndex
+    local array = nil
+
+    if (widgetIndex == 2) then
+        array = {x=550,y=130,
+            ["fc1"]= function() print("save1, fc1") end,
+            ["fc2"]= function() print("save1, fc2") end,
+            ["navigation"]={2,3,2,4},
+            ["hasFile"]=scene.save1,
+        }
+
+    elseif (widgetIndex == 3) then
+        array = {x=550,y=200,
+            ["fc1"]= function() print("save2, fc1") end,
+            ["fc2"]= function() print("save2, fc2") end,
+            ["navigation"]={3,4,3,2},
+            ["hasFile"]=scene.save2,
+        }
+
+    elseif (widgetIndex == 4) then
+        array = {x=550,y=270,
+            ["fc1"]= function() print("save3, fc1") end,
+            ["fc2"]= function() print("save3, fc2") end,
+            ["navigation"]={4,2,4,3},
+            ["hasFile"]=scene.save3,
+        }
+
+    elseif (widgetIndex == 1) then
+        array = {x=-100,y=-100,
+            ["fc1"]= nil,
+            ["fc2"]= nil,
+            ["navigation"]=nil,
+        }
+    else
+        return
+    end
+
+    local object = scene.widgetsTable[5].pointer
+    library.printTable(object)
+    scene.widgetsTable[5].navigation = array.navigation
+    object.x, object.y = array.x, array.y
+    -- If file doesnt exist
+    if array.hasFile then
+        object:setLabel("Delete")
+        scene.widgetsTable[5]["function"] = array.fc2
+    else
+        object:setLabel("New")
+        scene.widgetsTable[5]["function"] = array.fc1
+    end
+end
+
+function scene:hoverObj()
+    local widgetIndex = scene.widgetIndex
+    for i,widget in pairs(scene.widgetsTable) do
+        local params = {}
+        if (i == widgetIndex) then
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5, alpha = 1} 
+            scene:checkSaveFiles()
+            scene:extend()
+        else
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha = 0.7}
+        end
+        transition.to(widget.pointer, params)
+    end
+end
+
 local function refreshUI()
     -- Check if any savefiles are found -------------------------------------------------
     local save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
@@ -128,7 +206,40 @@ local function handleButtonEvent(event)
     end
 end
 
-local function loadUI() 
+function scene:loadUI()
+    local sceneGroup = scene.view
+
+    -- Create widgets
+    for i, object in pairs(scene.widgetsTable) do
+        local type = object.type
+
+        if (type == "text") then
+            scene.widgetsTable[i].pointer = display.newText( object.creation )
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setFillColor(unpack(object.color))
+            end
+
+        elseif (type == "line") then
+            scene.widgetsTable[i].pointer = display.newLine(unpack(object.creation))
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setStrokeColor(unpack(object.color))
+            end
+        
+        elseif (type == "button") then
+            scene.widgetsTable[i].pointer = widget.newButton( object.creation )
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+
+        elseif (type == nil) then
+            print("ERROR: Widget",i,"has no type attribute.")
+        end
+    end
+
+end
+
+
+local function loadUI_OLD() 
     -- Check if any savefiles are found -------------------------------------------------
     save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
     save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
@@ -284,8 +395,7 @@ end
 function scene:create( event )
     -- Code here runs when the scene is first created but has not yet appeared on screen
     
-    --local sceneGroup = self.view -- mit scene.view geht anscheinend auch ausserhalb dieser Funktion.
-    
+    scene.widgetIndex = 2
 end
  
  
@@ -297,8 +407,95 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        loadUI()
-        refreshUI()
+        
+        scene.widgetsTable = {
+            [1] = {
+                ["creation"] = {
+                    x = 50,
+                    y = 50,
+                    id = "buttonBack",
+                    label = "back",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 25,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = function() scene:back() end,
+                ["navigation"] = {2,2,2,4},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [2] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 130,
+                    id = "buttonSaveSlot1",
+                    label = "Save 1",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = "",
+                ["navigation"] = {5,3,1,1},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [3] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 200,
+                    id = "buttonSaveSlot2",
+                    label = "Save 2",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = "",
+                ["navigation"] = {5,4,1,2},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [4] = {
+                ["creation"] = {
+                    x = 400,
+                    y = 270,
+                    id = "buttonSaveSlot3",
+                    label = "Save 3",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = "",
+                ["navigation"] = {5,2,1,3},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+            [5] = {
+                ["creation"] = {
+                    x = 550,
+                    y = 130,
+                    id = "buttonInteract",
+                    label = "interact",
+                    onEvent = handleButtonEvent,
+                    font = "fonts/BULKYPIX.TTF",
+                    fontSize = 20,
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                },
+                ["function"] = nil,
+                ["navigation"] = {},
+                ["pointer"] = {},
+                ["type"] = "button",
+            },
+        
+        }
+
+        scene:checkSaveFiles()
+        scene:loadUI()
+        scene:extend()
+
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
