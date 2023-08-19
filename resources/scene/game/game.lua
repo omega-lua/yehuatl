@@ -43,14 +43,11 @@ function saveGameProgress()
     
     local filePath = "testSAVE"
     local data = map
-    print("---------------------------------------")
-    --library.printTable(data)
 
     --Encode data to JSON-format
     local encoded = json.encode( data, { indent=true } )
 
     -- Write to current savefile.
-    
 end
 
 
