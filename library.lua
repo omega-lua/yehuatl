@@ -465,10 +465,9 @@ function navigateMenu(event)
         local keyName = event.keyName
         local settings = runtime.settings
         local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
-        local widgetIndex = scene.widgetIndex
         local nextIndex = nil
-        local widget = scene.widgetsTable[widgetIndex]
-        
+        local widget = scene.widgetsTable[scene.widgetIndex]
+
         if (keyName == "right") then
             nextIndex = widget.navigation[1]
 
