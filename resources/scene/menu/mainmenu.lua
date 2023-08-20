@@ -153,9 +153,15 @@ function scene:show( event )
         -- Refresh
         scene:hoverObj()
 
+        local buttonPlay = scene.widgetsTable[1].pointer
+        local buttonSettings = scene.widgetsTable[2].pointer
+        local buttonCredits = scene.widgetsTable[3].pointer
+        transition.from( buttonPlay, {time=1000,delay=500,transition=easing.outCubic,x=800} )
+        transition.from( buttonSettings, {time=1000,delay=250,transition=easing.outCubic,y=-500} )
+        transition.from( buttonCredits, {time=1000,transition=easing.outCubic,y=500} )
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-
     end
 end
 
