@@ -48,6 +48,10 @@ function scene:hoverObj()
     end
 end
 
+function scene:updateUI()
+    scene:hoverObj()
+end
+
 function scene:loadUI()
     local sceneGroup = scene.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
