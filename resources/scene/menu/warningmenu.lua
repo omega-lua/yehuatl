@@ -18,8 +18,8 @@ function scene:discardSettings()
     parent:showToast("Settings discarded!")
             
     composer.hideOverlay("fade", 400)
+    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 800,})
     composer.removeScene("resources.scene.menu.settingsmenu")
-    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
 end
 
 local function handleButtonEvent(event)
@@ -128,7 +128,7 @@ function scene:create( event )
             ["navigation"] = nil,
             ["pointer"] = {},
             ["type"] = "text",
-            ["color"] = { 1, 0, 0, 1}
+            ["color"] = { 0, 0, 0, 1}
         },
         [3] = {
             ["creation"] = {
