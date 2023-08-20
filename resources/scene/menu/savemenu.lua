@@ -21,6 +21,22 @@ function scene:checkSaveFiles()
     scene.save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
 end
 
+-- middleman function. Only opens scene when savefile is present. NOT SO GOOD CODE
+function scene:goToSaveFile(filename)
+    if (filename == "save1.json") and scene.save1 then
+        currentSaveFile = filename
+        library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
+
+    elseif (filename == "save2.json") and scene.save2 then
+        currentSaveFile = filename
+        library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
+        
+    elseif (filename == "save3.json") and scene.save3 then
+        currentSaveFile = filename
+        library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
+    end
+end
+
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
     for i,widget in pairs(scene.widgetsTable) do
@@ -140,7 +156,6 @@ function scene:extendMenu()
         -- From 0 alpha to 0.7
         extendMenuTransitionAlpha = transition.to( object.pointer,{ time=1500, transition=easing.outCubic, alpha=0.7} )
     end
-
 end
 
 local function handleButtonEvent(event)
@@ -163,26 +178,8 @@ local function handleButtonEvent(event)
         elseif (event.target.id == 'buttonSaveSlot3') then
             currentSaveFile = "save3.json"
             library.handleSceneChange("resources.scene.game.game", "game",{ effect = "fade", time = 800,})
-        end
-
-        if (event.target.id == 'newSaveSlot1') then
-            library.newSaveFile('save1.json')
-            timer.performWithDelay( 30, refreshUI())
-        elseif (event.target.id == 'newSaveSlot2') then
-            library.newSaveFile('save2.json')
-            timer.performWithDelay( 30, refreshUI())
-        elseif (event.target.id == 'newSaveSlot3') then
-            library.newSaveFile('save3.json')
-            timer.performWithDelay( 30, refreshUI())
-        elseif (event.target.id == 'deleteSaveSlot1') then
-            library.deleteFile('save1.json')
-            timer.performWithDelay( 30, refreshUI())
-        elseif (event.target.id == 'deleteSaveSlot2') then
-            library.deleteFile('save2.json')
-            timer.performWithDelay( 30, refreshUI())
-        elseif (event.target.id == 'deleteSaveSlot3') then
-            library.deleteFile('save3.json')
-            timer.performWithDelay( 30, refreshUI())
+        elseif (event.target.id == 'buttonInteract') then
+            scene.widgetsTable[5]["function"]()
         end
     end
 end
@@ -255,7 +252,7 @@ function scene:create( event )
                 fontSize = 20,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = "",
+            ["function"] = function() scene:goToSaveFile("save1.json") end,
             ["navigation"] = {5,3,1,1},
             ["pointer"] = {},
             ["type"] = "button",
@@ -271,7 +268,7 @@ function scene:create( event )
                 fontSize = 20,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = "",
+            ["function"] = function() scene:goToSaveFile("save2.json") end,
             ["navigation"] = {5,4,1,2},
             ["pointer"] = {},
             ["type"] = "button",
@@ -287,7 +284,7 @@ function scene:create( event )
                 fontSize = 20,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = "",
+            ["function"] = function() scene:goToSaveFile("save3.json") end,
             ["navigation"] = {5,2,1,3},
             ["pointer"] = {},
             ["type"] = "button",
