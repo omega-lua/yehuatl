@@ -47,9 +47,9 @@ function scene:showToast(message)
     transition.to(toast, params)
 end
 
-local function handleScrollView(i,widget)     
+local function handleScrollView()     
     local m, n = scrollView:getContentPosition()
-    local x,y = widget:localToContent(0,0)
+    local x,y = scene.widgetsTable[scene.widgetIndex].pointer:localToContent(0,0)
     -- Upscrolling
     if (y <= display.contentCenterY - scrollView.height*0.5) then
         scrollView:scrollToPosition({y=-(widget.y-110), time=1000} ) 
@@ -63,14 +63,18 @@ function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
-        if (i == widgetIndex) then
-            handleScrollView(i, widget.pointer)
+        if (i == widgetIndex) then 
             params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5}     
         else
             params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1}
         end
         transition.to(widget.pointer, params)
     end
+end
+
+function scene:updateUI()
+    scene:hoverObj()
+    handleScrollView()
 end
 
 function scene:back()
