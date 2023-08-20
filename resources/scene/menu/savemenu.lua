@@ -21,143 +21,124 @@ function scene:checkSaveFiles()
     scene.save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
 end
 
-function scene:extend()
-    local widgetIndex = scene.widgetIndex
-    local array = nil
-
-    if (widgetIndex == 2) then
-        array = {x=550,y=130,
-            ["fc1"]= function() print("save1, fc1") end,
-            ["fc2"]= function() print("save1, fc2") end,
-            ["navigation"]={2,3,2,4},
-            ["hasFile"]=scene.save1,
-        }
-
-    elseif (widgetIndex == 3) then
-        array = {x=550,y=200,
-            ["fc1"]= function() print("save2, fc1") end,
-            ["fc2"]= function() print("save2, fc2") end,
-            ["navigation"]={3,4,3,2},
-            ["hasFile"]=scene.save2,
-        }
-
-    elseif (widgetIndex == 4) then
-        array = {x=550,y=270,
-            ["fc1"]= function() print("save3, fc1") end,
-            ["fc2"]= function() print("save3, fc2") end,
-            ["navigation"]={4,2,4,3},
-            ["hasFile"]=scene.save3,
-        }
-
-    elseif (widgetIndex == 1) then
-        array = {x=-100,y=-100,
-            ["fc1"]= nil,
-            ["fc2"]= nil,
-            ["navigation"]=nil,
-        }
-    else
-        return
-    end
-
-    local object = scene.widgetsTable[5].pointer
-    library.printTable(object)
-    scene.widgetsTable[5].navigation = array.navigation
-    object.x, object.y = array.x, array.y
-    -- If file doesnt exist
-    if array.hasFile then
-        object:setLabel("Delete")
-        scene.widgetsTable[5]["function"] = array.fc2
-    else
-        object:setLabel("New")
-        scene.widgetsTable[5]["function"] = array.fc1
-    end
-end
-
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then
             params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5, alpha = 1} 
-            scene:checkSaveFiles()
-            scene:extend()
         else
             params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha = 0.7}
         end
+        -- Prevents alpha flickering
+        transition.cancel(extendMenuTransitionAlpha)
         transition.to(widget.pointer, params)
     end
 end
 
-local function refreshUI()
-    -- Check if any savefiles are found -------------------------------------------------
-    local save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
-    local save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
-    local save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
-
-    if (save1 == false) then
-        buttonSaveSlot1:setEnabled( false )
-        buttonSaveSlot1:setLabel( "" )
-
-        -- Disable delete button, because there is nothing to delete
-        deleteSaveSlot1:setEnabled( false )
-        deleteSaveSlot1:setLabel( "" )
-
-        -- enable new button, because there is nothing to load
-        newSaveSlot1:setEnabled( true )
-        newSaveSlot1:setLabel( "new" )
+function scene:updateUI()
+    
+    -- Disable/Enable saveslot-buttons
+    local widgetsTable = scene.widgetsTable
+    print("scene.save1:", scene.save1)
+    if scene.save1 then
+        widgetsTable[2].pointer:setEnabled(true)
+        widgetsTable[2].pointer:setLabel("Save 1")
     else
-        buttonSaveSlot1:setEnabled( true )
-        buttonSaveSlot1:setLabel( "Save 1" )
-        
-        deleteSaveSlot1:setEnabled( true )
-        deleteSaveSlot1:setLabel( "delete" )
-        
-        newSaveSlot1:setEnabled( false )
-        newSaveSlot1:setLabel( "" )
+        widgetsTable[2].pointer:setEnabled(false)
+        widgetsTable[2].pointer:setLabel("-")
+    end
+
+    if scene.save2 then
+        widgetsTable[3].pointer:setEnabled(true)
+        widgetsTable[3].pointer:setLabel("Save 2")
+    else
+        widgetsTable[3].pointer:setEnabled(false)
+        widgetsTable[3].pointer:setLabel("-")
+    end
+
+    if scene.save3 then
+        widgetsTable[4].pointer:setEnabled(true)
+        widgetsTable[4].pointer:setLabel("Save 3")
+    else
+        widgetsTable[4].pointer:setEnabled(false)
+        widgetsTable[4].pointer:setLabel("-")
+    end
+
+    -- update UI
+    scene:hoverObj()
+    scene:extendMenu()
+end
+
+local function fc1(filename)
+    library.newSaveFile(filename)
+    scene:checkSaveFiles()
+    -- Switch to saveslot-button after press
+    scene.widgetIndex = scene.widgetsTable[5].navigation[3]
+    scene:updateUI()
+end
+
+local function fc2(filename)
+    library.deleteFile(filename)
+    scene:checkSaveFiles()
+    -- Switch to saveslot-button after press
+    scene.widgetIndex = scene.widgetsTable[5].navigation[3]
+    scene:updateUI()
+end
+
+function scene:extendMenu()
+    local widgetIndex = scene.widgetIndex
+    local cancelTransition = false
+    print(widgetIndex)
+    if (widgetIndex == 2) then
+        scene.array = {x=550,y=130,
+            ["fc1"] = function() fc1("save1.json") end,
+            ["fc2"] = function() fc2("save1.json") end,
+            ["navigation"]={2,3,2,4},
+            ["hasFile"]=scene.save1,
+        }
+    elseif (widgetIndex == 3) then
+        scene.array = {x=550,y=200,
+            ["fc1"] = function() fc1("save2.json") end,
+            ["fc2"] = function() fc2("save2.json") end,
+            ["navigation"]={3,4,3,2},
+            ["hasFile"]=scene.save2,
+        }
+    elseif (widgetIndex == 4) then
+        scene.array = {x=550,y=270,
+            ["fc1"] = function() fc1("save3.json") end,
+            ["fc2"] = function() fc2("save3.json") end,
+            ["navigation"]={4,2,4,3},
+            ["hasFile"]=scene.save3,
+        }
+    elseif (widgetIndex == 1) then
+        scene.array = {x=-100,y=-100,
+            ["fc1"] = nil,
+            ["fc2"] = nil,
+            ["navigation"]=nil,
+        }
+    elseif (widgetIndex == 5) then
+        cancelTransition = true
+    end
+
+    local object = scene.widgetsTable[5]
+    local array = scene.array
+    object.navigation = array.navigation
+    object.pointer.x, object.pointer.y, object.pointer.alpha = array.x, array.y, 0
+    -- If file doesnt exist
+    if array.hasFile then
+        object.pointer:setLabel("Delete")
+        object["function"] = array.fc2
+    else
+        object.pointer:setLabel("New")
+        object["function"] = array.fc1
     end
     
-    if (save2 == false) then
-        buttonSaveSlot2:setEnabled( false )
-        buttonSaveSlot2:setLabel( "" )
-
-        -- Disable delete button, because there is nothing to delete
-        deleteSaveSlot2:setEnabled( false )
-        deleteSaveSlot2:setLabel( "" )
-
-        -- enable new button, because there is nothing to load
-        newSaveSlot2:setEnabled( true )
-        newSaveSlot2:setLabel( "new" )
-    else
-        buttonSaveSlot2:setEnabled( true )
-        buttonSaveSlot2:setLabel( "Save 2" )
-        
-        deleteSaveSlot2:setEnabled( true )
-        deleteSaveSlot2:setLabel( "delete" )
-        
-        newSaveSlot2:setEnabled( false )
-        newSaveSlot2:setLabel( "" )
-    end
-
-    if (save3 == false) then
-        buttonSaveSlot3:setEnabled( false )
-        buttonSaveSlot3:setLabel( "" )
-
-        -- Disable delete button, because there is nothing to delete
-        deleteSaveSlot3:setEnabled( false )
-        deleteSaveSlot3:setLabel( "" )
-
-        -- enable new button, because there is nothing to load
-        newSaveSlot3:setEnabled( true )
-        newSaveSlot3:setLabel( "new" )
-    else
-        buttonSaveSlot3:setEnabled( true )
-        buttonSaveSlot3:setLabel( "Save 3" )
-        
-        deleteSaveSlot3:setEnabled( true )
-        deleteSaveSlot3:setLabel( "delete" )
-        
-        newSaveSlot3:setEnabled( false )
-        newSaveSlot3:setLabel( "" )
+    -- If widgetIndex is 5, then these animations will be skipped.
+    if not cancelTransition then
+        extendMenuTransitionX = transition.from( object.pointer,{ time=500, transition=easing.outCubic, x=array.x-100})
+        -- From 0 alpha to 0.7
+        extendMenuTransitionAlpha = transition.to( object.pointer,{ time=1500, transition=easing.outCubic, alpha=0.7} )
     end
 
 end
@@ -235,155 +216,6 @@ function scene:loadUI()
             print("ERROR: Widget",i,"has no type attribute.")
         end
     end
-
-end
-
-
-local function loadUI_OLD() 
-    -- Check if any savefiles are found -------------------------------------------------
-    save1 = doesFileExist( "save1.json", system.DocumentsDirectory)
-    save2 = doesFileExist( "save2.json", system.DocumentsDirectory)
-    save3 = doesFileExist( "save3.json", system.DocumentsDirectory)
-
-    -- Skip the savemenu-Interface
-    if (save1==false) and (save2==false) and (save3==false) then
-        print("no savefiles found")
-        -- Set var to nil if no savefiles are available
-        currentSaveFile = nil
-        local options = {effect = "fade", time = 500,}
-        composer.gotoScene("resources.scene.game.game", options)
-        return
-    end
-
-    -- Setup the buttons ----------------------------------------------------------------
-    local sceneGroup = scene.view
-
-    -- button for loading save1.json
-    buttonSaveSlot1 = widget.newButton({
-        x = display.contentCenterX*1.8,
-        y = display.contentCenterY*0.6,
-        id = "buttonSaveSlot1",
-        label = "Save 1",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1}}
-    })
-
-    -- button for loading save2.json
-    buttonSaveSlot2 = widget.newButton({
-        x = display.contentCenterX*1.8,
-        y = display.contentCenterY*1,
-        id = "buttonSaveSlot2",
-        label = "Save 2",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-        })
-       
-
-    -- button for loading save3.json
-    buttonSaveSlot3 = widget.newButton({
-        x = display.contentCenterX*1.8,
-        y = display.contentCenterY*1.4,
-        id = "buttonSaveSlot3",
-        label = "Save 3",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    newSaveSlot1 = widget.newButton({
-        x = display.contentCenterX*1.4,
-        y = display.contentCenterY*0.6,
-        id = "newSaveSlot1",
-        label = "new",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    newSaveSlot2 = widget.newButton({
-        x = display.contentCenterX*1.4,
-        y = display.contentCenterY*1,
-        id = "newSaveSlot2",
-        label = "new",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    newSaveSlot3 = widget.newButton({
-        x = display.contentCenterX*1.4,
-        y = display.contentCenterY*1.4,
-        id = "newSaveSlot3",
-        label = "new",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    deleteSaveSlot1 = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*0.6,
-        id = "deleteSaveSlot1",
-        label = "delete",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    deleteSaveSlot2 = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*1,
-        id = "deleteSaveSlot2",
-        label = "delete",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-
-    deleteSaveSlot3 = widget.newButton({
-        x = display.contentCenterX*1,
-        y = display.contentCenterY*1.4,
-        id = "deleteSaveSlot3",
-        label = "delete",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    -- Back button
-    buttonBack = widget.newButton({
-        x = display.contentCenterX*0.1,
-        y = display.contentCenterY*0.2,
-        id = "buttonBack",
-        label = "Back",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 30,
-        labelColor = { default={ 255, 255, 255, 1 }},
-    })
-
-    sceneGroup:insert( buttonSaveSlot1 )
-    sceneGroup:insert( buttonSaveSlot2 )
-    sceneGroup:insert( buttonSaveSlot3 )
-    sceneGroup:insert( deleteSaveSlot1 )
-    sceneGroup:insert( deleteSaveSlot2 )
-    sceneGroup:insert( deleteSaveSlot3 )
-    sceneGroup:insert( newSaveSlot1 )
-    sceneGroup:insert( newSaveSlot2 )
-    sceneGroup:insert( newSaveSlot3 )
-    sceneGroup:insert( buttonBack )
 end
 
 
@@ -395,7 +227,94 @@ end
 function scene:create( event )
     -- Code here runs when the scene is first created but has not yet appeared on screen
     
+    scene.widgetsTable = {
+        [1] = {
+            ["creation"] = {
+                x = 50,
+                y = 50,
+                id = "buttonBack",
+                label = "back",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = function() scene:back() end,
+            ["navigation"] = {2,2,2,4},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [2] = {
+            ["creation"] = {
+                x = 400,
+                y = 130,
+                id = "buttonSaveSlot1",
+                label = "Save 1",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = "",
+            ["navigation"] = {5,3,1,1},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [3] = {
+            ["creation"] = {
+                x = 400,
+                y = 200,
+                id = "buttonSaveSlot2",
+                label = "Save 2",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = "",
+            ["navigation"] = {5,4,1,2},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [4] = {
+            ["creation"] = {
+                x = 400,
+                y = 270,
+                id = "buttonSaveSlot3",
+                label = "Save 3",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = "",
+            ["navigation"] = {5,2,1,3},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [5] = {
+            ["creation"] = {
+                x = 550,
+                y = 130,
+                id = "buttonInteract",
+                label = "interact",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["function"] = nil,
+            ["navigation"] = {},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+    }
+
     scene.widgetIndex = 2
+
+    scene:checkSaveFiles()
+    scene:loadUI()
+    scene:updateUI()
 end
  
  
@@ -408,98 +327,23 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         
-        scene.widgetsTable = {
-            [1] = {
-                ["creation"] = {
-                    x = 50,
-                    y = 50,
-                    id = "buttonBack",
-                    label = "back",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 25,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = function() scene:back() end,
-                ["navigation"] = {2,2,2,4},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [2] = {
-                ["creation"] = {
-                    x = 400,
-                    y = 130,
-                    id = "buttonSaveSlot1",
-                    label = "Save 1",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = "",
-                ["navigation"] = {5,3,1,1},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [3] = {
-                ["creation"] = {
-                    x = 400,
-                    y = 200,
-                    id = "buttonSaveSlot2",
-                    label = "Save 2",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = "",
-                ["navigation"] = {5,4,1,2},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [4] = {
-                ["creation"] = {
-                    x = 400,
-                    y = 270,
-                    id = "buttonSaveSlot3",
-                    label = "Save 3",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = "",
-                ["navigation"] = {5,2,1,3},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [5] = {
-                ["creation"] = {
-                    x = 550,
-                    y = 130,
-                    id = "buttonInteract",
-                    label = "interact",
-                    onEvent = handleButtonEvent,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = nil,
-                ["navigation"] = {},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-        
-        }
+        -- Skip the savemenu-Interface
+        if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
+            print("no savefiles found")
+            -- Set var to nil if no savefiles are available
+            currentSaveFile = nil
+            local options = {effect = "fade", time = 500,}
+            composer.gotoScene("resources.scene.game.game", options)
+            return
+        end
 
-        scene:checkSaveFiles()
-        scene:loadUI()
-        scene:extend()
+        scene.widgetIndex = 2
+
+        scene:updateUI()
 
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
     end
 end
  
