@@ -44,18 +44,22 @@ function scene:showToast(message)
     }
     
     toast:setFillColor(0, 255, 0)
+    sceneGroup:insert(toast)
     transition.to(toast, params)
 end
 
 local function handleScrollView()     
-    local m, n = scrollView:getContentPosition()
-    local x,y = scene.widgetsTable[scene.widgetIndex].pointer:localToContent(0,0)
+    local widget = scene.widgetsTable[scene.widgetIndex]
+    local m,n = widget.pointer:localToContent(0,0)
+    local x,y = widget.pointer.x, widget.pointer.y
     -- Upscrolling
-    if (y <= display.contentCenterY - scrollView.height*0.5) then
-        scrollView:scrollToPosition({y=-(widget.y-110), time=1000} ) 
+    if (n <= display.contentCenterY - scrollView.height*0.5) then
+        --scrollView:scrollToPosition({y=-(y-110), time=1000} ) 
+        scrollView:scrollToPosition({y=-(y-100), time=1000} ) 
     -- Downscrolling
-    elseif (y+20 >= display.contentCenterY + scrollView.height*0.5) then
-        scrollView:scrollToPosition({y=-(widget.y-110), time=1000} )
+    elseif (n+150 >= display.contentCenterY + scrollView.height*0.5) then
+        --scrollView:scrollToPosition({y=-(y-110), time=1000} )
+        scrollView:scrollToPosition({y=-(y-300), time=1000} ) 
     end
 end
 
@@ -257,7 +261,7 @@ function scene:hideOverlay()
 end
 
 function scene:loadUI()
-    local sceneGroup = scene.view
+    sceneGroup = scene.view
 
     scrollView = widget.newScrollView({
         id = "scrollView",
@@ -266,6 +270,7 @@ function scene:loadUI()
         width = 800,
         height = 400,
         horizontalScrollDisabled = true,
+        friction = 0.985,
         scrollWidth = 800,
         scrollHeight = 1200,
         backgroundColor = { 0, 0, 0},
@@ -313,8 +318,12 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
+    -- Has to be set before widgetsTable
+    tmpSettings = deepcopy(runtime.settings)
+    scene.isSaved = true
+
     -- Only the first time in center; if reshown, then last state
-    scene.widgetIndex = 5
+    scene.widgetIndex = 6
 end
 
 -- show()
@@ -323,10 +332,6 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-
-        -- Has to be set before widgetsTable
-        tmpSettings = deepcopy(runtime.settings)
-        scene.isSaved = true
 
         -- Has to be here, so that it refreshes the UI everytime. Has to be set before scene:loadUI()
         scene.widgetsTable = {
@@ -692,6 +697,7 @@ function scene:show( event )
 
         -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
+        scene:updateUI()
 
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
@@ -720,7 +726,7 @@ end
  
 -- destroy()
 function scene:destroy( event )
-    print("scene destroyed")
+    print("----------scene destroyed---------------")
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
 
