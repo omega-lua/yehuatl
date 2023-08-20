@@ -25,7 +25,7 @@ local function handleButtonEvent( event )
         end
     end
 end
- 
+
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
     for i,widget in pairs(scene.widgetsTable) do
@@ -37,6 +37,11 @@ function scene:hoverObj()
         end
         transition.to(widget.pointer, params)
     end
+end
+
+
+function scene:updateUI()
+    scene:hoverObj()
 end
 
 function scene:handleObjectInteraction(object)
