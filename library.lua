@@ -488,7 +488,7 @@ function navigateMenu(event)
         -- For normal navigation
         if ( type( nextIndex ) == "number" ) then
             scene.widgetIndex = nextIndex
-            scene:hoverObj()
+            scene:updateUI()
        
         -- For segments and switches
         elseif ( type( nextIndex ) == "function" ) then
