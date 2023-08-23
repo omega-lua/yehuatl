@@ -461,6 +461,7 @@ function touchscreenControl(event)
 end
 
 function navigateMenu(event)
+    print("event.device:", event.device)
     if (event.phase == "up") then
         local keyName = event.keyName
         local settings = runtime.settings
@@ -480,7 +481,7 @@ function navigateMenu(event)
         elseif (keyName == "up") then
             nextIndex = widget.navigation[4]
 
-        elseif (keyName == "space") then
+        elseif (keyName == settings.keybindInteract) then
             widget["function"]()
         end
 
