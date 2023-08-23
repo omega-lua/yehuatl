@@ -57,6 +57,43 @@ function scene:hoverObj()
     end
 end
 
+-- Even necessary?
+local function handleButtonEvent(event)
+    if (event.phase == "ended") then
+        local id = event.target.id
+        if (id == "buttonBack") then
+            parent:hideOverlay()
+            return
+
+        -- For now just simulate the navigateMenu style.
+        elseif (id == "keybindEscape" ) then
+            scene.widgetIndex = 5
+        elseif (id == "keybindInteract" ) then
+            scene.widgetIndex = 7
+        elseif (id == "keybindForward" ) then
+            scene.widgetIndex = 9
+        elseif (id == "keybindBackward" ) then
+            scene.widgetIndex = 11
+        elseif (id == "keybindJump" ) then
+            scene.widgetIndex = 13
+        elseif (id == "keybindSneak" ) then
+            scene.widgetIndex = 15
+        elseif (id == "keybindPrimaryWeapon" ) then
+            scene.widgetIndex = 17
+        elseif (id == "keybindSecondaryWeapon" ) then
+            scene.widgetIndex = 19
+        elseif (id == "keybindBlock" ) then
+            scene.widgetIndex = 21
+        elseif (id == "keybindAbility" ) then
+            scene.widgetIndex = 23
+        elseif (id == "keybindInventory" ) then
+            scene.widgetIndex = 25
+        end
+        scene:handleKeybindChange()
+    end
+end
+
+-- listener for handleKeybindChange()
 local function handleKeybindInput(event)
     if ( event.phase == "up" ) then
         -- Localize
@@ -97,7 +134,6 @@ function scene:handleKeybindChange()
     -- Remove normal eventListener to get rid of some bugs.
     Runtime:removeEventListener("key", library.navigateMenu)
 end
-
 
 local function handleScrollView()     
     local widget = scene.widgetsTable[scene.widgetIndex]
@@ -196,6 +232,7 @@ function scene:show( event )
         scene.widgetsTable = {
             [1] = {
                 ["creation"] = {x=50,y=50,
+                    id = "buttonBack",   
                     label="back",
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -230,6 +267,7 @@ function scene:show( event )
             },
             [5] = {
                 ["creation"] = {x=520,y=150,
+                    id="keybindEscape",
                     label=tmpSettings.keybindEscape,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -250,6 +288,7 @@ function scene:show( event )
             },
             [7] = {
                 ["creation"] = {x=520,y=200,
+                    id="keybindInteract",
                     label=tmpSettings.keybindInteract,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -270,6 +309,7 @@ function scene:show( event )
             },
             [9] = {
                 ["creation"] = {x=520,y=250,
+                    id="keybindForward",
                     label=tmpSettings.keybindForward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -290,6 +330,7 @@ function scene:show( event )
             },
             [11] = {
                 ["creation"] = {x=520,y=300,
+                    id="keybindBackward",    
                     label=tmpSettings.keybindBackward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -310,6 +351,7 @@ function scene:show( event )
             },
             [13] = {
                 ["creation"] = {x=520,y=350,
+                    id="keybindJump",
                     label=tmpSettings.keybindJump,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -330,6 +372,7 @@ function scene:show( event )
             },
             [15] = {
                 ["creation"] = {x=520,y=400,
+                    id="keybindSneak",
                     label=tmpSettings.keybindSneak,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -350,6 +393,7 @@ function scene:show( event )
             },
             [17] = {
                 ["creation"] = {x=520,y=450,
+                    id="keybindPrimaryWeapon",
                     label=tmpSettings.keybindPrimaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -370,6 +414,7 @@ function scene:show( event )
             },
             [19] = {
                 ["creation"] = {x=520,y=500,
+                    id="keybindSecondaryWeapon",
                     label=tmpSettings.keybindSecondaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -390,6 +435,7 @@ function scene:show( event )
             },
             [21] = {
                 ["creation"] = {x=520,y=550,
+                    id="keybindBlock",
                     label=tmpSettings.keybindBlock,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -410,6 +456,7 @@ function scene:show( event )
             },
             [23] = {
                 ["creation"] = {x=520,y=600,
+                    id="keybindAbility",
                     label=tmpSettings.keybindAbility,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -430,6 +477,7 @@ function scene:show( event )
             },
             [25] = {
                 ["creation"] = {x=520,y=650,
+                    id="keybindInventory",
                     label=tmpSettings.keybindInventory,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
@@ -469,6 +517,7 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
     end
 end
  
