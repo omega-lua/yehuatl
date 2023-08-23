@@ -31,5 +31,5 @@ runtime.selectedInputDevice = runtime.settings.selectedInputDevice
 movF, movB, movJ, interact = false, false, false, false
 
 -- Gotoscene()
-composer.gotoScene("resources.scene.menu.mainmenu")
+composer.gotoScene("resources.scene.menu.mainmenu",{ effect = "fade", time = 1600,})
 library.setControlMode("menu")

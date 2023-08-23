@@ -10,80 +10,85 @@ local scene = composer.newScene()
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
- 
+function scene:discardSettings()
+    parent.isSaved = true
+    tmpSettings = nil
+
+    -- Message
+    parent:showToast("Settings discarded!")
+            
+    composer.hideOverlay("fade", 400)
+    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 800,})
+    composer.removeScene("resources.scene.menu.settingsmenu")
+end
+
 local function handleButtonEvent(event)
     if (event.phase == 'ended') then
         if (event.target.id == "buttonBack") then
-            composer.hideOverlay("fade", 500)
+            parent:hideOverlay()
         elseif (event.target.id == "buttonApplySettings") then
             parent:applySettings()
-            
-            -- Message
-            parent:showToast("Settings applied!")
-
-            composer.hideOverlay("fade", 200)
-
+            parent:hideOverlay()
         elseif (event.target.id == "buttonDiscardSettings") then
-            parent.isSaved = true
-            parent.tmpSettings = {}
-
-            -- Message
-            parent:showToast("Settings discarded!")
-            
-            composer.hideOverlay("fade", 200)
-            library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 100,})
+            scene:discardSettings()
         end
     end
 end
- 
-local function loadUI()
+
+function scene:hoverObj()
+    local widgetIndex = scene.widgetIndex
+    for i,widget in pairs(scene.widgetsTable) do
+        local params = {}
+        if (i == widgetIndex) then
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5}     
+        else
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1}
+        end
+        transition.to(widget.pointer, params)
+    end
+end
+
+function scene:updateUI()
+    scene:hoverObj()
+end
+
+function scene:loadUI()
     local sceneGroup = scene.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    local overlayBox = display.newRect(
-        display.contentCenterX,
-        display.contentCenterY, 
-        600, 
-        300
-    )
-    
-    local buttonBack = widget.newButton({
-        x = display.contentCenterX*1.2,
-        y = display.contentCenterY*1.5,
-        id = "buttonBack",
-        label = "back",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
-    })
+    -- Create widgets
+    for i, object in pairs(scene.widgetsTable) do
+        local type = object.type
 
-    local buttonApplySettings = widget.newButton({
-        x = display.contentCenterX*0.5,
-        y = display.contentCenterY*1.5,
-        id = "buttonApplySettings",
-        label = "Apply Settings",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
-    })
+        if (type == "text") then
+            scene.widgetsTable[i].pointer = display.newText( object.creation )
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setFillColor(unpack(object.color))
+            end
 
-    local buttonDiscardSettings = widget.newButton({
-        x = display.contentCenterX*1.9,
-        y = display.contentCenterY*1.5,
-        id = "buttonDiscardSettings",
-        label = "Discard Settings",
-        onEvent = handleButtonEvent,
-        font = "fonts/BULKYPIX.TTF",
-        fontSize = 25,
-        labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
-    })
+        elseif (type == "line") then
+            scene.widgetsTable[i].pointer = display.newLine(unpack(object.creation))
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+            if object.color then
+                scene.widgetsTable[i].pointer:setStrokeColor(unpack(object.color))
+            end
+        
+        elseif (type == "button") then
+            scene.widgetsTable[i].pointer = widget.newButton( object.creation )
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
 
-    sceneGroup:insert(overlayBox)
-    sceneGroup:insert(buttonBack)
-    sceneGroup:insert(buttonApplySettings)
-    sceneGroup:insert(buttonDiscardSettings)
+        elseif (type == "roundedRectangle") then
+            scene.widgetsTable[i].pointer = display.newRoundedRect(unpack(object.creation))
+            sceneGroup:insert(scene.widgetsTable[i].pointer)
+            if object.toBack then
+                scene.widgetsTable[i].pointer:toBack()
+            end
+
+        elseif (type == nil) then
+            print("ERROR: Widget",i,"has no type attribute.")
+        end
+    end
 end
 
 -- -----------------------------------------------------------------------------------
@@ -94,7 +99,88 @@ end
 function scene:create( event )
     --display.getCurrentStage():setFocus( warningmenu )
     
-    loadUI()
+    scene.widgetsTable = {
+        [1] = {
+            ["creation"] = {
+                display.contentCenterX,
+                display.contentCenterY, 
+                700, 
+                350,
+                10,
+            },
+            ["function"] = nil,
+            ["navigation"] = nil,
+            ["pointer"] = {},
+            ["type"] = "roundedRectangle",
+            ["toBack"] = true,
+        },
+        [2] = {
+            ["creation"] = {
+                x = 300, 
+                y = 100,
+                id = "textWarning",
+                text = "Settings aren't saved yet. What to do next?",
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+                --width = 300,
+            },
+            ["function"] = nil,
+            ["navigation"] = nil,
+            ["pointer"] = {},
+            ["type"] = "text",
+            ["color"] = { 0, 0, 0, 1}
+        },
+        [3] = {
+            ["creation"] = {
+                x = 300,
+                y = 200,
+                id = "buttonCancel",
+                label = "Cancel exit",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+            },
+            ["function"] = function() parent:hideOverlay() end,
+            ["navigation"] = {nil,4,nil,5},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [4] = {
+            ["creation"] = {
+                x = 300,
+                y = 250,
+                id = "buttonApplySettings",
+                label = "Save settings and exit",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+            },
+            ["function"] = function() parent:applySettings() parent:hideOverlay() end,
+            ["navigation"] = {nil,5,nil,3},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+        [5] = {
+            ["creation"] = {
+                x = 300,
+                y = 300,
+                id = "buttonDiscardSettings",
+                label = "Discard Settings",
+                onEvent = handleButtonEvent,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+            },
+            ["function"] = function() scene:discardSettings() end,
+            ["navigation"] = {nil,3,nil,4},
+            ["pointer"] = {},
+            ["type"] = "button",
+        },
+    }
+
+    scene.widgetIndex = 3
 end
  
  
@@ -107,7 +193,8 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
- 
+        scene:loadUI()
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         

@@ -232,39 +232,40 @@ function getSettings(path)
 end
 
 function initiateSettings(table)
-    if (table == {}) then
-        print("ERROR: Received empty Table.")
+    print("initiateSettings opened")
+    if not table then
+        print("ERROR: No table provided to initiateSettings()")
     else
         -- Ist zwar globaler Table, wird aber nur einmal bei Startup gemacht.
-        settings = table
+        runtime.settings = table
 
         -- Es werden alle geladen, da ich denke, lieber mehr RAM benutzen als kritische Zeit während des KeyboardControl() vergeuden.
-        selectedInputDevice = settings.selectedInputDevice
-        otherInputDevices = settings.otherInputDevices
-        keybindJump = settings.keybindJump
-        keybindSneak = settings.keybindSneak
-        keybindForward = settings.keybindForward
-        keybindBackward = settings.keybindBackward
-        keybindInteract = settings.keybindInteract
-        keybindEscape = settings.keybindEscape
-        keybindPrimaryWeapon = settings.keybindPrimaryWeapon
-        keybindSecondaryWeapon = settings.keybindSecondaryWeapon
-        keybindInventory = settings.keybindInventory
-        keybindSelect = settings.keybindSelect
-        keybindAbility  = settings.keybindAbility
-        keybindBlock  = settings.keybindBlock
-        volumeMusic = settings.volumeMusic
-        volumeSoundEffects = settings.volumeSoundEffects
-        selectedOutputDevice = settings.selectedOutputDevice
-        otherOutputDevices = settings.otherOutputDevices
-        playStereo = settings.playStereo
-        renderParticles = settings.renderParticles
-        cameraDamping = settings.cameraDamping
-        difficulty = settings.difficulty
+        selectedInputDevice = runtime.settings.selectedInputDevice
+        otherInputDevices = runtime.settings.otherInputDevices
+        keybindJump = runtime.settings.keybindJump
+        keybindSneak = runtime.settings.keybindSneak
+        keybindForward = runtime.settings.keybindForward
+        keybindBackward = runtime.settings.keybindBackward
+        keybindInteract = runtime.settings.keybindInteract
+        keybindEscape = runtime.settings.keybindEscape
+        keybindPrimaryWeapon = runtime.settings.keybindPrimaryWeapon
+        keybindSecondaryWeapon = runtime.settings.keybindSecondaryWeapon
+        keybindInventory = runtime.settings.keybindInventory
+        keybindSelect = runtime.settings.keybindSelect
+        keybindAbility  = runtime.settings.keybindAbility
+        keybindBlock  = runtime.settings.keybindBlock
+        volumeMusic = runtime.settings.volumeMusic
+        volumeSoundEffects = runtime.settings.volumeSoundEffects
+        selectedOutputDevice = runtime.settings.selectedOutputDevice
+        otherOutputDevices = runtime.settings.otherOutputDevices
+        playStereo = runtime.settings.playStereo
+        renderParticles = runtime.settings.renderParticles
+        cameraDamping = runtime.settings.cameraDamping
+        difficulty = runtime.settings.difficulty
     end
 end
 
--- DEBUG
+-- DEBUG,
 function setUpInitialSettings()
     local data = {
         ["selectedInputDevice"] = "Keyboard",
@@ -296,14 +297,18 @@ function setUpInitialSettings()
     local path = system.pathForFile( "resources/data/initial_settings.json", system.ResourceDirectory )
     library.writeFile(path, encoded)
 end
--- Speichert 
+-- Speichert
 function saveSettings(table)
-    -- json.encode
-    local encoded = json.encode(table, { indent=true })
+    if table then
+        -- json.encode
+        local encoded = json.encode(table, { indent=true })
 
-    -- Write file
-    local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
-    library.writeFile(path, encoded)
+        -- Write file
+        local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
+        library.writeFile(path, encoded)
+    else
+        print("ERROR: No table provided to saveSettings()")
+    end
 end
 
 function resetSettings()
@@ -456,35 +461,38 @@ function touchscreenControl(event)
 end
 
 function navigateMenu(event)
+    print("event.device:", event.device)
     if (event.phase == "up") then
         local keyName = event.keyName
         local settings = runtime.settings
-        local scene = composer.getScene(composer.getSceneName("current"))
-        local currObject = scene.currObject
-        local table = scene.matrix[currObject]
-        local entry = nil
-        
+        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
+        local nextIndex = nil
+        local widget = scene.widgetsTable[scene.widgetIndex]
+
         if (keyName == "right") then
-            entry = table[1]
+            nextIndex = widget.navigation[1]
+
         elseif (keyName == "down") then
-            entry = table[2]
+            nextIndex = widget.navigation[2]
+
         elseif (keyName == "left") then
-            entry = table[3]
+            nextIndex = widget.navigation[3]
+
         elseif (keyName == "up") then
-            entry = table[4]
-        elseif (keyName == "space") then
-            -- Maybe not working bcz of nil value in table
-            scene.functionsTable[currObject]()
+            nextIndex = widget.navigation[4]
+
+        elseif (keyName == settings.keybindInteract) then
+            widget["function"]()
         end
 
-        if entry then
-            if (string.len(entry) > 2) then
-                -- When number ist longer than 2: exec fc()
-                scene.functionsTable[entry]()
-            else
-                scene.currObject = entry
-                scene:hoverObj()
-            end
+        -- For normal navigation
+        if ( type( nextIndex ) == "number" ) then
+            scene.widgetIndex = nextIndex
+            scene:updateUI()
+       
+        -- For segments and switches
+        elseif ( type( nextIndex ) == "function" ) then
+            nextIndex()
         end
     end
 end
