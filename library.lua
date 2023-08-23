@@ -321,6 +321,64 @@ function resetSettings()
     return data
 end
 
+function getAvailableInputDevices()
+    -- Localize
+    local inputDevices = system.getInputDevices()
+    local availableInputDevices = {}
+    
+    -- Iterate
+    for index = 1, #inputDevices do
+        local inputDevice = inputDevices[index]
+        local deviceDisplayName = inputDevice.displayName
+        if availableInputDevices[deviceDisplayName] then
+            -- add specific permanentId
+            table.insert(availableInputDevices[deviceDisplayName].permanentIds, inputDevice.permanentId)
+        else
+            -- create subtable
+            local array = {}
+            array.deviceDisplayName = deviceDisplayName
+                
+            -- store permanentIds
+            array.permanentIds = {}
+            table.insert(array.permanentIds, inputDevice.permanentId)
+
+            -- Make keybinds table
+            array.keybinds = {}
+
+            -- Get type of input Device
+            array.type = inputDevice.type
+
+            -- Set array to the big table
+            availableInputDevices[deviceDisplayName] = array
+        end
+    end
+    return availableInputDevices
+end
+
+-- on startup setup for input devices
+function setUpInputDevices()
+    local availableInputDevices = getAvailableInputDevices()
+    --local availableInputDevices = {}
+
+    -- print mid result
+    library.printTable(availableInputDevices)
+
+    -- get available input device count
+    local length = 0    
+    for k in pairs(availableInputDevices) do length = length + 1 end
+    print("length:", length)
+
+    -- if-statements
+    if (length == 1) then
+        -- one input device, initialize this one
+    elseif (length > 1) then
+        -- multiple input devices, initialize last used one
+    else
+        -- handle error
+        print("ERROR: No input device found")
+    end
+end
+
 function initiatePhysics()
     physics.start() -- physics first startup
     physics.pause() -- pause physics for setup
@@ -461,7 +519,6 @@ function touchscreenControl(event)
 end
 
 function navigateMenu(event)
-    print("event.device:", event.device)
     if (event.phase == "up") then
         local keyName = event.keyName
         local settings = runtime.settings
@@ -610,6 +667,8 @@ library.initiateSettings = initiateSettings
 library.setUpInitialSettings = setUpInitialSettings
 library.saveSettings = saveSettings
 library.resetSettings = resetSettings
+library.getAvailableInputDevices = getAvailableInputDevices
+library.setUpInputDevices = setUpInputDevices
 library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
 library.findNearestObj = findNearestObj
