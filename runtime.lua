@@ -22,6 +22,11 @@ else
     runtime["settings"] = data
 end
 
+-- initialization of inputDevice-handling
+
+
+
+-- "global" scene functions
 runtime["currentSaveFile"] = nil
 runtime.currentScene = nil
 runtime.currentSceneType = nil
