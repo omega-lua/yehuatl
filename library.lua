@@ -226,7 +226,7 @@ function getSettings(path)
     local data = library.readFile(path)
     
     -- decode data
-    local decoded = json.decode(data)
+    local decoded = json.decode(data, 1, "emptyTable")
     
     return decoded
 end
@@ -267,34 +267,11 @@ end
 
 -- DEBUG,
 function setUpInitialSettings()
-    local data = {
-        ["selectedInputDevice"] = "Keyboard",
-        ["otherInputDevices"] = "EmptyTable", 
-        ["keybindJump"] = "space",
-        ["keybindSneak"] = "-",
-        ["keybindForward"] = "l",
-        ["keybindBackward"] = "j",
-        ["keybindInteract"] = "h",
-        ["keybindEscape"] = "escape",
-        ["keybindPrimaryWeapon"] = "8",
-        ["keybindSecondaryWeapon"] = "9",
-        ["keybindInventory"] = "i",
-        ["keybindSelect"] = "enter",
-        ["keybindAbility"] = "z",
-        ["keybindBlock"] = "b",
-        ["volumeMusic"] = 0.5,
-        ["volumeSoundEffects"] = 0.4,
-        ["selectedOutputDevice"] = "EmptyTable",
-        ["otherOutputDevices"] = "EmptyTable",
-        ["playStereo"] = true,
-        ["renderParticles"] = true,
-        ["cameraDamping"] = 0.9,
-        ["difficulty"] = 3,
-    }
+    local data = {}
 
     local encoded = json.encode(data, {indent=true})
 
-    local path = system.pathForFile( "resources/data/initial_settings.json", system.ResourceDirectory )
+    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
     library.writeFile(path, encoded)
 end
 -- Speichert
@@ -313,9 +290,9 @@ end
 
 function resetSettings()
     -- Get data from initial_setting.json
-    local path = system.pathForFile( "resources/data/initial_settings.json", system.ResourceDirectory )
+    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
     local data = library.getSettings(path)
-    
+
     -- Save data
     library.saveSettings(data)
     return data
@@ -330,26 +307,23 @@ function getAvailableInputDevices()
     -- Iterate through inputDevices
     for index = 1, #inputDevices do
         local inputDevice = inputDevices[index]
-        local deviceDisplayName = inputDevice.displayName
+        local displayName = inputDevice.displayName
 
-        if (_dir[deviceDisplayName]) then
+        if (_dir[displayName]) then
             -- Input Device kommt schon vor
 
-            local index = _dir[deviceDisplayName]
+            local index = _dir[displayName]
             table.insert(availableInputDevices[index].permanentIds, inputDevice.permanentId)
         else
             -- Input Device kommt noch nicht vor
 
             -- create subtable
             local array = {}
-            array.deviceDisplayName = deviceDisplayName
+            array.displayName = displayName
                 
             -- store permanentIds
             array.permanentIds = {}
             table.insert(array.permanentIds, inputDevice.permanentId)
-
-            -- Make keybinds table
-            array.keybinds = {}
 
             -- Get type of input Device
             array.type = inputDevice.type
@@ -358,7 +332,7 @@ function getAvailableInputDevices()
             table.insert(availableInputDevices, array)
 
             -- Update _dir
-            _dir[deviceDisplayName] = #availableInputDevices
+            _dir[displayName] = #availableInputDevices
         end
     end
     return availableInputDevices
@@ -368,63 +342,64 @@ end
 function setUpInputDevices()
     -- Localize
     local availableInputDevices = getAvailableInputDevices()
-    --local savedInputDevices = runtime.settings.controls.inputDevice.saved
-    local savedInputDevices = {"Steven", "Hendrik"}
+    local savedInputDevices = runtime.settings.controls.inputDevice.saved
 
-    local function checkInputDevice(inputDevice)
-        --local displayName = inputDevice.displayName
-        local displayName = "Hendrik"
-        if (table.indexOf(savedInputDevices, displayName) == nil) then
+    local function setInputDevice(inputDevice)
+        local displayName = inputDevice.displayName
+
+        if (table.indexOf(savedInputDevices, displayName) ~= nil) then
             -- It's a saved Input Device.
+
+            print(">>INITIATE<<")
             
             --> initiate data
-        
         else
-            -- It's a new Input Device. Create new keybinds.
+            -- Input Device is new, create new keybinds.
+            if (inputDevice.type == "unknown") then
+                -- show message
+                -- return
+            end
             
-            --local type = inputDevice.type
-            --local initialKeybinds = runtime.settings.controls.keybinds
-            
-            -- get initial_settings from ResourceDirectory
-            local path = system.pathForFile( "new_initial_settings.json", system.ResourceDirectory )
-            print(path)
-            local initial_settings = library.getSettings(path)
-            library.printTable(initial_settings)
+            -- get default_settings from ResourceDirectory
+            local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
+            local default_settings = library.getSettings(path)
 
-            -- get settings from DocumentsDirectory
+            -- get current settings from DocumentsDirectory. Maybe unnecessary, bcz runtime.settings
             local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
             local settings = library.getSettings(path)
-            library.printTable(settings)
+            local keybinds = {}
 
+            local type = inputDevice.type
+            local type = "keyboard" --  - -  - - - - - - - - - DEBUG
             if type == "controller" then
-                local keybinds = initialKeybinds.controller
-
-                --table.insert()
-
+                keybinds = default_settings.controls.keybinds.controller
             elseif type == "keyboard" then
-                local keybinds = initialKeybinds.keyboard
-
+                keybinds = default_settings.controls.keybinds.keyboard
             elseif type == "touchscreen" then
-                local keybinds = initialKeybinds.touchscreen
+                keybinds = default_settings.controls.keybinds.touchscreen
+            else print("ERROR: unkown or unsupported Input Device Type") return end
 
-            else
-                print("ERROR: unkown or unsupported Input Device Type")
-            end
+            -- set keybinds
+            settings.controls.keybinds[displayName] = keybinds
+            -- add input device to "saved"
+            table.insert(settings.controls.inputDevice.saved, displayName)
+            
+            -- Save and initiate settings
+            library.saveSettings(settings)
+            library.initiateSettings(settings)
         end
     end
 
     -- if-statements
     if (#availableInputDevices == 1) then
-        -- one input device, initialize this one
-        checkInputDevice(availableInputDevices[1])
-        return
+        setInputDevice(availableInputDevices[1])
 
     elseif (#availableInputDevices > 1) then
         
         -- Show message box
 
         -- Check the selected Input Device
-        checkInputDevice(inputDevice)
+        setInputDevice(availableInputDevices[1])
     else
         -- handle error
         print("ERROR: No input device found")
