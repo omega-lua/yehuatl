@@ -325,15 +325,21 @@ function getAvailableInputDevices()
     -- Localize
     local inputDevices = system.getInputDevices()
     local availableInputDevices = {}
+    local _dir = {}
     
-    -- Iterate
+    -- Iterate through inputDevices
     for index = 1, #inputDevices do
         local inputDevice = inputDevices[index]
         local deviceDisplayName = inputDevice.displayName
-        if availableInputDevices[deviceDisplayName] then
-            -- add specific permanentId
-            table.insert(availableInputDevices[deviceDisplayName].permanentIds, inputDevice.permanentId)
+
+        if (_dir[deviceDisplayName]) then
+            -- Input Device kommt schon vor
+
+            local index = _dir[deviceDisplayName]
+            table.insert(availableInputDevices[index].permanentIds, inputDevice.permanentId)
         else
+            -- Input Device kommt noch nicht vor
+
             -- create subtable
             local array = {}
             array.deviceDisplayName = deviceDisplayName
@@ -349,7 +355,10 @@ function getAvailableInputDevices()
             array.type = inputDevice.type
 
             -- Set array to the big table
-            availableInputDevices[deviceDisplayName] = array
+            table.insert(availableInputDevices, array)
+
+            -- Update _dir
+            _dir[deviceDisplayName] = #availableInputDevices
         end
     end
     return availableInputDevices
@@ -357,22 +366,64 @@ end
 
 -- on startup setup for input devices
 function setUpInputDevices()
+    -- Localize
     local availableInputDevices = getAvailableInputDevices()
-    --local availableInputDevices = {}
+    --local savedInputDevices = runtime.settings.controls.inputDevice.saved
+    local savedInputDevices = {"Steven", "Hendrik"}
 
-    -- print mid result
-    library.printTable(availableInputDevices)
+    local function checkInputDevice(inputDevice)
+        --local displayName = inputDevice.displayName
+        local displayName = "Hendrik"
+        if (table.indexOf(savedInputDevices, displayName) == nil) then
+            -- It's a saved Input Device.
+            
+            --> initiate data
+        
+        else
+            -- It's a new Input Device. Create new keybinds.
+            
+            --local type = inputDevice.type
+            --local initialKeybinds = runtime.settings.controls.keybinds
+            
+            -- get initial_settings from ResourceDirectory
+            local path = system.pathForFile( "new_initial_settings.json", system.ResourceDirectory )
+            local initial_settings = library.getSettings(path)
+            library.printTable(initial_settings)
 
-    -- get available input device count
-    local length = 0    
-    for k in pairs(availableInputDevices) do length = length + 1 end
-    print("length:", length)
+            -- get settings from DocumentsDirectory
+            local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
+            local settings = library.getSettings(path)
+            library.printTable(settings)
+
+            if type == "controller" then
+                local keybinds = initialKeybinds.controller
+
+                --table.insert()
+
+            elseif type == "keyboard" then
+                local keybinds = initialKeybinds.keyboard
+
+            elseif type == "touchscreen" then
+                local keybinds = initialKeybinds.touchscreen
+
+            else
+                print("ERROR: unkown or unsupported Input Device Type")
+            end
+        end
+    end
 
     -- if-statements
-    if (length == 1) then
+    if (#availableInputDevices == 1) then
         -- one input device, initialize this one
-    elseif (length > 1) then
-        -- multiple input devices, initialize last used one
+        checkInputDevice(availableInputDevices[1])
+        return
+
+    elseif (#availableInputDevices > 1) then
+        
+        -- Show message box
+
+        -- Check the selected Input Device
+        checkInputDevice(inputDevice)
     else
         -- handle error
         print("ERROR: No input device found")
