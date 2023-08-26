@@ -387,6 +387,7 @@ function setUpInputDevices()
             
             -- get initial_settings from ResourceDirectory
             local path = system.pathForFile( "new_initial_settings.json", system.ResourceDirectory )
+            print(path)
             local initial_settings = library.getSettings(path)
             library.printTable(initial_settings)
 
