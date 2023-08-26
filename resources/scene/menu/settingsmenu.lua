@@ -237,7 +237,7 @@ function scene:applySettings()
 end
 
 function scene:resetSettings()
-    -- Get initial_settings and save as settings.json
+    -- Get default_settings and save as settings.json
     local data = library.resetSettings()
 
     -- Initiate Settings
@@ -704,8 +704,7 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-
-        library.setUpInputDevices()
+        
     end
 end
  
