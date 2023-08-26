@@ -23,7 +23,7 @@ else
 end
 
 -- initialization of inputDevice-handling
-
+library.setUpInputDevices()
 
 
 -- "global" scene functions
