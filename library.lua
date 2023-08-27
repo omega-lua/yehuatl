@@ -232,7 +232,6 @@ function getSettings(path)
 end
 
 function initiateSettings(table)
-    print("initiateSettings opened")
     if not table then
         print("ERROR: No table provided to initiateSettings()")
     else
@@ -242,18 +241,7 @@ function initiateSettings(table)
         -- Es werden alle geladen, da ich denke, lieber mehr RAM benutzen als kritische Zeit während des KeyboardControl() vergeuden.
         selectedInputDevice = runtime.settings.selectedInputDevice
         otherInputDevices = runtime.settings.otherInputDevices
-        keybindJump = runtime.settings.keybindJump
-        keybindSneak = runtime.settings.keybindSneak
-        keybindForward = runtime.settings.keybindForward
-        keybindBackward = runtime.settings.keybindBackward
-        keybindInteract = runtime.settings.keybindInteract
-        keybindEscape = runtime.settings.keybindEscape
-        keybindPrimaryWeapon = runtime.settings.keybindPrimaryWeapon
-        keybindSecondaryWeapon = runtime.settings.keybindSecondaryWeapon
-        keybindInventory = runtime.settings.keybindInventory
-        keybindSelect = runtime.settings.keybindSelect
-        keybindAbility  = runtime.settings.keybindAbility
-        keybindBlock  = runtime.settings.keybindBlock
+
         volumeMusic = runtime.settings.volumeMusic
         volumeSoundEffects = runtime.settings.volumeSoundEffects
         selectedOutputDevice = runtime.settings.selectedOutputDevice
@@ -335,7 +323,30 @@ function getAvailableInputDevices()
             _dir[displayName] = #availableInputDevices
         end
     end
+    runtime.availableInputDevices = availableInputDevices
     return availableInputDevices
+end
+
+function initiateKeybinds()
+    -- Keybinds --------------------------------------------------------
+    local current = runtime.settings.controls.inputDevice.current
+    local key = runtime.settings.controls.keybinds[current]
+
+    keybindJump = key.jump
+    keybindSneak = key.sneak
+    keybindForward = key.forward
+    keybindBackward = key.backward
+    keybindInteract = key.interact
+    keybindEscape = key.escape
+    keybindPrimaryWeapon = key.primaryWeapon
+    keybindSecondaryWeapon = key.secondaryWeapon
+    keybindInventory = key.inventory
+    keybindAbility  = key.ability
+    keybindBlock  = key.block
+    keybindNavigateLeft = key.navigateLeft
+    keybindNavigateRight = key.navigateRight
+    keybindNavigateUp = key.navigateUp
+    keybindNavigateDown = key.navigateDown
 end
 
 -- on startup setup for input devices
@@ -347,16 +358,25 @@ function setUpInputDevices()
     local function setInputDevice(inputDevice)
         local displayName = inputDevice.displayName
 
-        if (table.indexOf(savedInputDevices, displayName) ~= nil) then
+        if (table.indexOf(savedInputDevices, displayName)) then
             -- It's a saved Input Device.
-
             print(">>INITIATE<<")
             
-            --> initiate data
+            -- Set variables
+            runtime.currentInputDevice = displayName
+            for index = 1, #availableInputDevices do
+                if availableInputDevices[index].displayName == displayName then
+                    runtime.currentInputDeviceType = availableInputDevices[index].type
+                    break
+                end
+            end
+
+            initiateKeybinds()
         else
             -- Input Device is new, create new keybinds.
             if (inputDevice.type == "unknown") then
                 -- show message
+                print("SHOW MESSAGE")
                 -- return
             end
             
@@ -397,6 +417,7 @@ function setUpInputDevices()
     elseif (#availableInputDevices > 1) then
         
         -- Show message box
+        print("show message box")
 
         -- Check the selected Input Device
         setInputDevice(availableInputDevices[1])
@@ -548,24 +569,23 @@ end
 function navigateMenu(event)
     if (event.phase == "up") then
         local keyName = event.keyName
-        local settings = runtime.settings
         local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
         local nextIndex = nil
         local widget = scene.widgetsTable[scene.widgetIndex]
 
-        if (keyName == "right") then
+        if (keyName == keybindNavigateRight) then
             nextIndex = widget.navigation[1]
 
-        elseif (keyName == "down") then
+        elseif (keyName == keybindNavigateDown) then
             nextIndex = widget.navigation[2]
 
-        elseif (keyName == "left") then
+        elseif (keyName == keybindNavigateLeft) then
             nextIndex = widget.navigation[3]
 
-        elseif (keyName == "up") then
+        elseif (keyName == keybindNavigateUp) then
             nextIndex = widget.navigation[4]
 
-        elseif (keyName == settings.keybindInteract) then
+        elseif (keyName == keybindInteract) then
             widget["function"]()
         end
 
@@ -583,13 +603,12 @@ end
 
 function setControlMode(sceneType)
     Runtime:removeEventListener("key", library.navigateMenu)
-    --Runtime:removeEventListener()
+    Runtime:removeEventListener("touch", library.touchscreenControl)
     --Runtime:removeEventListener()
     
-    print(runtime.selectedInputDevice)
-    if (runtime.selectedInputDevice == "keyboard") then
+    local inputType = runtime.currentInputDeviceType
+    if (inputType == "keyboard") then
         if (sceneType == "menu") then
-            print("eventListener added.")
             Runtime:addEventListener("key", library.navigateMenu)
             runtime.currentSceneType = "menu"
         elseif (sceneType == "game") then
@@ -597,7 +616,7 @@ function setControlMode(sceneType)
             -- scene:navigateGame()
         end
     
-    elseif (runtime.selectedInputDevice == "touchscreen") then
+    elseif (inputType == "touchscreen") then
         if (sceneType == "menu") then
             runtime.currentSceneType = "menu"
             -- Touch navigation (??)
@@ -605,6 +624,13 @@ function setControlMode(sceneType)
             runtime.currentSceneType = "game"
             -- Touch navigation (??)
         end
+    elseif (inputType == "controller") then
+        --
+    elseif (inputType == "unknown") then
+        -- If unknown, add all eventListeners.
+
+        Runtime:addEventListener("key", library.navigateMenu)
+
     end
 end
 
@@ -699,7 +725,6 @@ library.setUpInputDevices = setUpInputDevices
 library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
 library.findNearestObj = findNearestObj
-library.findNearestObjV2 = findNearestObjV2
 library.hoverObj = hoverObj
 library.keyboardControl = keyboardControl
 library.touchscreenControl = touchscreenControl
