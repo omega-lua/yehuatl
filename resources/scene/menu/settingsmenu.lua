@@ -95,22 +95,22 @@ end
 
 function scene:handleSegment(index, value)
     local widget = scene.widgetsTable[index]
-    
+
     -- Music Volume Segment
     if (index == 12) then
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.volumeMusic = value
+            tmpSettings.sound.volumeMusic = value
             scene.isSaved = false
             return
         end
 
-        local old = tmpSettings.volumeMusic
-        local check = old + value
-        if (check <= 5 ) and (check >= 1 ) then
-            tmpSettings.volumeMusic = check
-            widget.pointer:setActiveSegment(tmpSettings.volumeMusic)
+        local old = tmpSettings.sound.volumeMusic
+        local value = old + value
+        if (value <= 5 ) and (value >= 1 ) then
+            tmpSettings.sound.volumeMusic = value
+            widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
     
@@ -119,16 +119,16 @@ function scene:handleSegment(index, value)
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.volumeSoundEffects = value
+            tmpSettings.sound.volumeSoundEffects = value
             scene.isSaved = false
             return
         end
 
-        local old = tmpSettings.volumeSoundEffects
-        local check = old + value
-        if (check <= 5 ) and (check >= 1 ) then
-            tmpSettings.volumeSoundEffects = check
-            widget.pointer:setActiveSegment(tmpSettings.volumeSoundEffects)
+        local old = tmpSettings.sound.volumeSoundEffects
+        local value = old + value
+        if (value <= 5 ) and (value >= 1 ) then
+            tmpSettings.sound.volumeSoundEffects = value
+            widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
     
@@ -137,16 +137,16 @@ function scene:handleSegment(index, value)
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.difficulty = value
+            tmpSettings.ingame.difficulty = value
             scene.isSaved = false
             return
         end
         
-        local old = tmpSettings.difficulty
-        local check = old + value
-        if (check <= 3 ) and (check >= 1 ) then
-            tmpSettings.difficulty = check
-            widget.pointer:setActiveSegment(tmpSettings.difficulty)
+        local old = tmpSettings.ingame.difficulty
+        local value = old + value
+        if (value <= 3 ) and (value >= 1 ) then
+            tmpSettings.ingame.difficulty = value
+            widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
     end
@@ -159,19 +159,19 @@ function scene:handleSwitch(index, boolean)
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
-            tmpSettings.playStereo = state
+            tmpSettings.sound.playStereo = state
             scene.isSaved = false
             return
         end
         
-        local state = tmpSettings.playStereo
+        local state = tmpSettings.sound.playStereo
         if state and not boolean then
             widget.pointer:setState( {isOn = false, isAnimated = true} )
-            tmpSettings.playStereo = false 
+            tmpSettings.sound.playStereo = false 
             scene.isSaved = false
         elseif not state and boolean then
-            switchStereo:setState( {isOn = true, isAnimated = true} )
-            tmpSettings.playStereo = true 
+            widget.pointer:setState( {isOn = true, isAnimated = true} )
+            tmpSettings.sound.playStereo = true 
             scene.isSaved = false
         end
 
@@ -179,19 +179,19 @@ function scene:handleSwitch(index, boolean)
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
-            tmpSettings.playStereo = state
+            tmpSettings.sound.playStereo = state
             scene.isSaved = false
             return
         end
         
-        local state = tmpSettings.renderParticles
+        local state = tmpSettings.visual.renderParticles
         if state and not boolean then
             widget.pointer:setState( {isOn = false, isAnimated = true} )
-            tmpSettings.renderParticles = false 
+            tmpSettings.visual.renderParticles = false 
             scene.isSaved = false
         elseif not state and boolean then
             widget.pointer:setState( {isOn = true, isAnimated = true} )
-            tmpSettings.renderParticles = true 
+            tmpSettings.visual.renderParticles = true 
             scene.isSaved = false
         end
     end
@@ -252,7 +252,7 @@ end
 
 function scene:showOverlay(overlay)
     composer.showOverlay(overlay, {isModal=true, effect="fade", time=400})
-    transition.fadeOut( scene, {time=1000, transition=easing.inOutCubic} )
+    transition.fadeOut(scene,{time=1000, transition=easing.inOutCubic} )
 end
 
 function scene:hideOverlay()
@@ -320,6 +320,7 @@ function scene:create( event )
 
     -- Has to be set before widgetsTable
     tmpSettings = deepcopy(runtime.settings)
+    
     scene.isSaved = true
 
     -- Only the first time in center; if reshown, then last state
@@ -479,7 +480,7 @@ function scene:show( event )
                     id = "segmentMusicVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
-                    defaultSegment = tmpSettings.volumeMusic,
+                    defaultSegment = tmpSettings.sound.volumeMusic,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(12) end,
@@ -537,7 +538,7 @@ function scene:show( event )
                     id = "switchStereo",
                     x = 480,
                     y = 400,
-                    initialSwitchState = tmpSettings.playStereo,
+                    initialSwitchState = tmpSettings.sound.playStereo,
                     onRelease = function() scene:handleSwitch(16) end,
                 },
                 ["function"] = nil,
@@ -593,7 +594,7 @@ function scene:show( event )
                     id = "switchParticles",
                     x = 480,
                     y = 500,
-                    initialSwitchState = tmpSettings.renderParticles,
+                    initialSwitchState = tmpSettings.visual.renderParticles,
                     -- onRelease (for Touchcontrol)
                 },
                 ["function"] = nil,
@@ -651,7 +652,7 @@ function scene:show( event )
                     id = "segmentDifficulty",
                     segmentWidth = 35,
                     segments = {"1", "2", "3"},
-                    defaultSegment = tmpSettings.difficulty,
+                    defaultSegment = tmpSettings.ingame.difficulty,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(26) end,
