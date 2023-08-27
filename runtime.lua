@@ -22,15 +22,17 @@ else
     runtime["settings"] = data
 end
 
--- initialization of inputDevice-handling
-library.setUpInputDevices()
-
-
--- "global" scene functions
+-- "global" scene variables
 runtime["currentSaveFile"] = nil
 runtime.currentScene = nil
 runtime.currentSceneType = nil
-runtime.selectedInputDevice = runtime.settings.selectedInputDevice
+
+-- "global" input device variables
+runtime.currentInputDevice = nil
+runtime.currentInputDeviceType = nil
+
+-- initialization of inputDevice-handling
+library.setUpInputDevices()
 
 -- Maybe store as player.variable
 movF, movB, movJ, interact = false, false, false, false
