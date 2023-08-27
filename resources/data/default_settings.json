@@ -13,7 +13,11 @@
         "sneak":"-",
         "inventory":"i",
         "interact":"space",
-        "ability":"z"
+        "ability":"z",
+        "navigateUp":"up",
+        "navigateDown":"down",
+        "navigateLeft":"left",
+        "navigateRight":"right"
       },
       "controller":{
         "attack":"button A",
@@ -27,7 +31,11 @@
         "aneak":"-",
         "inventory":"i",
         "interact":"space",
-        "ability":"z"
+        "ability":"z",
+        "navigateUp":"up",
+        "navigateDown":"down",
+        "navigateLeft":"left",
+        "navigateRight":"right"
       },
       "touchscreen":{
         "attack":"button A",
@@ -49,7 +57,7 @@
       "saved":[]
     }
   },
-  "Sound":{
+  "sound":{
     "volumeMusic":1,
     "volumeSoundEffects":2,
     "playStereo":true,
