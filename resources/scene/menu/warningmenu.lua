@@ -10,7 +10,18 @@ local scene = composer.newScene()
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
-function scene:discardSettings()
+function scene:actionApplySettings()
+    parent:applySettings()
+
+    -- Message
+    parent:showToast("Settings applied!")
+            
+    composer.hideOverlay("fade", 400)
+    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 800})
+    composer.removeScene("resources.scene.menu.settingsmenu")
+end
+
+function scene:actionDiscardSettings()
     parent.isSaved = true
     tmpSettings = nil
 
@@ -18,7 +29,7 @@ function scene:discardSettings()
     parent:showToast("Settings discarded!")
             
     composer.hideOverlay("fade", 400)
-    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 800,})
+    library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 800})
     composer.removeScene("resources.scene.menu.settingsmenu")
 end
 
@@ -27,10 +38,9 @@ local function handleButtonEvent(event)
         if (event.target.id == "buttonBack") then
             parent:hideOverlay()
         elseif (event.target.id == "buttonApplySettings") then
-            parent:applySettings()
-            parent:hideOverlay()
+            scene:actionApplySettings()
         elseif (event.target.id == "buttonDiscardSettings") then
-            scene:discardSettings()
+            scene:actionDiscardSettings()
         end
     end
 end
@@ -151,13 +161,13 @@ function scene:create( event )
                 x = 300,
                 y = 250,
                 id = "buttonApplySettings",
-                label = "Save settings and exit",
+                label = "Save changes and exit",
                 onEvent = handleButtonEvent,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
                 labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
             },
-            ["function"] = function() parent:applySettings() parent:hideOverlay() end,
+            ["function"] = function() scene:actionApplySettings() end,
             ["navigation"] = {nil,5,nil,3},
             ["pointer"] = {},
             ["type"] = "button",
@@ -167,13 +177,13 @@ function scene:create( event )
                 x = 300,
                 y = 300,
                 id = "buttonDiscardSettings",
-                label = "Discard Settings",
+                label = "Discard changes",
                 onEvent = handleButtonEvent,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
                 labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
             },
-            ["function"] = function() scene:discardSettings() end,
+            ["function"] = function() scene:actionDiscardSettings() end,
             ["navigation"] = {nil,3,nil,4},
             ["pointer"] = {},
             ["type"] = "button",
@@ -181,8 +191,8 @@ function scene:create( event )
     }
 
     scene.widgetIndex = 3
+
 end
- 
  
 -- show()
 function scene:show( event )
@@ -194,13 +204,13 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         scene:loadUI()
+        scene:updateUI()
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         
     end
 end
- 
  
 -- hide()
 function scene:hide( event )
@@ -218,7 +228,6 @@ function scene:hide( event )
     end
 end
  
- 
 -- destroy()
 function scene:destroy( event )
  
@@ -226,7 +235,6 @@ function scene:destroy( event )
     -- Code here runs prior to the removal of scene's view
  
 end
- 
  
 -- -----------------------------------------------------------------------------------
 -- Scene event function listeners
