@@ -16,8 +16,10 @@ function scene:back()
 end
 
 function scene:setInputDevice(index)
-    runtime.currentInputDevice = runtime.availableInputDevices[index].displayName
-    library.setUpInputDevices()
+    local inputDevice = runtime.availableInputDevices[index]
+    
+    -- Deactivated because it would always change settings.json, but it should be here.
+    --library.setInputDevice(inputDevice.displayName, inputDevice.type)
 end
 
 function scene:loadUI()
