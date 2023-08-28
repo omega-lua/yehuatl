@@ -105,7 +105,6 @@ end
 function scene:extendMenu()
     local widgetIndex = scene.widgetIndex
     local cancelTransition = false
-    print(widgetIndex)
     if (widgetIndex == 2) then
         scene.array = {x=550,y=130,
             ["fc1"] = function() fc1("save1.json") end,
