@@ -14,6 +14,10 @@ if (state == false) then
     local data = library.resetSettings()
     library.initiateSettings(data)
     runtime["settings"] = data
+    -- clear unnecessary data
+    runtime.settings.controls.keybinds.controller = nil
+    runtime.settings.controls.keybinds.keyboard = nil
+    runtime.settings.controls.keybinds.touchscreen = nil
 else
     local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
     print("--settings.json found--")
@@ -32,7 +36,8 @@ runtime.currentInputDevice = nil
 runtime.currentInputDeviceType = nil
 
 -- initialization of inputDevice-handling
-library.setUpInputDevices()
+--library.setUpInputDevices()
+library.initiateInputDevices()
 
 -- Maybe store as player.variable
 movF, movB, movJ, interact = false, false, false, false
