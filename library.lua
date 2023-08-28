@@ -323,14 +323,29 @@ function getAvailableInputDevices()
             _dir[displayName] = #availableInputDevices
         end
     end
+
     runtime.availableInputDevices = availableInputDevices
     return availableInputDevices
 end
 
-function initiateKeybinds()
-    -- Keybinds --------------------------------------------------------
-    local current = runtime.settings.controls.inputDevice.current
-    local key = runtime.settings.controls.keybinds[current]
+function createKeybinds(inputDeviceType)
+    -- get default_settings from ResourceDirectory
+    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
+    local default_settings = library.getSettings(path)
+    
+    if inputDeviceType == "controller" then
+        keybinds = default_settings.controls.keybinds.controller
+    elseif inputDeviceType == "keyboard" then
+        keybinds = default_settings.controls.keybinds.keyboard
+    elseif inputDeviceType == "touchscreen" then
+        keybinds = default_settings.controls.keybinds.touchscreen
+    else print("ERROR: unkown or unsupported Input Device Type") return end
+
+    -- Changes are all stored together, so not here.
+    return keybinds
+end
+
+function initiateKeybinds(key)
 
     keybindJump = key.jump
     keybindSneak = key.sneak
@@ -349,81 +364,76 @@ function initiateKeybinds()
     keybindNavigateDown = key.navigateDown
 end
 
--- on startup setup for input devices
-function setUpInputDevices()
+function setInputDevice(displayName, inputDeviceType)
     -- Localize
-    local availableInputDevices = getAvailableInputDevices()
     local savedInputDevices = runtime.settings.controls.inputDevice.saved
+    local isSaved = (savedInputDevices[displayName] ~= nil)
+    local inputDeviceType = inputDeviceType or savedInputDevices[displayName]
+    local keybinds = {}
 
-    local function setInputDevice(inputDevice)
-        local displayName = inputDevice.displayName
-
-        if (table.indexOf(savedInputDevices, displayName)) then
-            -- It's a saved Input Device.
-            print(">>INITIATE<<")
-            
-            -- Set variables
-            runtime.currentInputDevice = displayName
-            for index = 1, #availableInputDevices do
-                if availableInputDevices[index].displayName == displayName then
-                    runtime.currentInputDeviceType = availableInputDevices[index].type
-                    break
-                end
-            end
-
-            initiateKeybinds()
+    if isSaved then
+        -- InputDevice is saved
+        if inputDeviceType then
+            -- user wants to change type of current input device. This will delete the old keybinds!     
+            -- get new keybinds
+            keybinds = library.createKeybinds(inputDeviceType)    
+            -- overwrite settings.controls.keybinds.INPUTDEVICENAME with new keybinds.
+            runtime.settings.controls.keybinds[displayName] = keybinds
+            -- add input device to saved
+            runtime.settings.controls.inputDevice.saved[displayName] = inputDeviceType
+        end
+        -- get keybinds from settings
+        keybinds = runtime.settings.controls.keybinds[displayName]
+    else
+        -- InputDevice is not saved
+        if (inputDeviceType == "unkown") then
+            print("type is unkown, open overlay")
+            -- gotoScene(inputdeviceoverlay)
+            return
         else
-            -- Input Device is new, create new keybinds.
-            if (inputDevice.type == "unknown") then
-                -- show message
-                print("SHOW MESSAGE")
-                -- return
-            end
-            
-            -- get default_settings from ResourceDirectory
-            local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-            local default_settings = library.getSettings(path)
-
-            -- get current settings from DocumentsDirectory. Maybe unnecessary, bcz runtime.settings
-            local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
-            local settings = library.getSettings(path)
-            local keybinds = {}
-
-            local type = inputDevice.type
-            local type = "keyboard" --  - -  - - - - - - - - - DEBUG
-            if type == "controller" then
-                keybinds = default_settings.controls.keybinds.controller
-            elseif type == "keyboard" then
-                keybinds = default_settings.controls.keybinds.keyboard
-            elseif type == "touchscreen" then
-                keybinds = default_settings.controls.keybinds.touchscreen
-            else print("ERROR: unkown or unsupported Input Device Type") return end
-
-            -- set keybinds
-            settings.controls.keybinds[displayName] = keybinds
-            -- add input device to "saved"
-            table.insert(settings.controls.inputDevice.saved, displayName)
-            
-            -- Save and initiate settings
-            library.saveSettings(settings)
-            library.initiateSettings(settings)
+            -- Type is known. Make new, typespecific keybinds
+            keybinds = library.createKeybinds(inputDeviceType)
+            -- add keybinds to keybinds table
+            runtime.settings.controls.keybinds[displayName] = keybinds
+            -- add input device to saved
+            runtime.settings.controls.inputDevice.saved[displayName] = inputDeviceType
         end
     end
 
-    -- if-statements
-    if (#availableInputDevices == 1) then
-        setInputDevice(availableInputDevices[1])
+    -- set runtime.currentInputDevice
+    runtime.currentInputDevice = displayName
+    runtime.currentInputDeviceType = inputDeviceType
 
-    elseif (#availableInputDevices > 1) then
-        
-        -- Show message box
-        print("show message box")
+    -- set settings.controls.inputDevice.current in settings.json
+    runtime.settings.controls.inputDevice.current = displayName
 
-        -- Check the selected Input Device
-        setInputDevice(availableInputDevices[1])
-    else
-        -- handle error
-        print("ERROR: No input device found")
+    -- Save changes in settings.json
+    library.saveSettings(runtime.settings)
+
+    -- initiate keybinds
+    library.initiateKeybinds(keybinds)
+
+    -- handle controlMode()
+end
+
+
+
+function initiateInputDevices()
+    -- Localize
+    local availableInputDevices = library.getAvailableInputDevices()
+
+    if #availableInputDevices == 1 then
+        local displayName = availableInputDevices[1].displayName
+        local inputDeviceType = availableInputDevices[1].type
+        library.setInputDevice(displayName, inputDeviceType)
+    elseif #availableInputDevices > 1 then
+        -- activate all keybinds?
+        -- show overlay
+
+        -- DEBUG
+        library.setInputDevice("Razer Ornata V2", "keyboard")
+    elseif #availableInputDevices == 0 then
+        print("ERROR: No input devices found.")
     end
 end
 
@@ -720,6 +730,10 @@ library.initiateSettings = initiateSettings
 library.setUpInitialSettings = setUpInitialSettings
 library.saveSettings = saveSettings
 library.resetSettings = resetSettings
+library.createKeybinds = createKeybinds
+library.initiateInputDevices = initiateInputDevices
+library.initiateKeybinds = initiateKeybinds
+library.setInputDevice = setInputDevice
 library.getAvailableInputDevices = getAvailableInputDevices
 library.setUpInputDevices = setUpInputDevices
 library.initiatePhysics = initiatePhysics
