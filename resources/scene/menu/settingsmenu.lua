@@ -231,6 +231,7 @@ function scene:applySettings()
     library.initiateSettings(data)
 
     -- Set variable
+    tmpSettings = nil
     scene.isSaved = true
 
     scene:showToast("Settings applied!")
@@ -510,7 +511,7 @@ function scene:show( event )
                     id = "segmentEffectsVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
-                    defaultSegment = tmpSettings.volumeSoundEffects,
+                    defaultSegment = tmpSettings.sound.volumeSoundEffects,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(14) end,
