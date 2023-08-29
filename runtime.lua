@@ -28,20 +28,17 @@ end
 
 -- "global" scene variables
 runtime["currentSaveFile"] = nil
-runtime.currentScene = nil
-runtime.currentSceneType = nil
+runtime.currentScene = "mainmenu"
+runtime.currentSceneType = "menu"
 
 -- "global" input device variables
 runtime.currentInputDevice = nil
 runtime.currentInputDeviceType = nil
 
--- initialization of inputDevice-handling
---library.setUpInputDevices()
-library.initiateInputDevices()
-
 -- Maybe store as player.variable
 movF, movB, movJ, interact = false, false, false, false
 
--- Gotoscene()
-composer.gotoScene("resources.scene.menu.mainmenu",{ effect = "fade", time = 1600,})
-library.setControlMode("menu")
+library.handleSceneChange("resources.scene.menu.mainmenu", "menu",{ effect = "fade", time = 1600,})
+
+-- initialization of inputDevice-handling
+library.initiateInputDevices()
