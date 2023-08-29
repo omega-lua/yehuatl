@@ -11,15 +11,79 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-function scene:back()
-    composer.hideOverlay({effect="fade", time=400})
+function scene:showToast(message)
+    local toast = display.newText({
+        text = message,     
+        x = display.contentCenterX,
+        y = display.contentCenterY*0.2,
+        width = 256,
+        font = "fonts/BULKYPIX.TTF",   
+        fontSize = 18,
+        align = "center"
+    })
+ 
+    local params = {
+        time = 1000,
+        tag = "toast",
+        transition = easing.outQuart,
+        delay = 1500,
+        alpha = 0
+    }
+    
+    toast:setFillColor(255, 0, 0)
+    sceneGroup:insert(toast)
+    transition.to(toast, params)
 end
 
-function scene:setInputDevice(index)
-    local inputDevice = runtime.availableInputDevices[index]
-    
-    -- Deactivated because it would always change settings.json, but it should be here.
-    --library.setInputDevice(inputDevice.displayName, inputDevice.type)
+-- Gets opened by pressing the back button.
+function scene:applyInputDevice()
+    -- if statement here to check if both inputs are here.
+    local currentInputDevice = runtime.currentInputDevice
+    local currentType = runtime.currentInputDeviceType
+    local newType = scene.cache.type
+    local newInputDevice = scene.cache.index
+
+    print("currentInputDevice:", currentInputDevice)
+    print("currentType:", currentType)
+    print("newType:", newType)
+    print("newInputDevice:", newInputDevice)
+
+    if (newType ~= currentType) and (currentType ~= "unkown") then
+        -- user wants to override/change inputdevicetype
+
+        -- Show warning
+        scene:showToast("Youre about to override the current keybinds...")
+        return
+    end
+
+    local deviceToLoad = newInputDevice or currentInputDevice
+    local typeToLoad = newType or currentType
+    if (newIndex and newType) then
+        -- scene:setInputDevice(displayName, inputDeviceType)
+        --composer.hideOverlay({effect="fade", time=400})
+        --library.setControlMode(runtime.currentSceneType)
+    end
+end
+
+local function handleButtonEvent(event)
+    if (event.phase == "ended") then
+        local id = event.target.id
+        if (id == "buttonApply") then
+            scene:applyInputDevice()
+        elseif (id == "buttonInputDevice1") then
+            scene.cache.index = 1
+        elseif (id == "buttonInputDevice2") then
+            scene.cache.index = 2
+        elseif (id == "buttonInputDevice3") then
+            scene.cache.index = 3
+        elseif (id == "buttonTouchscreen") then
+            scene.cache.type = "touchscreen"
+        elseif (id == "buttonController") then
+            scene.cache.type = "controller"
+        elseif (id == "buttonKeyboard") then
+            scene.cache.type = "keyboard"
+        end
+    end
 end
 
 function scene:loadUI()
@@ -42,7 +106,7 @@ function scene:loadUI()
     local n = #runtime.availableInputDevices
     for i=1, n do
         -- variables for navigation
-        local current = i+4
+        local current = i+#scene.widgetsTable
         local up = current-1
         -- then its the back button
         if (up < 5) then up = 1 end
@@ -61,7 +125,7 @@ function scene:loadUI()
                 fontSize = 20,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = function() scene:setInputDevice(i) end,
+            ["function"] = function() scene.cache.index = i end,
             ["navigation"] = {3,down,1,up},
             ["pointer"] = {},
             ["type"] = "button",
@@ -70,6 +134,7 @@ function scene:loadUI()
         -- Insert
         table.insert(scene.widgetsTable, array)
     end
+    library.printTable(scene.widgetsTable)
 
     -- Create widgets
     for i, object in pairs(scene.widgetsTable) do
@@ -158,16 +223,16 @@ function scene:show( event )
         scene.widgetsTable = {
             [1] = {
                 ["creation"] = {
-                    x = 50,
+                    x = -50,
                     y = 50,
-                    id = "buttonBack",
-                    label = "back",
+                    id = "buttonApply",
+                    label = "Apply",
                     onEvent = handleButtonEvent,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:back() end,
+                ["function"] = function() scene:applyInputDevice() end,
                 ["navigation"] = {5,5,3,nil},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -184,7 +249,7 @@ function scene:show( event )
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = nil,
+                ["function"] = function() scene.cache.type = "keyboard" end,
                 ["navigation"] = {1,3,6,4},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -201,7 +266,7 @@ function scene:show( event )
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = nil,
+                ["function"] = function() scene.cache.type = "controller" end,
                 ["navigation"] = {1,4,6,2},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -218,7 +283,7 @@ function scene:show( event )
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = nil,
+                ["function"] = function() scene.cache.type = "touchscreen" end,
                 ["navigation"] = {1,2,6,3},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -226,6 +291,7 @@ function scene:show( event )
             },
         }
 
+        scene.cache = {["index"] = nil,["type"] = nil}
         scene:loadUI()
 
     elseif ( phase == "did" ) then
