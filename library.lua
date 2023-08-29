@@ -371,11 +371,14 @@ function setInputDevice(displayName, inputDeviceType)
     local inputDeviceType = inputDeviceType or savedInputDevices[displayName]
     local keybinds = {}
 
+    print("isSaved:", isSaved)
+    print("displayName:", displayName)
+    print("inputDevice:", inputDeviceType)
+
     if isSaved then
         -- InputDevice is saved
         if inputDeviceType then
             -- user wants to change type of current input device. This will delete the old keybinds!     
-            -- get new keybinds
             keybinds = library.createKeybinds(inputDeviceType)    
             -- overwrite settings.controls.keybinds.INPUTDEVICENAME with new keybinds.
             runtime.settings.controls.keybinds[displayName] = keybinds
@@ -385,10 +388,11 @@ function setInputDevice(displayName, inputDeviceType)
         -- get keybinds from settings
         keybinds = runtime.settings.controls.keybinds[displayName]
     else
+        print("inputdevice new")
         -- InputDevice is not saved
         if (inputDeviceType == "unkown") then
             print("type is unkown, open overlay")
-            -- gotoScene(inputdeviceoverlay)
+            composer.showOverlay("resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
             return
         else
             -- Type is known. Make new, typespecific keybinds
@@ -412,11 +416,7 @@ function setInputDevice(displayName, inputDeviceType)
 
     -- initiate keybinds
     library.initiateKeybinds(keybinds)
-
-    -- handle controlMode()
 end
-
-
 
 function initiateInputDevices()
     -- Localize
@@ -428,10 +428,10 @@ function initiateInputDevices()
         library.setInputDevice(displayName, inputDeviceType)
     elseif #availableInputDevices > 1 then
         -- activate all keybinds?
-        -- show overlay
+        
+        -- show Overlay
+        composer.showOverlay( "resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
 
-        -- DEBUG
-        library.setInputDevice("Razer Ornata V2", "keyboard")
     elseif #availableInputDevices == 0 then
         print("ERROR: No input devices found.")
     end
@@ -645,8 +645,11 @@ function setControlMode(sceneType)
 end
 
 function handleSceneChange(goTo, nextType, options)
-    local currScene = composer.getSceneName( "current" )
-    local currType = currScene:sub(17, 20) -- Crappy. Otherwise: https://docs.coronalabs.com/api/library/global/select.html
+    --local currScene = composer.getSceneName( "current" )
+    --local currType = currScene:sub(17, 20) -- Crappy. Otherwise: https://docs.coronalabs.com/api/library/global/select.html
+
+    local currScene = runtime.currentScene    
+    local currType = runtime.currentSceneType
 
     if (currType == 'menu') and (nextType == 'game') then
         initiatePhysics()
@@ -655,6 +658,11 @@ function handleSceneChange(goTo, nextType, options)
         terminatePhysics()
         composer.removeScene("resources.scene.game.game", true)
     end
+    
+    -- update variables
+    --runtime.currentScene = ???
+    runtime.currentSceneType = nextType
+    
     composer.gotoScene(goTo, options)
     library.setControlMode(nextType)
 end
