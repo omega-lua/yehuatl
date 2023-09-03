@@ -57,10 +57,11 @@ function scene:create( event )
     local sceneGroup = self.view
 
     -- Only occurs when no savefiles found, and user presses play. For example during first time launching.
-    if not currentSaveFile then
+    if not runtime.currentSaveFile then
         library.newSaveFile()
+        runtime.currentSaveFile = "save1.json"
     end
-    library.loadSaveFile(currentSaveFile)
+    library.loadSaveFile(runtime.currentSaveFile)
 end
 
  
