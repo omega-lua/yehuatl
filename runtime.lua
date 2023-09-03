@@ -31,6 +31,9 @@ runtime["currentSaveFile"] = nil
 runtime.currentScene = "mainmenu"
 runtime.currentSceneType = "menu"
 
+-- "global" savefile variables
+runtime.currentSaveFile = nil
+
 -- "global" input device variables
 runtime.currentInputDevice = nil
 runtime.currentInputDeviceType = nil
