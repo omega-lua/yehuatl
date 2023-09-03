@@ -5,14 +5,13 @@ local widget = require( "widget" )
 local composer = require( "composer" )
 local scene = composer.newScene()
 
-
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
 -- Function to handle button events
-local function handleButtonEvent( event )
+local function handleButtonEvent(event)
     if ( event.phase == "ended") then
         if (event.target.id == 'buttonPlay') then
             scene:handleObjectInteraction("buttonPlay")
@@ -38,7 +37,6 @@ function scene:hoverObj()
         transition.to(widget.pointer, params)
     end
 end
-
 
 function scene:updateUI()
     scene:hoverObj()
@@ -83,8 +81,8 @@ function scene:create( event )
     scene.widgetsTable = {
         [1] = {
             ["creation"] = {
-                x = display.contentCenterX*1.4, 
-                y = display.contentCenterY,
+                x = 420, 
+                y = 180,
                 id = "buttonPlay",
                 label = "Play",
                 onEvent = handleButtonEvent,
@@ -96,11 +94,12 @@ function scene:create( event )
             ["navigation"] = {2,3,2,3},
             ["pointer"] = {},
             ["type"] = "button",
+            ["isInteractable"] = true
         },
         [2] = {
             ["creation"] = {
-                x = display.contentCenterX*0.6,
-                y = display.contentCenterY, 
+                x = 180,
+                y = 180, 
                 id = "buttonSettings",
                 label = "Settings",
                 onEvent = handleButtonEvent,
@@ -112,11 +111,12 @@ function scene:create( event )
             ["navigation"] = {1,3,1,3},
             ["pointer"] = {},
             ["type"] = "button",
+            ["isInteractable"] = true
         },
         [3] = {
             ["creation"] = {
-                x = display.contentCenterX*1,
-                y = display.contentCenterY*1.4, 
+                x = 300,
+                y = 260, 
                 id = "buttonCredits",
                 label = "Credits",
                 onEvent = handleButtonEvent,
@@ -128,6 +128,7 @@ function scene:create( event )
             ["navigation"] = {1,1,2,1},
             ["pointer"] = {},
             ["type"] = "button",
+            ["isInteractable"] = true
         },
     }
 
@@ -148,11 +149,10 @@ function scene:show( event )
         runtime.currentScene = scene
         runtime.currentSceneType = "menu"
 
-        
-
         -- Refresh
         scene:hoverObj()
 
+        -- animation
         local buttonPlay = scene.widgetsTable[1].pointer
         local buttonSettings = scene.widgetsTable[2].pointer
         local buttonCredits = scene.widgetsTable[3].pointer
