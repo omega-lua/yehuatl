@@ -24,15 +24,15 @@ end
 -- middleman function. Only opens scene when savefile is present. NOT SO GOOD CODE
 function scene:goToSaveFile(filename)
     if (filename == "save1.json") and scene.save1 then
-        currentSaveFile = filename
+        runtime.currentSaveFile = filename
         library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
 
     elseif (filename == "save2.json") and scene.save2 then
-        currentSaveFile = filename
+        runtime.currentSaveFile = filename
         library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
         
     elseif (filename == "save3.json") and scene.save3 then
-        currentSaveFile = filename
+        runtime.currentSaveFile = filename
         library.handleSceneChange("resources.scene.game.game", "game",{ effect = "zoomInOutFade", time = 1200,})
     end
 end
@@ -56,7 +56,6 @@ function scene:updateUI()
     
     -- Disable/Enable saveslot-buttons
     local widgetsTable = scene.widgetsTable
-    print("scene.save1:", scene.save1)
     if scene.save1 then
         widgetsTable[2].pointer:setEnabled(true)
         widgetsTable[2].pointer:setLabel("Save 1")
@@ -169,13 +168,13 @@ local function handleButtonEvent(event)
         end
 
         if (event.target.id == 'buttonSaveSlot1') then
-            currentSaveFile = "save1.json"
+            runtime.currentSaveFile = "save1.json"
             library.handleSceneChange("resources.scene.game.game", "game",{ effect = "fade", time = 800,})
         elseif (event.target.id == 'buttonSaveSlot2') then
-            currentSaveFile = "save2.json"
+            runtime.currentSaveFile = "save2.json"
             library.handleSceneChange("resources.scene.game.game", "game",{ effect = "fade", time = 800,})
         elseif (event.target.id == 'buttonSaveSlot3') then
-            currentSaveFile = "save3.json"
+            runtime.currentSaveFile = "save3.json"
             library.handleSceneChange("resources.scene.game.game", "game",{ effect = "fade", time = 800,})
         elseif (event.target.id == 'buttonInteract') then
             scene.widgetsTable[5]["function"]()
@@ -327,7 +326,7 @@ function scene:show( event )
         if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
             print("no savefiles found")
             -- Set var to nil if no savefiles are available
-            currentSaveFile = nil
+            runtime.currentSaveFile = nil
             local options = {effect = "fade", time = 500,}
             composer.gotoScene("resources.scene.game.game", options)
             return
@@ -337,7 +336,6 @@ function scene:show( event )
 
         scene:updateUI()
 
- 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
