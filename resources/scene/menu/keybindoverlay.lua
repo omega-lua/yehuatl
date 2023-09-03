@@ -64,7 +64,7 @@ local function handleButtonEvent(event)
             parent:hideOverlay()
             return
 
-        -- For now just simulate the navigateMenu style.
+        -- For now just simulate the keyNavigation style.
         elseif (id == "keybindEscape" ) then
             scene.widgetIndex = 5
         elseif (id == "keybindInteract" ) then
@@ -120,7 +120,7 @@ local function handleKeybindInput(event)
         widget.alpha = 1
 
         -- Add normal eventListener again
-        Runtime:addEventListener("key", library.navigateMenu)
+        Runtime:addEventListener("key", library.keyNavigation)
 
     end
 end
@@ -136,7 +136,7 @@ function scene:handleKeybindChange()
     Runtime:addEventListener("key", handleKeybindInput)
 
     -- Remove normal eventListener to get rid of some bugs.
-    Runtime:removeEventListener("key", library.navigateMenu)
+    Runtime:removeEventListener("key", library.keyNavigation)
 end
 
 local function handleScrollView()     
@@ -169,8 +169,8 @@ function scene:hoverObj()
     end
 end
 
--- middleman function
 function scene:updateUI()
+    -- middleman function
     scene:hoverObj()
     handleScrollView()
 end
