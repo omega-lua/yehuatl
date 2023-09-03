@@ -17,14 +17,13 @@ function scene:showToast(message)
         width = 256,
         font = "fonts/BULKYPIX.TTF",   
         fontSize = 18,
-        align = "center"  -- Alignment parameter
+        align = "center"
     })
  
     local params = {
         time = 1000,
         tag = "toast",
         transition = easing.outQuart,
-        delay = 00,
         alpha = 0
     }
     
@@ -99,10 +98,15 @@ local function handleKeybindInput(event)
         -- Localize
         local widgetIndex = scene.widgetIndex
         local widget = scene.widgetsTable[widgetIndex].pointer
-        local keybindName = scene.keybindTable[widgetIndex]
-        
+        local keybindName = scene.widgetsTable[widgetIndex].pointer.id
+        local inputDevice = runtime.currentInputDevice
+        print("inputDevice:", inputDevice)
+        print("keybindName:", keybindName)
+
         -- Set pressed key as new keybind in tmpSettings
-        tmpSettings[keybindName] = event.keyName
+        tmpSettings.controls.keybinds[inputDevice][keybindName] = event.keyName
+
+        library.printTable(tmpSettings)
 
         -- Change isSaved Variable
         parent.isSaved = false
@@ -111,7 +115,7 @@ local function handleKeybindInput(event)
         Runtime:removeEventListener("key", handleKeybindInput)
 
         -- Reload widget text
-        widget:setLabel(tmpSettings[keybindName])
+        widget:setLabel(tmpSettings.controls.keybinds[inputDevice][keybindName])
         transition.cancel( scene.transitionBlinking )
         widget.alpha = 1
 
@@ -267,8 +271,8 @@ function scene:show( event )
             },
             [5] = {
                 ["creation"] = {x=520,y=150,
-                    id="keybindEscape",
-                    label=tmpSettings.keybindEscape,
+                    id="escape",
+                    label=tmpSettings.controls.keybinds[runtime.currentInputDevice].escape,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -288,8 +292,8 @@ function scene:show( event )
             },
             [7] = {
                 ["creation"] = {x=520,y=200,
-                    id="keybindInteract",
-                    label=tmpSettings.keybindInteract,
+                    id="interact",
+                    label=keybindInteract,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -309,8 +313,8 @@ function scene:show( event )
             },
             [9] = {
                 ["creation"] = {x=520,y=250,
-                    id="keybindForward",
-                    label=tmpSettings.keybindForward,
+                    id="forward",
+                    label=keybindForward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -330,8 +334,8 @@ function scene:show( event )
             },
             [11] = {
                 ["creation"] = {x=520,y=300,
-                    id="keybindBackward",    
-                    label=tmpSettings.keybindBackward,
+                    id="backward",    
+                    label=keybindBackward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -351,8 +355,8 @@ function scene:show( event )
             },
             [13] = {
                 ["creation"] = {x=520,y=350,
-                    id="keybindJump",
-                    label=tmpSettings.keybindJump,
+                    id="jump",
+                    label=keybindJump,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -372,8 +376,8 @@ function scene:show( event )
             },
             [15] = {
                 ["creation"] = {x=520,y=400,
-                    id="keybindSneak",
-                    label=tmpSettings.keybindSneak,
+                    id="sneak",
+                    label=keybindSneak,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -393,8 +397,8 @@ function scene:show( event )
             },
             [17] = {
                 ["creation"] = {x=520,y=450,
-                    id="keybindPrimaryWeapon",
-                    label=tmpSettings.keybindPrimaryWeapon,
+                    id="primaryWeapon",
+                    label=keybindPrimaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -414,8 +418,8 @@ function scene:show( event )
             },
             [19] = {
                 ["creation"] = {x=520,y=500,
-                    id="keybindSecondaryWeapon",
-                    label=tmpSettings.keybindSecondaryWeapon,
+                    id="secondaryWeapon",
+                    label=keybindSecondaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -435,8 +439,8 @@ function scene:show( event )
             },
             [21] = {
                 ["creation"] = {x=520,y=550,
-                    id="keybindBlock",
-                    label=tmpSettings.keybindBlock,
+                    id="block",
+                    label=keybindBlock,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -456,8 +460,8 @@ function scene:show( event )
             },
             [23] = {
                 ["creation"] = {x=520,y=600,
-                    id="keybindAbility",
-                    label=tmpSettings.keybindAbility,
+                    id="ability",
+                    label=keybindAbility,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -477,8 +481,8 @@ function scene:show( event )
             },
             [25] = {
                 ["creation"] = {x=520,y=650,
-                    id="keybindInventory",
-                    label=tmpSettings.keybindInventory,
+                    id="inventory",
+                    label=keybindInventory,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleButtonEvent,
@@ -497,19 +501,6 @@ function scene:show( event )
                 ["type"] = "text",
             },
 
-        }
-        scene.keybindTable = {
-            [5] = "keybindEscape",
-            [7] = "keybindInteract",
-            [9] = "keybindForward",
-            [11] = "keybindBackward",
-            [13] = "keybindJump",
-            [15] = "keybindSneak",
-            [17] = "keybindPrimaryWeapon",
-            [19] = "keybindSecondaryWeapon",
-            [21] = "keybindBlock",
-            [23] = "keybindAbility",
-            [24] = "keybindInventory",
         }
 
         scene:loadUI()
