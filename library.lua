@@ -460,58 +460,6 @@ function terminatePhysics()
     physics.stop()
 end
 
-function findNearestObj()
-    -- maybe define a table with the data for each menu, instead of calculating it everytime.
-    for i, object in ipairs(listOfObjects) do
-        local x, y = object.x, object.y
-        
-        if (navigationInput == "up") and (y <= currPosY) then
-            local dx, dy = (currPosX-x), (currPosY-y)
-            local delta = sqrt((dx*dx)+(dy*dy))
-            --distances[object] = delta
-            distances[i] = delta
-            if delta < minD then
-                minD = delta
-            end
-
-        elseif (navigationInput == "down") and (y >= currPosY)then
-            local dx, dy = (currPosX-x), (currPosY-y)
-            local delta = sqrt((dx*dx)+(dy*dy))
-            --distances[object] = delta
-            distances[i] = delta
-            if delta < minD then
-                minD = delta
-            end
-
-        elseif (navigationInput == "left") and (x <= currPosX) then
-            local dx, dy = (currPosX-x), (currPosY-y)
-            local delta = sqrt((dx*dx)+(dy*dy))
-            --distances[object] = delta
-            distances[i] = delta
-            if delta < minD then
-                minD = delta
-            end
-
-        elseif (navigationInput == "right") and (x >= currPosX) then
-            local dx, dy = (currPosX-x), (currPosY-y)
-            local delta = sqrt((dx*dx)+(dy*dy))
-            distances[i] = delta
-            if delta < minD then
-                minD = delta
-            end
-        else
-            local delta = 10000
-            distances[i] = delta
-            if delta < minD then
-                minD = delta
-            end
-        end
-    end
-    local index = table.indexOf( distances, minD )
-    local nearestObj = listOfObjects[index]
-    currPosX, currPosY = nearestObj:localToContent(0,0)
-end
-
 function navigateGame(event)
     -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
     if (event.phase == "down") then
@@ -584,11 +532,101 @@ function touchscreenControl(event)
     end
 end
 
-function navigateMenu(event)
+function createNavigationMatrix()
+    -- Localize
+    local sqrt = math.sqrt
+    local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
+    local widgetsTable = scene.widgetsTable
+    local matrix, array = {}, {}
+
+    -- Get all coordinates from interactable widgets
+    for i, object in pairs(scene.widgetsTable) do
+        if object.isInteractable then
+            local x, y = object.pointer:localToContent(0,0)
+            --local x, y = scene.widgetsTable[i].creation.x, scene.widgetsTable[i].creation.y
+            array[i] = {x,y}
+        end
+    end
+
+    
+    for i, c in pairs(array) do
+        local ix, iy = c[1], c[2]
+        local a,b,c,d = "nil", "nil", "nil", "nil"
+        local minA, minB, minC, minD = 5000, 5000, 5000, 5000
+        local _lookup = {["a"]={}, ["b"]={}, ["c"]={}, ["d"]={}}
+        
+        -- get deltas
+        for j, k in pairs(array) do
+            if (i ~= j) then
+                local jx, jy = k[1], k[2]
+
+                if ix < jx then
+                    local dx, dy = (ix-jx)*0.2, (iy-jy)
+                    local delta = sqrt(dx*dx*0.2+dy*dy)               
+                    if delta < minA then 
+                        a = j
+                        minA = delta
+                    end
+                end
+                if ix > jx then
+                    local dx, dy = (ix-jx)*0.2, (iy-jy)
+                    local delta = sqrt(dx*dx+dy*dy)
+                    if delta < minC then
+                        c = j
+                        minC = delta
+                    end
+                end
+                if iy < jy then
+                    local dx, dy = (ix-jx), (iy-jy)*0.2
+                    local delta = sqrt(dx*dx+dy*dy)
+                    if delta < minB then
+                        b = j
+                        minB = delta
+                    end
+                end
+                if iy > jy then
+                    local dx, dy = (ix-jx), (iy-jy)*0.2
+                    local delta = sqrt(dx*dx+dy*dy)
+                    if delta < minD then
+                        d = j
+                        minD = delta
+                    end
+                end
+
+            end
+        end
+
+        -- handle no navigationindex
+        if (a == nil) then
+            --
+        end
+        if (b == nil) then
+            --
+        end
+        if (c == nil) then
+            --
+        end
+        if (d == nil) then
+            --
+        end
+        print("---------------------",a,b,c,d)
+        matrix[i] = {a,b,c,d}
+    end
+    return matrix
+end
+
+function setNavigationMatrix(matrix)
+    local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName( "current" ) )
+    for i, object in pairs(matrix) do
+        scene.widgetsTable[i].navigation = matrix[i]
+    end
+end
+
+function keyNavigation(event)
     if (event.phase == "up") then
         local keyName = event.keyName
-        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
         local nextIndex = nil
+        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
         local widget = scene.widgetsTable[scene.widgetIndex]
 
         if (keyName == keybindNavigateRight) then
@@ -620,7 +658,7 @@ function navigateMenu(event)
 end
 
 function setControlMode(sceneType)
-    Runtime:removeEventListener("key", library.navigateMenu)
+    Runtime:removeEventListener("key", library.keyNavigation)
     Runtime:removeEventListener("key", library.navigateGame)
     Runtime:removeEventListener("touch", library.touchscreenControl)
     --Runtime:removeEventListener()
@@ -628,7 +666,7 @@ function setControlMode(sceneType)
     local inputType = runtime.currentInputDeviceType
     if (inputType == "keyboard") then
         if (sceneType == "menu") then
-            Runtime:addEventListener("key", library.navigateMenu)
+            Runtime:addEventListener("key", library.keyNavigation)
             runtime.currentSceneType = "menu"
         elseif (sceneType == "game") then
             runtime.currentSceneType = "game"
@@ -645,16 +683,16 @@ function setControlMode(sceneType)
         end
     elseif (inputType == "controller") then
         if (sceneType == "menu") then
-            Runtime:addEventListener("key", library.navigateMenu)
+            Runtime:addEventListener("key", library.keyNavigation)
             runtime.currentSceneType = "menu"
         elseif (sceneType == "game") then
             runtime.currentSceneType = "game"
-            -- scene:navigateGame()
+            -- navigateGame()
         end
     elseif (inputType == "unknown") then
         -- If unknown, add all eventListeners.
 
-        Runtime:addEventListener("key", library.navigateMenu)
+        Runtime:addEventListener("key", library.keyNavigation)
         --
         --
     end
@@ -663,8 +701,8 @@ end
 function handleSceneChange(goTo, nextType, options)
     --local currScene = composer.getSceneName( "current" )
     --local currType = currScene:sub(17, 20) -- Crappy. Otherwise: https://docs.coronalabs.com/api/library/global/select.html
-
-    local currScene = runtime.currentScene    
+    --local currScene = runtime.currentScene    
+    
     local currType = runtime.currentSceneType
 
     if (currType == 'menu') and (nextType == 'game') then
@@ -767,7 +805,9 @@ library.findNearestObj = findNearestObj
 library.hoverObj = hoverObj
 library.navigateGame = navigateGame
 library.touchscreenControl = touchscreenControl
-library.navigateMenu = navigateMenu
+library.createNavigationMatrix = createNavigationMatrix
+library.setNavigationMatrix = setNavigationMatrix
+library.keyNavigation = keyNavigation
 library.setControlMode = setControlMode
 library.handleSceneChange = handleSceneChange
 library.saveUserDataJSON = saveUserDataJSON
