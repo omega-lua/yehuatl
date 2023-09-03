@@ -25,6 +25,8 @@ function deepcopy(orig)
 end
 
 function scene:showToast(message)
+    sceneGroup = scene.view
+    
     local toast = display.newText({
         text = message,     
         x = display.contentCenterX,
@@ -32,7 +34,7 @@ function scene:showToast(message)
         width = 256,
         font = "fonts/BULKYPIX.TTF",   
         fontSize = 18,
-        align = "center"  -- Alignment parameter
+        align = "center"
     })
  
     local params = {
@@ -90,6 +92,9 @@ function scene:back()
     else
         -- if settings are saved
         library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
+        
+        tmpSettings = nil
+        scene.isSaved = true
     end
 end
 
@@ -197,6 +202,37 @@ function scene:handleSwitch(index, boolean)
     end
 end
 
+function scene:applySettings()
+    local data = tmpSettings
+
+    -- Save to file
+    library.saveSettings(data)
+
+    -- Initiate Settings
+    library.initiateSettings(data)
+    library.initiateKeybinds(data.controls.keybinds[runtime.currentInputDevice])
+
+    tmpSettings = deepcopy(runtime.settings)
+    scene.isSaved = true
+
+    scene:showToast("settings apllied!")
+end
+
+function scene:resetSettings()
+    -- Get default_settings and save as settings.json
+    local data = library.resetSettings()
+
+    -- Initiate Settings
+    library.initiateSettings(data)
+
+    tmpSettings = deepcopy(runtime.settings)
+    scene.isSaved = true
+
+    scene:updateUI()
+
+    scene:showToast("settings reset!")
+end
+
 local function handleButtonEvent(event)
     if (event.phase == 'ended') then
         local id = event.target.id
@@ -219,36 +255,6 @@ local function handleButtonEvent(event)
             scene:showOverlay("resources.scene.menu.outputdeviceoverlay")
         end
     end 
-end
-
-function scene:applySettings()
-    local data = tmpSettings
-
-    -- Save to file
-    library.saveSettings(data)
-
-    -- Initiate Settings
-    library.initiateSettings(data)
-
-    -- Set variable
-    tmpSettings = nil
-    scene.isSaved = true
-
-    scene:showToast("Settings applied!")
-end
-
-function scene:resetSettings()
-    -- Get default_settings and save as settings.json
-    local data = library.resetSettings()
-
-    -- Initiate Settings
-    library.initiateSettings(data)
-
-    scene:reload()
-
-    scene.isSaved = true
-
-    scene:showToast("Settings reset!")
 end
 
 function scene:showOverlay(overlay)
@@ -334,6 +340,12 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+
+        if tmpSettings == nil then
+            print("tmpSettings is nil")
+            tmpSettings = deepcopy(runtime.settings)
+            scene.isSaved = true
+        end
 
         -- Has to be here, so that it refreshes the UI everytime. Has to be set before scene:loadUI()
         scene.widgetsTable = {
