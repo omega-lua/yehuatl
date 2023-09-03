@@ -46,8 +46,7 @@ function scene:applyInputDevice()
     local savedType = runtime.settings.controls.inputDevice.saved[selectedDevice]
     
     local function fc(v,k)
-        print(v,k)
-        library.setInputDevice(selectedDevice, selectedType)
+        library.setInputDevice(v, k)
         library.setControlMode(runtime.currentSceneType)
     end
 
@@ -77,42 +76,7 @@ function scene:applyInputDevice()
     composer.hideOverlay({effect="fade", time=800})
 end
 
--- Gets opened by pressing the back button.
-function scene:applyInputDeviceTEMP()
-    -- if no change then... function
-    
-    -- there may are better ways.
-    local selectedDevice = nil
-    if scene.selectedInputDeviceIndex then
-        selectedDevice = runtime.availableInputDevices[scene.selectedInputDeviceIndex].displayName
-    else
-        selectedDevice = runtime.currentInputDevice or nil
-    end
-    local selectedDeviceType = scene.selectedInputDeviceType or runtime.currentInputDeviceType or runtime.settings.controls.inputDevice.saved[selectedDevice] or nil
-
-    -- currently disabled
-    if false and (newType ~= currentType) and (currentType ~= "unkown") then
-        -- user wants to override/change inputdevicetype
-
-        -- Show warning
-        scene:showToast("Youre about to override the current keybinds...")
-
-        -- Give an option to user !!!
-        return
-    end
-
-    if selectedDevice and selectedDeviceType then
-        print("inputdevice should be loaded..")
-
-        library.setInputDevice(selectedDevice, selectedDeviceType)
-        composer.hideOverlay({effect="fade", time=800})
-        library.setControlMode(runtime.currentSceneType)
-    else
-        print("Message: You must choose one.")
-    end
-end
-
--- Find a better solution, this one not scalable (!!!), but useful for playing audio/visual feedback.
+-- Maybe useful for playing audio/visual feedback in future.
 local function handleButtonEvent(event)
     if (event.phase == "ended") then
         local id = event.target.id
@@ -155,15 +119,6 @@ function scene:loadUI()
     -- Create table entry for each inputDeviceWidget
     local n = #runtime.availableInputDevices
     for i=1, n do
-        -- variables for navigation
-        local current = i+#scene.widgetsTable
-        local up = current-1
-        -- then its the back button
-        if (up < 5) then up = 1 end
-        local down = current + 1
-        -- then its the back button
-        if (down > n+4) then down = 1 end
-
         -- isSaved property to darken the unsaved input devices
         local isSaved = runtime.settings.controls.inputDevice.saved[runtime.availableInputDevices[i].displayName]
         if isSaved ~= nil then isSaved = true else isSaved = nil end
@@ -182,10 +137,11 @@ function scene:loadUI()
                 labelColor = { default=t, over={ 1, 1, 1, 0.5 } }
             },
             ["function"] = function() scene.selectedIndex = i end,
-            ["navigation"] = {3,down,1,up},
+            ["navigation"] = {},
             ["pointer"] = {},
             ["type"] = "button",
             ["parent"] = "scrollView",
+            ["isInteractable"] = true
         }
         -- Insert
         table.insert(scene.widgetsTable, array)
@@ -235,6 +191,7 @@ end
 
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
+    print("widgetIndex:", widgetIndex)
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
@@ -249,7 +206,6 @@ end
 function scene:updateUI()
     scene:hoverObj()
 end
-
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -290,7 +246,8 @@ function scene:show( event )
                 ["navigation"] = {5,5,3,nil},
                 ["pointer"] = {},
                 ["type"] = "button",
-                ["parent"] = "sceneGroup"
+                ["parent"] = "sceneGroup",
+                ["isInteractable"] = true
             },
             [2] = {
                 ["creation"] = {
@@ -308,6 +265,7 @@ function scene:show( event )
                 ["pointer"] = {},
                 ["type"] = "button",
                 ["parent"] = "sceneGroup",
+                ["isInteractable"] = true
             },
             [3] = {
                 ["creation"] = {
@@ -325,6 +283,7 @@ function scene:show( event )
                 ["pointer"] = {},
                 ["type"] = "button",
                 ["parent"] = "sceneGroup",
+                ["isInteractable"] = true
             },
             [4] = {
                 ["creation"] = {
@@ -342,12 +301,17 @@ function scene:show( event )
                 ["pointer"] = {},
                 ["type"] = "button",
                 ["parent"] = "sceneGroup",
+                ["isInteractable"] = true
             },
         }
 
+        scene.widgetIndex = 6
         scene.selectedIndex = nil
         scene.selectedType = nil
         scene:loadUI()
+
+        local matrix = library.createNavigationMatrix()
+        library.setNavigationMatrix(matrix)
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
