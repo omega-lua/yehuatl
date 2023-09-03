@@ -191,7 +191,6 @@ end
 
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
-    print("widgetIndex:", widgetIndex)
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
