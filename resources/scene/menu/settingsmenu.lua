@@ -363,7 +363,7 @@ function scene:show( event )
                 ["function"] = function() scene:back() end,
                 ["navigation"] = {5,5,5,27},
                 ["pointer"] = {},
-                ["type"] = "button",
+                ["type"] = "button"
             },
             [2] = {
                 ["creation"] = {100,50,320,50},
