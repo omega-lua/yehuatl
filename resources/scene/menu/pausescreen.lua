@@ -4,10 +4,6 @@ local widget = require( "widget" )
 local composer = require( "composer" )
 local scene = composer.newScene()
  
--- -----------------------------------------------------------------------------------
--- Scene event functions
--- -----------------------------------------------------------------------------------
-
 local function handleButtonEvent(event)
     if (event.phase == 'ended') then    
         if (event.target.id == "buttonResume") then
@@ -24,6 +20,10 @@ local function handleButtonEvent(event)
         end
     end
 end
+
+-- -----------------------------------------------------------------------------------
+-- Scene event functions
+-- -----------------------------------------------------------------------------------
 
 
 -- create()
