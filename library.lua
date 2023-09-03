@@ -165,7 +165,6 @@ function writeFile(path, contents)
     file = nil
 end
 
--- Sets Variables stored in the savefile. //Weiss nicht ob da hier sein soll oder in game.lua
 function loadSaveFile(filename)
     local path = system.pathForFile(filename, system.DocumentsDirectory)
     local contents = library.readFile(path)
@@ -173,7 +172,6 @@ function loadSaveFile(filename)
     -- 2. Decode JSON-file
     decoded, pos, msg = json.decode(contents, 1, "emptyTable")
 
-    -- KOMMT IN INITIATEDATA
     -- 3. Set Variabels
     if decoded then
         -- 3.1 Set map-Variable
@@ -183,7 +181,7 @@ function loadSaveFile(filename)
         playerData = decoded["playerData"]
         environmentData = decoded["environmentData"]
 
-    elseif not decoded then
+    else
         print( "Decode failed at "..tostring(pos)..": "..tostring(msg) )
     end
 end
@@ -368,30 +366,15 @@ function setInputDevice(displayName, inputDeviceType)
     -- Localize
     local savedInputDevices = runtime.settings.controls.inputDevice.saved
     local isSaved = (savedInputDevices[displayName] ~= nil)
-    local inputDeviceType = inputDeviceType or savedInputDevices[displayName]
+    local inputDeviceType = inputDeviceType --or savedInputDevices[displayName]
     local keybinds = {}
 
-    print("isSaved:", isSaved)
-    print("displayName:", displayName)
-    print("inputDevice:", inputDeviceType)
-
     if isSaved then
-        -- InputDevice is saved
-        if inputDeviceType then
-            -- user wants to change type of current input device. This will delete the old keybinds!     
-            keybinds = library.createKeybinds(inputDeviceType)    
-            -- overwrite settings.controls.keybinds.INPUTDEVICENAME with new keybinds.
-            runtime.settings.controls.keybinds[displayName] = keybinds
-            -- add input device to saved
-            runtime.settings.controls.inputDevice.saved[displayName] = inputDeviceType
-        end
-        -- get keybinds from settings
+        -- InputDevice is saved, get keybinds from settings
         keybinds = runtime.settings.controls.keybinds[displayName]
     else
-        print("inputdevice new")
         -- InputDevice is not saved
         if (inputDeviceType == "unkown") then
-            print("type is unkown, open overlay")
             composer.showOverlay("resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
             return
         else
@@ -411,6 +394,9 @@ function setInputDevice(displayName, inputDeviceType)
     -- set settings.controls.inputDevice.current in settings.json
     runtime.settings.controls.inputDevice.current = displayName
 
+    -- update controlMode
+    library.setControlMode(runtime.currentSceneType)
+
     -- Save changes in settings.json
     library.saveSettings(runtime.settings)
 
@@ -423,11 +409,36 @@ function initiateInputDevices()
     local availableInputDevices = library.getAvailableInputDevices()
 
     if #availableInputDevices == 1 then
+        print("only one input device found")
         local displayName = availableInputDevices[1].displayName
         local inputDeviceType = availableInputDevices[1].type
         library.setInputDevice(displayName, inputDeviceType)
     elseif #availableInputDevices > 1 then
-        -- activate all keybinds?
+        -- if only one saved input device is found in availableInputDevices, use this one. Inefficient.
+        local temp_available = {}
+        local temp_saved = {}
+        local n, name = 0, nil
+        for k,v in pairs(availableInputDevices) do
+            table.insert(temp_available, availableInputDevices[k].displayName)
+        end
+        for k,v in pairs(runtime.settings.controls.inputDevice.saved) do
+            table.insert(temp_saved, k)
+        end
+        for i=1, #temp_saved do
+            if (table.indexOf( temp_available, temp_saved[i] )) then
+                print("true")
+                n = n + 1
+                name = temp_saved[i]
+            end
+        end
+        if (n == 1) then
+            print("only one device saved AND available.")
+            local inputDeviceType = runtime.settings.controls.inputDevice.saved[name]
+            library.setInputDevice(name, inputDeviceType)
+            return
+        end
+
+        -- activate all keybinds!!!!
         
         -- show Overlay
         composer.showOverlay( "resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
@@ -501,10 +512,8 @@ function findNearestObj()
     currPosX, currPosY = nearestObj:localToContent(0,0)
 end
 
--- Muss noch herausfinden, wie was gesteuert werden kann.
-function keyboardControl(event)
+function navigateGame(event)
     -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
-    
     if (event.phase == "down") then
         if (event.keyName == keybindJump) then
             player:Jump()
@@ -563,7 +572,6 @@ function keyboardControl(event)
 
 end 
 
--- movF, movB, movJ, interact
 function touchscreenControl(event)
     if (event.phase == "began") then
         if (event.target == ButtonForward) then
@@ -613,6 +621,7 @@ end
 
 function setControlMode(sceneType)
     Runtime:removeEventListener("key", library.navigateMenu)
+    Runtime:removeEventListener("key", library.navigateGame)
     Runtime:removeEventListener("touch", library.touchscreenControl)
     --Runtime:removeEventListener()
     
@@ -623,7 +632,7 @@ function setControlMode(sceneType)
             runtime.currentSceneType = "menu"
         elseif (sceneType == "game") then
             runtime.currentSceneType = "game"
-            -- scene:navigateGame()
+            Runtime:addEventListener("key", library.navigateGame)
         end
     
     elseif (inputType == "touchscreen") then
@@ -635,12 +644,19 @@ function setControlMode(sceneType)
             -- Touch navigation (??)
         end
     elseif (inputType == "controller") then
-        --
+        if (sceneType == "menu") then
+            Runtime:addEventListener("key", library.navigateMenu)
+            runtime.currentSceneType = "menu"
+        elseif (sceneType == "game") then
+            runtime.currentSceneType = "game"
+            -- scene:navigateGame()
+        end
     elseif (inputType == "unknown") then
         -- If unknown, add all eventListeners.
 
         Runtime:addEventListener("key", library.navigateMenu)
-
+        --
+        --
     end
 end
 
@@ -723,6 +739,7 @@ function saveUserDataJSON()
  
     file = nil
 end
+
 --------------------------------------------------------------------------------
 -- Add functions to Public Library
 --------------------------------------------------------------------------------
@@ -748,7 +765,7 @@ library.initiatePhysics = initiatePhysics
 library.terminatePhysics = terminatePhysics
 library.findNearestObj = findNearestObj
 library.hoverObj = hoverObj
-library.keyboardControl = keyboardControl
+library.navigateGame = navigateGame
 library.touchscreenControl = touchscreenControl
 library.navigateMenu = navigateMenu
 library.setControlMode = setControlMode
