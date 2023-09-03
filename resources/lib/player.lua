@@ -23,7 +23,7 @@ function M.new( instance, options )
     local scaleFactor = scaleFactor
     --filter = CollisionFilterPlayer
     physics.addBody(instance, "dynamic",
-        { density=3.5, friction=0, bounce=0, shape={-35,-65, 35,-65, 35,60, -35,60}  }, -- 1: Main body element für abstumpfen: 5,65, -5,65 als 3- und 2-letzte einfügen.
+        { density=3.5, friction=0, bounce=0, shape={-35,-65, 35,-65, 35,65, -35,65}  }, -- 1: Main body element für abstumpfen: 5,65, -5,65 als 3- und 2-letzte einfügen.
         { box={ halfWidth=20, halfHeight=8, x=0, y=75 }, isSensor=true },               -- 2: Foot sensor element
         { box={ halfWidth=10, halfHeight=10, x=45, y=70 }, isSensor=true },             -- 3: Right Side sensor element
         { box={ halfWidth=10, halfHeight=10, x=-45, y=70 }, isSensor=true },            -- 4: Left Side sensor element
