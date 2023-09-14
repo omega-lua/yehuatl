@@ -222,10 +222,8 @@ end
 function getSettings(path)
     -- Read file
     local data = library.readFile(path)
-    
     -- decode data
     local decoded = json.decode(data, 1, "emptyTable")
-    
     return decoded
 end
 
@@ -322,7 +320,6 @@ function getAvailableInputDevices()
         end
     end
 
-    runtime.availableInputDevices = availableInputDevices
     return availableInputDevices
 end
 
@@ -363,19 +360,23 @@ function initiateKeybinds(key)
 end
 
 function setInputDevice(displayName, inputDeviceType)
+    print(displayName, inputDeviceType)
     -- Localize
     local savedInputDevices = runtime.settings.controls.inputDevice.saved
     local isSaved = (savedInputDevices[displayName] ~= nil)
-    local inputDeviceType = inputDeviceType --or savedInputDevices[displayName]
+    local inputDeviceType = inputDeviceType
     local keybinds = {}
 
     if isSaved then
         -- InputDevice is saved, get keybinds from settings
         keybinds = runtime.settings.controls.keybinds[displayName]
+        if not keybinds then
+            print("ERROR: No keybinds are stored for this (saved) input device.")
+        end
     else
         -- InputDevice is not saved
         if (inputDeviceType == "unkown") then
-            composer.showOverlay("resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
+            composer.showOverlay("resources.scene.menu.inputdevicemenu", {isModal=true, effect="fade", time=400})
             return
         else
             -- Type is known. Make new, typespecific keybinds
@@ -383,27 +384,80 @@ function setInputDevice(displayName, inputDeviceType)
             -- add keybinds to keybinds table
             runtime.settings.controls.keybinds[displayName] = keybinds
             -- add input device to saved
-            runtime.settings.controls.inputDevice.saved[displayName] = inputDeviceType
+            runtime.settings.controls.inputDevice.saved[displayName] = {}
+            runtime.settings.controls.inputDevice.saved[displayName].type = inputDeviceType
         end
     end
 
-    -- set runtime.currentInputDevice
+    -- set variables
     runtime.currentInputDevice = displayName
     runtime.currentInputDeviceType = inputDeviceType
-
-    -- set settings.controls.inputDevice.current in settings.json
     runtime.settings.controls.inputDevice.current = displayName
+    runtime.settings.controls.inputDevice.saved[displayName].lastUsed = os.time()
 
     -- update controlMode
     library.setControlMode(runtime.currentSceneType)
-
     -- Save changes in settings.json
     library.saveSettings(runtime.settings)
-
     -- initiate keybinds
     library.initiateKeybinds(keybinds)
 end
 
+function initiateIputDevice()
+    -- Localize
+    runtime.availableInputDevices = library.getAvailableInputDevices()
+    local availableInputDevices = runtime.availableInputDevices
+    local savedInputDevices = runtime.settings.controls.inputdevice.saved
+    runtime.settings.controls.inputdevice.alwaysLastUsed = false -- DEBUG
+
+    if scene.currentInputDevice then
+        -- Keep using that one.
+        return true
+    end
+
+    if availableInputDevices then
+        if savedInputDevices then
+            if (#savedInputDevices == 1) then
+                -- May not work.
+                local name = savedInputDevices[1]
+                for i, device in pairs(availableInputDevices) do
+                    if (device.displayName == name) then
+                        -- use this one.
+                        -- setInputDevice(device, deviceType)
+                        return true
+                    end
+                end
+            else
+                -- Get last used (and saved) input device.
+                local maxn, device, deviceType = 0, nil, nil
+                for name, parameters in pairs(savedInputDevices) do
+                    if parameters.lastUsed and (parameters.lastUsed > maxn) then
+                        maxn = parameters.lastUsed
+                        device = name
+                        deviceType = parameters.type
+                    end
+                end
+
+                if runtime.settings.controls.inpuotdevice.alwaysLastUsed then
+                    -- use last used.
+                    -- setInputDevice(device, deviceType)
+                else
+                    -- show menu. Show latest one.
+                    scene.selectedDevice = device
+                    scene.selectedType = deviceType
+                    -- show menu.
+                end
+            end
+        else
+            -- show menu.
+        end
+    else
+        print("ERROR: No available inputdevices.")
+        return false
+    end
+end
+
+-- OUTDATED OUTDATED OUTDATED
 function initiateInputDevices()
     -- Localize
     local availableInputDevices = library.getAvailableInputDevices()
@@ -415,33 +469,32 @@ function initiateInputDevices()
         library.setInputDevice(displayName, inputDeviceType)
     elseif #availableInputDevices > 1 then
         -- if only one saved input device is found in availableInputDevices, use this one. Inefficient.
-        local temp_available = {}
-        local temp_saved = {}
-        local n, name = 0, nil
-        for k,v in pairs(availableInputDevices) do
-            table.insert(temp_available, availableInputDevices[k].displayName)
-        end
-        for k,v in pairs(runtime.settings.controls.inputDevice.saved) do
-            table.insert(temp_saved, k)
-        end
-        for i=1, #temp_saved do
-            if (table.indexOf( temp_available, temp_saved[i] )) then
-                print("true")
-                n = n + 1
-                name = temp_saved[i]
-            end
-        end
-        if (n == 1) then
-            print("only one device saved AND available.")
-            local inputDeviceType = runtime.settings.controls.inputDevice.saved[name]
-            library.setInputDevice(name, inputDeviceType)
-            return
-        end
+        --local temp_available = {}
+        --local temp_saved = {}
+        --local n, name = 0, nil
+        --for k,v in pairs(availableInputDevices) do
+            --table.insert(temp_available, availableInputDevices[k].displayName)
+        --end
+        --for k,v in pairs(runtime.settings.controls.inputDevice.saved) do
+            --table.insert(temp_saved, k)
+        --end
+        --for i=1, #temp_saved do
+            --if (table.indexOf( temp_available, temp_saved[i] )) then
+                --n = n + 1
+                --name = temp_saved[i]
+            --end
+        --end
+        --if (n == 1) then
+            --print("only one device saved AND available.")
+            --local inputDeviceType = runtime.settings.controls.inputDevice.saved[name].type
+            --library.setInputDevice(name, inputDeviceType)
+            --return
+        --end
 
         -- activate all keybinds!!!!
         
         -- show Overlay
-        composer.showOverlay( "resources.scene.menu.inputdeviceoverlay", {isModal=true, effect="fade", time=400})
+        composer.showOverlay( "resources.scene.menu.inputdevicemenu", {isModal=true, effect="fade", time=400})
 
     elseif #availableInputDevices == 0 then
         print("ERROR: No input devices found.")
