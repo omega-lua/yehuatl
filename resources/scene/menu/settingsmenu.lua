@@ -233,7 +233,7 @@ function scene:resetSettings()
     scene:showToast("settings reset!")
 end
 
-local function handleButtonEvent(event)
+local function handleInteraction(event)
     if (event.phase == 'ended') then
         local id = event.target.id
         if (id == 'buttonBack') then
@@ -246,25 +246,15 @@ local function handleButtonEvent(event)
             scene:resetSettings()
 
         elseif (id == 'buttonKeybinds') then
-            scene:showOverlay( "resources.scene.menu.keybindoverlay")
+            library.handleSceneChange("resources.scene.menu.keybindoverlay", "menu", {effect='fade', time=400})
 
         elseif (id == 'buttonInputDevice') then
-            scene:showOverlay("resources.scene.menu.inputdeviceoverlay")
+            library.handleSceneChange("resources.scene.menu.inputdevicemenu", "menu", {effect='fade', time=400})
 
         elseif (id == 'buttonOutputDevice') then
-            scene:showOverlay("resources.scene.menu.outputdeviceoverlay")
+            library.handleSceneChange("resources.scene.menu.outputdeviceoverlay", "menu", {effect='fade', time=400})
         end
     end 
-end
-
-function scene:showOverlay(overlay)
-    composer.showOverlay(overlay, {isModal=true, effect="fade", time=400})
-    transition.fadeOut(scene,{time=1000, transition=easing.inOutCubic} )
-end
-
-function scene:hideOverlay()
-    composer.hideOverlay(true, "fade", 400)
-    --transition.fadeIn( sceneGroup, {time=1000, transition=easing.inOutCubic} )
 end
 
 function scene:loadUI()
@@ -355,12 +345,12 @@ function scene:show( event )
                     y = 50,
                     id = "buttonBack",
                     label = "back",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:back() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
                 ["navigation"] = {5,5,5,27},
                 ["pointer"] = {},
                 ["type"] = "button"
@@ -402,12 +392,12 @@ function scene:show( event )
                     y = 100,
                     id = "buttonKeybinds",
                     label = "Keybinds",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:showOverlay("resources.scene.menu.keybindoverlay") end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonKeybinds"}, phase="ended"}) end,
                 ["navigation"] = {nil,6,nil,1},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -418,12 +408,12 @@ function scene:show( event )
                     y = 150,
                     id = "buttonInputDevice",
                     label = "Input Device",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:showOverlay("resources.scene.menu.inputdeviceoverlay") end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
                 ["navigation"] = {nil,10,nil,5},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -463,12 +453,12 @@ function scene:show( event )
                     y = 250,
                     id = "buttonOutputDevice",
                     label = "Output Device",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1}, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:showOverlay("resources.scene.menu.outputdeviceoverlay") end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonOutputDevice"}, phase="ended"}) end,
                 ["navigation"] = {nil,12,nil,6},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -498,7 +488,7 @@ function scene:show( event )
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(12) end,
                 },
-                ["function"] = function()  end,
+                ["function"] = nil, --function()  end
                 ["navigation"] = {function() scene:handleSegment(12,1) end,14, function() scene:handleSegment(12,-1) end,10},
                 ["pointer"] = {},
                 ["type"] = "segment",
@@ -681,12 +671,12 @@ function scene:show( event )
                     y = 700,
                     id = "buttonApplySettings",
                     label = "Apply Settings",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:applySettings(tmpSettings) end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApplySettings"}, phase="ended"}) end,
                 ["navigation"] = {28, 1, 28, 26},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -697,12 +687,12 @@ function scene:show( event )
                     y = 700,
                     id = "buttonResetSettings",
                     label = "Reset Settings",
-                    onEvent = handleButtonEvent,
+                    onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
-                ["function"] = function() scene:resetSettings() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonResetSettings"}, phase="ended"}) end,
                 ["navigation"] = {27, 1, 27, 26},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -718,7 +708,6 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        
     end
 end
  
@@ -758,5 +747,6 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
+scene:addEventListener("interaction", handleInteraction)
  
 return scene
