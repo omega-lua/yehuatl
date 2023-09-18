@@ -1,29 +1,20 @@
 -- Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
 
-local library = require("library")
+local lib = require( "resources.lib.lib" )
 local widget = require( "widget" )
 local composer = require( "composer" )
 local scene = composer.newScene()
 
 -- -----------------------------------------------------------------------------------
+-- Scene variables
+-- -----------------------------------------------------------------------------------
+
+scene.type = "menu"
+
+-- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
-
--- Function to handle button events
-local function handleButtonEvent(event)
-    if ( event.phase == "ended") then
-        if (event.target.id == 'buttonPlay') then
-            scene:handleObjectInteraction("buttonPlay")
-
-        elseif (event.target.id == 'buttonSettings') then
-            scene:handleObjectInteraction("buttonSettings")
-
-        elseif (event.target.id == 'buttonCredits') then
-            scene:handleObjectInteraction("buttonCredits")
-        end
-    end
-end
 
 function scene:hoverObj()
     local widgetIndex = scene.widgetIndex
@@ -42,13 +33,17 @@ function scene:updateUI()
     scene:hoverObj()
 end
 
-function scene:handleObjectInteraction(object)
-    if (object == "buttonPlay") then
-        library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,})
-    elseif (object == "buttonSettings") then
-        library.handleSceneChange( "resources.scene.menu.settingsmenu", "menu", { effect = "fade", time = 400,})
-    elseif (object == "buttonCredits") then
-        library.handleSceneChange("resources.scene.menu.creditsmenu", "menu", { effect = "fade", time = 400,})
+local function handleInteraction(event)
+    if (event.phase == "ended") then
+        local id = event.target.id
+        local options = {effect = "fade", time = 400}
+        if (id == 'buttonPlay') then
+            lib.scene.show( "resources.scene.menu.savemenu", options )
+        elseif (id == 'buttonSettings') then
+            lib.scene.show( "resources.scene.menu.settingsmenu", options )
+        elseif (id == 'buttonCredits') then
+            lib.scene.show( "resources.scene.menu.creditsmenu", options )
+        end
     end
 end
  
@@ -85,12 +80,12 @@ function scene:create( event )
                 y = 180,
                 id = "buttonPlay",
                 label = "Play",
-                onEvent = handleButtonEvent,
+                onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 30,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = function() library.handleSceneChange("resources.scene.menu.savemenu","menu", { effect = "fade", time = 400,}) end,
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonPlay"}, phase="ended"}) end,
             ["navigation"] = {2,3,2,3},
             ["pointer"] = {},
             ["type"] = "button",
@@ -102,12 +97,12 @@ function scene:create( event )
                 y = 180, 
                 id = "buttonSettings",
                 label = "Settings",
-                onEvent = handleButtonEvent,
+                onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 30,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = function() library.handleSceneChange("resources.scene.menu.settingsmenu","menu", { effect = "fade", time = 400,}) end,
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonSettings"}, phase="ended"}) end,
             ["navigation"] = {1,3,1,3},
             ["pointer"] = {},
             ["type"] = "button",
@@ -119,12 +114,12 @@ function scene:create( event )
                 y = 260, 
                 id = "buttonCredits",
                 label = "Credits",
-                onEvent = handleButtonEvent,
+                onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 30,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = function() library.handleSceneChange("resources.scene.menu.creditsmenu","menu", { effect = "fade", time = 400,}) end,
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonCredits"}, phase="ended"}) end,
             ["navigation"] = {1,1,2,1},
             ["pointer"] = {},
             ["type"] = "button",
@@ -145,9 +140,6 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        
-        runtime.currentScene = scene
-        runtime.currentSceneType = "menu"
 
         -- Refresh
         scene:hoverObj()
@@ -184,10 +176,8 @@ end
  
 -- destroy()
 function scene:destroy( event )
- 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
  
  
@@ -199,5 +189,6 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
- 
+scene:addEventListener( "interaction", handleInteraction )
+
 return scene
