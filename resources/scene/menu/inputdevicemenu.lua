@@ -1,8 +1,8 @@
 -- Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
 
+local lib = require( "resources.lib.lib" )
 local composer = require("composer")
 local widget = require("widget")
-local library = require("library")
 
 local scene = composer.newScene()
 
@@ -10,7 +10,7 @@ local scene = composer.newScene()
 -- Scene Variables
 -- -----------------------------------------------------------------------------------
 scene.type = "menu"
-scene.widgetIndex = 2
+scene.widgetIndex = 4
 scene.widgetsTable = {}
 scene.selectedDevice = nil
 scene.selectedType = nil
@@ -23,8 +23,8 @@ scene._selectedIndex = nil
 function scene:showToast(message)
     local toast = display.newText({
         text = message,     
-        x = display.contentCenterX,
-        y = display.contentCenterY*0.2,
+        x = 300,
+        y = 50,
         width = 256,
         font = "fonts/BULKYPIX.TTF",   
         fontSize = 18,
@@ -32,7 +32,7 @@ function scene:showToast(message)
     })
  
     local params = {
-        time = 1000,
+        time = 1500,
         tag = "toast",
         transition = easing.outQuart,
         delay = 2000,
@@ -40,41 +40,25 @@ function scene:showToast(message)
     }
     
     toast:setFillColor(255, 0, 0)
-    sceneGroup:insert(toast)
     transition.to(toast, params)
 end
 
--- Gets opened by pressing the back button.
 function scene:applyInputDevice()
     -- Localize
-    local currentDevice = runtime.currentInputDevice
-    local currentType = runtime.currentInputDeviceType
+    local currentDevice = lib.inputdevice.current.name
+    local currentType = lib.inputdevice.current.type
     local selectedDevice = scene.selectedDevice
     local selectedType = scene.selectedType
-    local savedType = runtime.settings.controls.inputDevice.saved[selectedDevice]
-
-    print("-------------")
-    print("currentDevice:", currentDevice)
-    print("currentType:", currentType)
-    print("_selectedDeviceTable:", _selectedDeviceTable)
-    print("selectedDevice:", selectedDevice)
-    print("selectedType:", selectedType)
-    print("savedType:", savedType)
-    print("-------------")
-
-
-    local function fc(v,k)
-        library.setInputDevice(v, k)
-        library.setControlMode(runtime.currentSceneType)
-    end
+    local _saved = lib.settings.table.controls.inputDevice.saved[selectedDevice] or {}
+    local savedType = _saved.type
 
     if selectedDevice and (selectedDevice ~= currentDevice) then
         if selectedType then
             -- load
-            fc(selectedDevice, selectedType)
+            lib.inputdevice.set(selectedDevice, selectedType)
         elseif savedType then
             -- load
-            fc(selectedDevice, savedType)
+            lib.inputdevice.set(selectedDevice, savedType)
         else
             -- show message: need input.
             scene:showToast("WARNING: Need input type of "..selectedDevice)
@@ -84,40 +68,46 @@ function scene:applyInputDevice()
     elseif selectedType and (selectedType ~= currentType) then
         if (currentType == nil) then
             -- load
-            fc(currentDevice, selectedType)
+            lib.inputdevice.set(currentDevice, selectedType)
         else
             -- show warning: user is about to override keybinds.
             scene:showToast("WARNING: About to override keybinds of "..currentDevice)
             return
         end
     end
-    library.handleSceneChange("resources.scene.menu.settingsmenu", "menu", {effect="fade", time=400})
+    -- Removing settingsmenu to reset tmpTable.
+    composer.removeScene( "resources.scene.menu.settingsmenu", true )
+    lib.scene.show("resources.scene.menu.mainmenu", {effect="fade", time=400})
 end
 
 function scene:changeSelection(selection)
     if (selection == "inputdevice") then
-        --local availableInputDevices = runtime.availableInputDevices
-        --local selectedDevice = scene.selectedDevice
+        local availableInputDevices = lib.inputdevice.getAvailable()
+
+        -- To set the last used inputdevice as shown option
+        for i, object in pairs(availableInputDevices) do
+            if object.displayName == scene.selectedDevice then
+                scene._selectedIndex = i
+                break
+            end
+        end
+
         local s, n = scene._selectedIndex, nil -- s(electedDevice), n(ext device)
         
-        -- Uses variable so it has to iterate through the table only on first time of changeSelection().
-        --if not s then
-            --for i, device in pairs(availableInputDevices) do
-                --if (device.displayName == selectedDevice) then s = i break end
-           --end
-        --end
-
-
         -- calculate which is input device is next (looping 1<->3)
         if (s == 3) or (s == nil) then n = 1 else n = s + 1 end
 
-        -- set variables and buttonlabel
+        -- set variables
+        
+        local deviceName = availableInputDevices[n].displayName
+        local _saved = lib.settings.table.controls.inputDevice.saved[deviceName] or {}
+        scene.selectedDevice = deviceName
         scene._selectedIndex = n
-        scene.selectedDevice = runtime.availableInputDevices[n].displayName
-        local _t = runtime.settings.controls.inputDevice.saved[scene.selectedDevice] or {}
-        scene.selectedType = _t.type or nil
+        scene.selectedType = _saved.type
+
+        -- Set buttonlabels
         scene.widgetsTable[3].pointer:setLabel(scene.selectedType or "Choose...")
-        scene.widgetsTable[2].pointer:setLabel(scene.selectedDevice)
+        scene.widgetsTable[4].pointer.text = (scene.selectedDevice or "Choose...")
 
     elseif (selection == "type") then
         local t = {"keyboard", "controller", "touchscreen"}
@@ -136,13 +126,13 @@ function scene:changeSelection(selection)
     end
 end
 
--- Handles all user interaction
 local function handleInteraction(event)
     if (event.phase == "ended") then
         local id = event.target.id
         if (id == "buttonApply") then
             scene:applyInputDevice()
         elseif (id == "buttonInputDevice") then
+            print("x")
             scene:changeSelection("inputdevice")
         elseif (id == "buttonType") then
             scene:changeSelection("type")
@@ -152,7 +142,11 @@ end
 
 -- On startup
 function scene:loadUI() 
-    sceneGroup = scene.view
+    local sceneGroup = scene.view
+
+    -- Show the last used input device
+    local device, deviceType = lib.inputdevice.getLastUsed()
+    scene.selectedDevice, scene.selectedType = device, deviceType
 
     scene.widgetsTable = {
         [1] = {
@@ -167,27 +161,23 @@ function scene:loadUI()
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApply"}, phase="ended"}) end,
-            ["navigation"] = {2,2,3,3},
+            ["navigation"] = {4,4,3,3},
             ["pointer"] = {},
             ["type"] = "button",
-            ["parent"] = "sceneGroup",
         },
         [2] = {
             ["creation"] = {
                 x = 150,
                 y = 200,
                 id = "buttonInputDevice",
-                label = scene.selectedDevice or "Choose...",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
             ["navigation"] = {3,1,1,1},
             ["pointer"] = {},
             ["type"] = "button",
-            ["parent"] = "sceneGroup"
         },
         [3] = {
             ["creation"] = {
@@ -201,10 +191,37 @@ function scene:loadUI()
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonType"}, phase="ended"}) end,
-            ["navigation"] = {1,1,2,1},
+            ["navigation"] = {1,1,4,1},
             ["pointer"] = {},
             ["type"] = "button",
-            ["parent"] = "sceneGroup"
+        },
+        [4] = {
+            ["creation"] = {
+                x = 150,
+                y = 200,
+                width = 200,
+                text = scene.selectedDevice or "Choose...",
+                align = "center",
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+            },
+            ["navigation"] = {3,1,1,1},
+            ["pointer"] = {},
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
+            ["type"] = "text",
+        },
+        [5] = {
+            ["creation"] = {
+                x = 350,
+                y = 200,
+                width = 200,
+                text = "as a",
+                align = "center",
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+            },
+            ["pointer"] = {},
+            ["type"] = "text",
         },
     }
 
@@ -237,12 +254,7 @@ function scene:loadUI()
             print("ERROR: Widget",i,"has no type attribute.")
         end
 
-        -- where to insert
-        if (object.parent == "sceneGroup") then
-            sceneGroup:insert(scene.widgetsTable[i].pointer)
-        else
-            print("ERROR: object has no valid parent attribute.")
-        end
+        sceneGroup:insert(scene.widgetsTable[i].pointer)
     end
 end
 
@@ -251,17 +263,18 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5, alpha=1}     
         else
-            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1}
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.7}
         end
         transition.to(widget.pointer, params)
     end
 end
  
 function scene:updateUI()
-    -- Code for refreshing widget labels.
+    scene:hoverObj()
 end
+
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -284,9 +297,8 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        scene.widgetIndex = 2
+        scene.widgetIndex = 4
         scene:updateUI()
-        scene:hoverObj()
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
