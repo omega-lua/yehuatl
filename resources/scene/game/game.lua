@@ -1,6 +1,5 @@
 -- Scene Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
 local composer = require "composer"
-local library = require "library"
 local scene = composer.newScene()
 
 local json = require "json"
@@ -58,10 +57,10 @@ function scene:create( event )
 
     -- Only occurs when no savefiles found, and user presses play. For example during first time launching.
     if not runtime.currentSaveFile then
-        library.newSaveFile()
+        lib.savefile.new()
         runtime.currentSaveFile = "save1.json"
     end
-    library.loadSaveFile(runtime.currentSaveFile)
+    lib.savefile.load(runtime.currentSaveFile)
 end
 
  
@@ -74,7 +73,7 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        library.handleSceneChange(currentMapPath, "game", {})
+        lib.scene.show(currentMapPath, {})
     
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
