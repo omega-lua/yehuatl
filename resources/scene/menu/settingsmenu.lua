@@ -1,15 +1,22 @@
 -- Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
 
+local lib = require( "resources.lib.lib" )
 local widget = require( "widget" )
 local composer = require( "composer" )
-local library = require("library")
 local scene = composer.newScene()
 
 -- -----------------------------------------------------------------------------------
--- Scene event functions
+-- Scene variables
 -- -----------------------------------------------------------------------------------
 
-function deepcopy(orig)
+scene.type = "menu"
+scene.isSaved = true
+
+-- -----------------------------------------------------------------------------------
+-- Scene functions
+-- -----------------------------------------------------------------------------------
+
+local function deepcopy(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
@@ -51,16 +58,14 @@ function scene:showToast(message)
 end
 
 local function handleScrollView()     
-    local widget = scene.widgetsTable[scene.widgetIndex]
-    local m,n = widget.pointer:localToContent(0,0)
-    local x,y = widget.pointer.x, widget.pointer.y
+    local pointer = scene.widgetsTable[scene.widgetIndex].pointer
+    local m,n = pointer:localToContent(0,0)
+    local x,y = pointer.x, pointer.y
     -- Upscrolling
     if (n <= display.contentCenterY - scrollView.height*0.5) then
-        --scrollView:scrollToPosition({y=-(y-110), time=1000} ) 
         scrollView:scrollToPosition({y=-(y-100), time=1000} ) 
     -- Downscrolling
     elseif (n+150 >= display.contentCenterY + scrollView.height*0.5) then
-        --scrollView:scrollToPosition({y=-(y-110), time=1000} )
         scrollView:scrollToPosition({y=-(y-300), time=1000} ) 
     end
 end
@@ -88,12 +93,12 @@ function scene:back()
         -- Darken scene behind...
         
         -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
-        composer.showOverlay("resources.scene.menu.warningmenu", {isModal=true})
+        composer.showOverlay("resources.scene.menu.warningoverlay", {effect = "fade", time = 200,isModal=true})
     else
         -- if settings are saved
-        library.handleSceneChange("resources.scene.menu.mainmenu", "menu", { effect = "fade", time = 400,})
+        lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 400,})
         
-        tmpSettings = nil
+        lib.settings.tmpTable = nil
         scene.isSaved = true
     end
 end
@@ -106,15 +111,15 @@ function scene:handleSegment(index, value)
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.sound.volumeMusic = value
+            lib.settings.tmpTable.sound.volumeMusic = value
             scene.isSaved = false
             return
         end
 
-        local old = tmpSettings.sound.volumeMusic
+        local old = lib.settings.tmpTable.sound.volumeMusic
         local value = old + value
         if (value <= 5 ) and (value >= 1 ) then
-            tmpSettings.sound.volumeMusic = value
+            lib.settings.tmpTable.sound.volumeMusic = value
             widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
@@ -124,15 +129,15 @@ function scene:handleSegment(index, value)
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.sound.volumeSoundEffects = value
+            lib.settings.tmpTable.sound.volumeSoundEffects = value
             scene.isSaved = false
             return
         end
 
-        local old = tmpSettings.sound.volumeSoundEffects
+        local old = lib.settings.tmpTable.sound.volumeSoundEffects
         local value = old + value
         if (value <= 5 ) and (value >= 1 ) then
-            tmpSettings.sound.volumeSoundEffects = value
+            lib.settings.tmpTable.sound.volumeSoundEffects = value
             widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
@@ -142,15 +147,15 @@ function scene:handleSegment(index, value)
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
-            tmpSettings.ingame.difficulty = value
+            lib.settings.tmpTable.ingame.difficulty = value
             scene.isSaved = false
             return
         end
         
-        local old = tmpSettings.ingame.difficulty
+        local old = lib.settings.tmpTable.ingame.difficulty
         local value = old + value
         if (value <= 3 ) and (value >= 1 ) then
-            tmpSettings.ingame.difficulty = value
+            lib.settings.tmpTable.ingame.difficulty = value
             widget.pointer:setActiveSegment(value)
             scene.isSaved = false
         end
@@ -164,19 +169,19 @@ function scene:handleSwitch(index, boolean)
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
-            tmpSettings.sound.playStereo = state
+            lib.settings.tmpTable.sound.playStereo = state
             scene.isSaved = false
             return
         end
         
-        local state = tmpSettings.sound.playStereo
+        local state = lib.settings.tmpTable.sound.playStereo
         if state and not boolean then
             widget.pointer:setState( {isOn = false, isAnimated = true} )
-            tmpSettings.sound.playStereo = false 
+            lib.settings.tmpTable.sound.playStereo = false 
             scene.isSaved = false
         elseif not state and boolean then
             widget.pointer:setState( {isOn = true, isAnimated = true} )
-            tmpSettings.sound.playStereo = true 
+            lib.settings.tmpTable.sound.playStereo = true 
             scene.isSaved = false
         end
 
@@ -184,35 +189,35 @@ function scene:handleSwitch(index, boolean)
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
-            tmpSettings.sound.playStereo = state
+            lib.settings.tmpTable.sound.playStereo = state
             scene.isSaved = false
             return
         end
         
-        local state = tmpSettings.visual.renderParticles
+        local state = lib.settings.tmpTable.visual.renderParticles
         if state and not boolean then
             widget.pointer:setState( {isOn = false, isAnimated = true} )
-            tmpSettings.visual.renderParticles = false 
+            lib.settings.tmpTable.visual.renderParticles = false 
             scene.isSaved = false
         elseif not state and boolean then
             widget.pointer:setState( {isOn = true, isAnimated = true} )
-            tmpSettings.visual.renderParticles = true 
+            lib.settings.tmpTable.visual.renderParticles = true 
             scene.isSaved = false
         end
     end
 end
 
 function scene:applySettings()
-    local data = tmpSettings
+    local data = lib.settings.tmpTable
 
     -- Save to file
-    library.saveSettings(data)
+    lib.settings.save(data)
 
     -- Initiate Settings
-    library.initiateSettings(data)
-    library.initiateKeybinds(data.controls.keybinds[runtime.currentInputDevice])
+    lib.settings.initiate(data)
+    lib.inputdevice.initiateKeybinds(data.controls.keybinds[lib.inputdevice.current.name])
 
-    tmpSettings = deepcopy(runtime.settings)
+    lib.settings.tmpTable = deepcopy(lib.settings.table)
     scene.isSaved = true
 
     scene:showToast("settings apllied!")
@@ -220,12 +225,12 @@ end
 
 function scene:resetSettings()
     -- Get default_settings and save as settings.json
-    local data = library.resetSettings()
+    local data = lib.settings.reset()
 
     -- Initiate Settings
-    library.initiateSettings(data)
+    lib.settings.initiate(data)
 
-    tmpSettings = deepcopy(runtime.settings)
+    lib.settings.tmpTable = deepcopy(lib.settings.table)
     scene.isSaved = true
 
     scene:updateUI()
@@ -246,13 +251,13 @@ local function handleInteraction(event)
             scene:resetSettings()
 
         elseif (id == 'buttonKeybinds') then
-            library.handleSceneChange("resources.scene.menu.keybindoverlay", "menu", {effect='fade', time=400})
+            lib.scene.show("resources.scene.menu.keybindoverlay", {effect='fade', time=400})
 
         elseif (id == 'buttonInputDevice') then
-            library.handleSceneChange("resources.scene.menu.inputdevicemenu", "menu", {effect='fade', time=400})
+            lib.scene.show("resources.scene.menu.inputdevicemenu", {effect='fade', time=400})
 
         elseif (id == 'buttonOutputDevice') then
-            library.handleSceneChange("resources.scene.menu.outputdeviceoverlay", "menu", {effect='fade', time=400})
+            lib.scene.show("resources.scene.menu.outputdeviceoverlay", {effect='fade', time=400})
         end
     end 
 end
@@ -267,7 +272,7 @@ function scene:loadUI()
         width = 800,
         height = 400,
         horizontalScrollDisabled = true,
-        friction = 0.985,
+        friction = 0.85,
         scrollWidth = 800,
         scrollHeight = 1200,
         backgroundColor = { 0, 0, 0},
@@ -316,10 +321,8 @@ function scene:create( event )
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
     -- Has to be set before widgetsTable
-    tmpSettings = deepcopy(runtime.settings)
+    lib.settings.tmpTable = deepcopy(lib.settings.table)
     
-    scene.isSaved = true
-
     -- Only the first time in center; if reshown, then last state
     scene.widgetIndex = 6
 end
@@ -331,9 +334,9 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        if tmpSettings == nil then
-            print("tmpSettings is nil")
-            tmpSettings = deepcopy(runtime.settings)
+        if lib.settings.tmpTable == nil then
+            print("lib.settings.tmpTable is nil")
+            lib.settings.tmpTable = deepcopy(lib.settings.table)
             scene.isSaved = true
         end
 
@@ -483,7 +486,7 @@ function scene:show( event )
                     id = "segmentMusicVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
-                    defaultSegment = tmpSettings.sound.volumeMusic,
+                    defaultSegment = lib.settings.tmpTable.sound.volumeMusic,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(12) end,
@@ -513,7 +516,7 @@ function scene:show( event )
                     id = "segmentEffectsVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
-                    defaultSegment = tmpSettings.sound.volumeSoundEffects,
+                    defaultSegment = lib.settings.tmpTable.sound.volumeSoundEffects,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(14) end,
@@ -541,7 +544,7 @@ function scene:show( event )
                     id = "switchStereo",
                     x = 480,
                     y = 400,
-                    initialSwitchState = tmpSettings.sound.playStereo,
+                    initialSwitchState = lib.settings.tmpTable.sound.playStereo,
                     onRelease = function() scene:handleSwitch(16) end,
                 },
                 ["function"] = nil,
@@ -597,7 +600,7 @@ function scene:show( event )
                     id = "switchParticles",
                     x = 480,
                     y = 500,
-                    initialSwitchState = tmpSettings.visual.renderParticles,
+                    initialSwitchState = lib.settings.tmpTable.visual.renderParticles,
                     -- onRelease (for Touchcontrol)
                 },
                 ["function"] = nil,
@@ -655,7 +658,7 @@ function scene:show( event )
                     id = "segmentDifficulty",
                     segmentWidth = 35,
                     segments = {"1", "2", "3"},
-                    defaultSegment = tmpSettings.ingame.difficulty,
+                    defaultSegment = lib.settings.tmpTable.ingame.difficulty,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(26) end,
@@ -703,9 +706,6 @@ function scene:show( event )
         scene:loadUI()
         scene:updateUI()
 
-        runtime.currentScene = scene
-        runtime.currentSceneType = "menu"
-
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
@@ -730,11 +730,10 @@ end
  
 -- destroy()
 function scene:destroy( event )
-    print("----------scene destroyed---------------")
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
 
-    tmpSettings = nil
+    lib.settings.tmpTable = nil
     scene.isSaved = true
 end
  
