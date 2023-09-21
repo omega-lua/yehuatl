@@ -162,7 +162,7 @@ local function handleInteraction(event)
 
         elseif (id == 'buttonSave1') then
             if scene.save1 then
-                lib.savefile.current = 'save1.json.json'
+                lib.savefile.current = 'save1.json'
                 lib.scene.show("resources.scene.game.game", {effect = "fade", time = 1200})
             end
         elseif (id == 'buttonSave2') then
