@@ -132,7 +132,6 @@ local function handleInteraction(event)
         if (id == "buttonApply") then
             scene:applyInputDevice()
         elseif (id == "buttonInputDevice") then
-            print("x")
             scene:changeSelection("inputdevice")
         elseif (id == "buttonType") then
             scene:changeSelection("type")
@@ -222,7 +221,7 @@ function scene:loadUI()
             },
             ["pointer"] = {},
             ["type"] = "text",
-        },
+        }
     }
 
     -- Create widgets
