@@ -1,9 +1,11 @@
 -- Scene Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
-local composer = require "composer"
-local scene = composer.newScene()
+local lib = require( "resources.lib.lib" )
 
+local composer = require "composer"
 local json = require "json"
 local physics = require "physics"
+
+local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 overlaySceneStatus = false
@@ -56,11 +58,11 @@ function scene:create( event )
     local sceneGroup = self.view
 
     -- Only occurs when no savefiles found, and user presses play. For example during first time launching.
-    if not runtime.currentSaveFile then
+    if not lib.savefile.current then
         lib.savefile.new()
-        runtime.currentSaveFile = "save1.json"
+        lib.savefile.current = "save1.json"
     end
-    lib.savefile.load(runtime.currentSaveFile)
+    lib.savefile.load(lib.savefile.current)
 end
 
  
