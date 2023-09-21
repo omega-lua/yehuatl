@@ -321,7 +321,7 @@ function scene:show( event )
         if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
             print("no savefiles found")
             -- Set var to nil if no savefiles are available
-            runtime.currentSaveFile = nil
+            lib.savefile.current = nil
             local options = {effect = "fade", time = 500,}
             composer.gotoScene("resources.scene.game.game", options)
             return
