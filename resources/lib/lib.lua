@@ -236,7 +236,6 @@ end
 function settings.onStartup()
     local data = nil
     local doesExist = lib.file.doesExist("settings.json", system.DocumentsDirectory)
-    print(doesExist)
     if doesExist then
         local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
         data = settings.get(path)
@@ -457,13 +456,11 @@ function inputdevice.onStartup()
                 end
             end
         end
-        lib.printTable(crossmatches)
 
         if (#crossmatches == 1) then
             -- if theres only one crossmatch, use this input device and return.
             if (n == 1) then
                 lib.inputdevice.set(device, savedInputDevices[device].type)
-                print("only one")
                 return false
             end
         
@@ -546,7 +543,6 @@ function control.key.menu(event)
 end
 
 function control.key.game(event)
-    print("key event")
     -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
     if (event.phase == "down") then
         if (event.keyName == keybindJump) then
@@ -631,7 +627,6 @@ function control.setMode(sceneType)
 
     if (inputType == "keyboard") then
         if (sceneType == "menu") then
-            print("added")
             Runtime:addEventListener("key", lib.control.key.menu)
 
         elseif (sceneType == "game") then
@@ -653,7 +648,6 @@ function control.setMode(sceneType)
             Runtime:addEventListener("key", lib.control.key.game)
         end
     elseif not inputType then
-        print("no inputType")
         -- inputtype unknown, add all eventListeners.
 
         Runtime:addEventListener("key", lib.control.key.menu)
