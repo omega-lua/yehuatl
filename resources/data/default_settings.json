@@ -5,7 +5,7 @@
         "attack":"a",
         "jump":"space",
         "backward":"left",
-        "escape":"button5",
+        "escape":"escape",
         "block":"b",
         "secondaryWeapon":"9",
         "primaryWeapon":"down",
