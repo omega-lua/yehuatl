@@ -148,7 +148,7 @@ function scene:show( event )
         local buttonPlay = scene.widgetsTable[1].pointer
         local buttonSettings = scene.widgetsTable[2].pointer
         local buttonCredits = scene.widgetsTable[3].pointer
-        transition.from( buttonPlay, {time=1000,delay=500,transition=easing.outCubic,x=800} )
+        transition.from( buttonPlay, {time=1000,delay=500,transition=easing.outCubic,x=900} )
         transition.from( buttonSettings, {time=1000,delay=250,transition=easing.outCubic,y=-500} )
         transition.from( buttonCredits, {time=1000,transition=easing.outCubic,y=500} )
 
