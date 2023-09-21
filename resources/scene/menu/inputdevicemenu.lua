@@ -83,9 +83,11 @@ end
 function scene:changeSelection(selection)
     if (selection == "inputdevice") then
         local availableInputDevices = lib.inputdevice.getAvailable()
+        local len = 0
 
-        -- To set the last used inputdevice as shown option
+        -- To set the last used inputdevice as shown option and get len
         for i, object in pairs(availableInputDevices) do
+            len = len + 1
             if object.displayName == scene.selectedDevice then
                 scene._selectedIndex = i
                 break
@@ -95,10 +97,10 @@ function scene:changeSelection(selection)
         local s, n = scene._selectedIndex, nil -- s(electedDevice), n(ext device)
         
         -- calculate which is input device is next (looping 1<->3)
-        if (s == 3) or (s == nil) then n = 1 else n = s + 1 end
+        if (s == len) or (s == nil) then n = 1 else n = s + 1 end
 
         -- set variables
-        
+ 
         local deviceName = availableInputDevices[n].displayName
         local _saved = lib.settings.table.controls.inputDevice.saved[deviceName] or {}
         scene.selectedDevice = deviceName
