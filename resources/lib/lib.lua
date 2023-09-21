@@ -126,7 +126,7 @@ end
 
 function savefile.load(filename)
     local path = system.pathForFile(filename, system.DocumentsDirectory)
-    local contents = file.read(path)
+    local contents = lib.file.read(path)
 
     -- 2. Decode JSON-file
     decoded, pos, msg = json.decode(contents, 1, "emptyTable")
@@ -390,7 +390,7 @@ function inputdevice.forget(deviceName)
     -- 1. Get which inputdevice to forget
     local deviceName = deviceName
     local controls = lib.settings.table.controls
-    local savedInputDevices = control.inputDevice.saved
+    local savedInputDevices = controls.inputDevice.saved
 
     -- 2. Delete selected inputdevice out of controls.keybinds.
     controls.keybinds[deviceName] = nil
@@ -404,8 +404,11 @@ function inputdevice.forget(deviceName)
         controls.inputDevice.current = nil
     end
 
-    -- 5. Set changes in lib.settings.table
-    lib.settings.table = controls
+    -- 5. Set changes to lib.settings.table
+    lib.settings.table.controls = controls
+
+    -- 6. Save changes
+    lib.settings.save(lib.settings.table)
 end
 
 function inputdevice.set(deviceName, deviceType)
@@ -526,6 +529,8 @@ function control.key.menu(event)
 
         elseif (keyName == lib.keybind.interact) then
             widget["function"]()
+        elseif (keyName == lib.keybind.escape) then
+            scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"})
         end
 
         -- For normal navigation
