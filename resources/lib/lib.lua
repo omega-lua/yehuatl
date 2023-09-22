@@ -230,6 +230,9 @@ function settings.reset()
 
     -- Save data
     settings.save(data)
+
+    -- Load resetted settings
+    settings.initiate(table)
     return data
 end
 
