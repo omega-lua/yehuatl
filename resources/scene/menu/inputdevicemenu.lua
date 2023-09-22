@@ -90,17 +90,14 @@ function scene:changeSelection(selection)
             len = len + 1
             if object.displayName == scene.selectedDevice then
                 scene._selectedIndex = i
-                break
             end
         end
 
         local s, n = scene._selectedIndex, nil -- s(electedDevice), n(ext device)
-        
         -- calculate which is input device is next (looping 1<->3)
         if (s == len) or (s == nil) then n = 1 else n = s + 1 end
 
         -- set variables
- 
         local deviceName = availableInputDevices[n].displayName
         local _saved = lib.settings.table.controls.inputDevice.saved[deviceName] or {}
         scene.selectedDevice = deviceName
@@ -133,8 +130,10 @@ local function handleInteraction(event)
         local id = event.target.id
         if (id == "buttonApply") then
             scene:applyInputDevice()
+
         elseif (id == "buttonInputDevice") then
             scene:changeSelection("inputdevice")
+
         elseif (id == "buttonType") then
             scene:changeSelection("type")
         end
