@@ -30,7 +30,7 @@ function handlePauseScreen()
         -- For Consistency Reasons
         overlaySceneStatus = nil
         
-        -- Hide pausescrean-Overlay
+        -- Hide pausescreen-Overlay
         composer.hideOverlay(false, "fade", 500)
         
         -- unpause map
