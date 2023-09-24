@@ -155,11 +155,12 @@ local scene = {}
 scene.current = nil
 
 function scene.show(scenePath, options)
-    composer.gotoScene(scenePath, options)
+    composer.loadScene( scenePath )
 
     local _scene = composer.getScene( scenePath )
-    local sceneType = _scene.type
-    lib.control.setMode(sceneType)
+    lib.control.setMode(_scene.type)
+
+    composer.gotoScene(scenePath, options)
 end
 
 function scene.startPhysics()
@@ -443,43 +444,40 @@ end
 
 function inputdevice.onStartup()
     -- Localize
-    local availableInputDevices = lib.inputdevice.getAvailable()
-    local savedInputDevices = lib.settings.table.controls.inputDevice.saved
-    lib.settings.table.controls.inputDevice.alwaysLastUsed = false -- DEBUG
+    local availableInputDevices = inputdevice.getAvailable()
+    local savedInputDevices = settings.table.controls.inputDevice.saved
+    settings.table.controls.inputDevice.alwaysLastUsed = false -- DEBUG
 
     if availableInputDevices then
         -- Get count of crossmatches between those two tables
-        local crossmatches, n, device = {}, 0, nil
+        local n, device = 0, nil
         for name, saved in pairs(savedInputDevices) do
             for j, available in pairs(availableInputDevices) do
                 if (name == available.displayName) then
-                    crossmatches[#crossmatches+1] = name
                     n = n + 1
                     device = name
                 end
             end
         end
 
-        if (#crossmatches == 1) then
+        if (n == 1) then
             -- if theres only one crossmatch, use this input device and return.
-            if (n == 1) then
-                lib.inputdevice.set(device, savedInputDevices[device].type)
-                return false
-            end
+            lib.inputdevice.set(device, savedInputDevices[device].type)
+            return false
         
-        elseif (#crossmatches > 1) then
+        elseif (n > 1) then
             -- Get last used of saved input device.
             local lastDevice, lastType = inputdevice.getLastUsed()
 
             if lib.settings.table.controls.inputDevice.alwaysLastUsed then
+                print("INFO: set last used inputdevice")
                 -- use last used.
-                lib.inputDevice.set(lastDevice, lastType)
+                lib.inputdevice.set(lastDevice, lastType)
                 return false
             else
-                print("multiple saved ones available")
-                -- show menu. Show latest one.
-                lib.inputdevice.current.name = lastDevice
-                lib.inputdevice.current.type = lastType
+                print("INFO: multiple saved AND available")
+
+                lib.inputdevice.set(lastDevice, lastType)
                 -- show menu.
                 lib.scene.show("resources.scene.menu.inputdevicemenu", {time=400, effect="fade"})
                 return true
@@ -505,7 +503,7 @@ lib.keybind = keybind
 -- control functions
 --------------------------------------------------------------------------------
 
-local control = {key = {}, touch = {}}
+local control = {key = {}, touch = {}, mode=nil}
 local moveF, moveB, MoveJ, interact = false, false, false, false
 
 function control.key.menu(event)
@@ -514,22 +512,23 @@ function control.key.menu(event)
         local next = nil
         local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
         local widget = scene.widgetsTable[scene.widgetIndex]
+        local keybind = lib.keybind
 
-        if (keyName == lib.keybind.navigateRight) then
+        if (keyName == keybind.navigateRight) then
             next = widget.navigation[1]
 
-        elseif (keyName == lib.keybind.navigateDown) then
+        elseif (keyName == keybind.navigateDown) then
             next = widget.navigation[2]
 
-        elseif (keyName == lib.keybind.navigateLeft) then
+        elseif (keyName == keybind.navigateLeft) then
             next = widget.navigation[3]
 
-        elseif (keyName == lib.keybind.navigateUp) then
+        elseif (keyName == keybind.navigateUp) then
             next = widget.navigation[4]
 
-        elseif (keyName == lib.keybind.interact) then
+        elseif (keyName == keybind.interact) then
             widget["function"]()
-        elseif (keyName == lib.keybind.escape) then
+        elseif (keyName == keybind.escape) then
             scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"})
         end
 
@@ -615,6 +614,7 @@ end
 function control.setMode(sceneType)
     -- Localize
     local inputType = lib.inputdevice.current.type
+    local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
     
     -- Rwemove all active Control-Eventlisteners
     Runtime:removeEventListener("key", lib.control.key.menu)
@@ -629,6 +629,7 @@ function control.setMode(sceneType)
     end
 
     if (inputType == "keyboard") then
+        lib.control.mode = "key"
         if (sceneType == "menu") then
             Runtime:addEventListener("key", lib.control.key.menu)
 
@@ -637,13 +638,15 @@ function control.setMode(sceneType)
         end
     
     elseif (inputType == "touchscreen") then
+        lib.control.mode = "touch"
         if (sceneType == "menu") then
-            Runtime:addEventListener("touch", lib.control.touch.menu)
+            --Runtime:addEventListener("touch", lib.control.touch.menu)
 
         elseif (sceneType == "game") then
             Runtime:addEventListener("touch", lib.control.touch.game)
         end
     elseif (inputType == "controller") then
+        lib.control.mode = "key"
         if (sceneType == "menu") then
             Runtime:addEventListener("key", lib.control.key.menu)
 
@@ -651,6 +654,7 @@ function control.setMode(sceneType)
             Runtime:addEventListener("key", lib.control.key.game)
         end
     elseif not inputType then
+        lib.control.mode = "unkown"
         -- inputtype unknown, add all eventListeners.
 
         Runtime:addEventListener("key", lib.control.key.menu)
@@ -662,6 +666,91 @@ end
 lib.control = control
 
 -- DEBUG ------------------------------------------------------------------------------
+
+function lib.print(node)
+    if type(node) == table then
+        -- To print a table if needed. Source: https://gist.github.com/revolucas/dd1ecccfca32d558fddf70ddb39eb8a6
+        local cache, stack, output = {},{},{}
+        local depth = 1
+        local output_str = "{\n"
+  
+        while true do
+            local size = 0
+            for k,v in pairs(node) do
+                size = size + 1
+            end
+  
+            local cur_index = 1
+            for k,v in pairs(node) do
+                if (cache[node] == nil) or (cur_index >= cache[node]) then
+  
+                    if (string.find(output_str,"}",output_str:len())) then
+                        output_str = output_str .. ",\n"
+                    elseif not (string.find(output_str,"\n",output_str:len())) then
+                        output_str = output_str .. "\n"
+                    end
+  
+                    -- This is necessary for working with HUGE tables otherwise we run out of memory using concat on huge strings
+                    table.insert(output,output_str)
+                    output_str = ""
+  
+                    local key
+                    if (type(k) == "number" or type(k) == "boolean") then
+                        key = "["..tostring(k).."]"
+                    else
+                        key = "['"..tostring(k).."']"
+                    end
+  
+                    if (type(v) == "number" or type(v) == "boolean") then
+                        output_str = output_str .. string.rep('\t',depth) .. key .. " = "..tostring(v)
+                    elseif (type(v) == "table") then
+                        output_str = output_str .. string.rep('\t',depth) .. key .. " = {\n"
+                        table.insert(stack,node)
+                        table.insert(stack,v)
+                        cache[node] = cur_index+1
+                        break
+                    else
+                        output_str = output_str .. string.rep('\t',depth) .. key .. " = '"..tostring(v).."'"
+                    end
+  
+                    if (cur_index == size) then
+                        output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
+                    else
+                        output_str = output_str .. ","
+                    end
+                else
+                    -- close the table
+                    if (cur_index == size) then
+                        output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
+                    end
+                end
+  
+                cur_index = cur_index + 1
+            end
+  
+            if (size == 0) then
+                output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
+            end
+  
+            if (#stack > 0) then
+                node = stack[#stack]
+                stack[#stack] = nil
+                depth = cache[node] == nil and depth + 1 or depth - 1
+            else
+                break
+            end
+        end
+  
+        -- This is necessary for working with HUGE tables otherwise we run out of memory using concat on huge strings
+        table.insert(output,output_str)
+        output_str = table.concat(output)
+  
+        print(output_str)
+
+    elseif type(node) == string or type(node) == number then
+        print(node)
+    end
+end
 
 function lib.printTable(node)
     -- To print a table if needed. Source: https://gist.github.com/revolucas/dd1ecccfca32d558fddf70ddb39eb8a6
