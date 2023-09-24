@@ -10,6 +10,7 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
+scene.isInteractable = false
 scene.isSaved = true
 
 -- -----------------------------------------------------------------------------------
@@ -164,47 +165,43 @@ function scene:handleSegment(index, value)
     end
 end
 
-function scene:handleSwitch(index, boolean)
+function scene:handleSwitch(index, action)
     local widget = scene.widgetsTable[index]
+    
     -- Enable Stereo Widget
     if (index == 15) then
         -- Touchcontrol
-        if (boolean == nil) then
+        if (action == 'touch') then
             local state = widget.pointer.isOn
             lib.settings.tmpTable.sound.playStereo = state
             scene.isSaved = false
             return
-        end
-        
-        local state = lib.settings.tmpTable.sound.playStereo
-        if state and not boolean then
-            widget.pointer:setState( {isOn = false, isAnimated = true} )
-            lib.settings.tmpTable.sound.playStereo = false 
+        -- Keycontrol
+        elseif (action == 'key') then
+            local state = not widget.pointer.isOn
+            lib.settings.tmpTable.sound.playStereo = state
             scene.isSaved = false
-        elseif not state and boolean then
-            widget.pointer:setState( {isOn = true, isAnimated = true} )
-            lib.settings.tmpTable.sound.playStereo = true 
-            scene.isSaved = false
+
+            widget.pointer:setState( {isOn = state, isAnimated = true} )
+            return
         end
 
+    -- Enable particles widget
     elseif (index == 20) then
         -- Touchcontrol
-        if (boolean == nil) then
+        if (action == 'touch') then
             local state = widget.pointer.isOn
-            lib.settings.tmpTable.sound.playStereo = state
+            lib.settings.tmpTable.visual.renderParticles = state
             scene.isSaved = false
             return
-        end
-        
-        local state = lib.settings.tmpTable.visual.renderParticles
-        if state and not boolean then
-            widget.pointer:setState( {isOn = false, isAnimated = true} )
-            lib.settings.tmpTable.visual.renderParticles = false 
+        -- Keycontrol
+        elseif (action == 'key') then
+            local state = not widget.pointer.isOn
+            lib.settings.tmpTable.visual.renderParticles = state
             scene.isSaved = false
-        elseif not state and boolean then
-            widget.pointer:setState( {isOn = true, isAnimated = true} )
-            lib.settings.tmpTable.visual.renderParticles = true 
-            scene.isSaved = false
+
+            widget.pointer:setState( {isOn = state, isAnimated = true} )
+            return
         end
     end
 end
@@ -241,25 +238,31 @@ function scene:resetSettings()
 end
 
 local function handleInteraction(event)
-    if (event.phase == 'ended') then
-        local id = event.target.id
-        if (id == 'buttonBack') then
-            scene:back()
+    if scene.isInteractable then
+        if (event.phase == 'ended') then
+            local id = event.target.id
+            if (id == 'buttonBack') then
+                scene.isInteractable = false
+                scene:back()
 
-        elseif (id == 'buttonApplySettings') then
-            scene:applySettings()
+            elseif (id == 'buttonApplySettings') then
+                scene:applySettings()
 
-        elseif (id == 'buttonResetSettings') then
-            scene:resetSettings()
+            elseif (id == 'buttonResetSettings') then
+                scene:resetSettings()
 
-        elseif (id == 'buttonKeybinds') then
-            lib.scene.show("resources.scene.menu.keybindoverlay", {effect='fade', time=400})
+            elseif (id == 'buttonKeybinds') then
+                scene.isInteractable = false
+                lib.scene.show("resources.scene.menu.keybindoverlay", {effect='fade', time=400})
 
-        elseif (id == 'buttonInputDevice') then
-            lib.scene.show("resources.scene.menu.inputdevicemenu", {effect='fade', time=400})
+            elseif (id == 'buttonInputDevice') then
+                scene.isInteractable = false
+                lib.scene.show("resources.scene.menu.inputdevicemenu", {effect='fade', time=400})
 
-        elseif (id == 'buttonOutputDevice') then
-            lib.scene.show("resources.scene.menu.outputdeviceoverlay", {effect='fade', time=400})
+            elseif (id == 'buttonOutputDevice') then
+                scene.isInteractable = false
+                lib.scene.show("resources.scene.menu.outputdeviceoverlay", {effect='fade', time=400})
+            end
         end
     end 
 end
@@ -463,7 +466,7 @@ function scene:show( event )
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(11) end,
                 },
-                ["function"] = nil, --function()  end
+                ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(11,1) end,13, function() scene:handleSegment(11,-1) end,6},
                 ["pointer"] = {},
                 ["type"] = "segment",
@@ -491,7 +494,7 @@ function scene:show( event )
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(13) end,
                 },
-                ["function"] = nil,
+                ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(13,1) end, 15, function() scene:handleSegment(13,-1) end,11},
                 ["pointer"] = {},
                 ["type"] = "segment",
@@ -513,10 +516,10 @@ function scene:show( event )
                     x = 480,
                     y = 350,
                     initialSwitchState = lib.settings.tmpTable.sound.playStereo,
-                    onRelease = function() scene:handleSwitch(15) end,
+                    onRelease = function() scene:handleSwitch(15, 'touch') end,
                 },
-                ["function"] = nil,
-                ["navigation"] = {function() scene:handleSwitch(15,true) end,20, function()scene:handleSwitch(15,false) end,13},
+                ["function"] = function() scene:handleSwitch(15, 'key') end,
+                ["navigation"] = {function() scene:handleSwitch(15,'key') end,20, function()scene:handleSwitch(15,'key') end,13},
                 ["pointer"] = {},
                 ["type"] = "switch",
             },
@@ -561,10 +564,10 @@ function scene:show( event )
                     x = 480,
                     y = 450,
                     initialSwitchState = lib.settings.tmpTable.visual.renderParticles,
-                    onRelease = function() scene:handleSwitch(20) end,
+                    onRelease = function() scene:handleSwitch(20, 'touch') end,
                 },
-                ["function"] = nil,
-                ["navigation"] = {function() scene:handleSwitch(20,true) end,25,function() scene:handleSwitch(20,false) end,15},
+                ["function"] = function() scene:handleSwitch(20, 'key') end,
+                ["navigation"] = {function() scene:handleSwitch(20, 'key') end,25,function() scene:handleSwitch(20, 'key') end,15},
                 ["pointer"] = {},
                 ["type"] = "switch",
             },
@@ -615,7 +618,7 @@ function scene:show( event )
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(25) end,
                 },
-                ["function"] = nil,
+                ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(25,1) end,26,function() scene:handleSegment(25,-1) end,20},
                 ["pointer"] = {},
                 ["type"] = "segment",
@@ -659,6 +662,8 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
+        scene.isInteractable = true
     end
 end
  
@@ -672,6 +677,8 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
  
+        scene.isInteractable = false
+
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
 
