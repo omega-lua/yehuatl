@@ -60,27 +60,20 @@ function scene:hoverObj()
 end
 
 function scene:updateSaveSlots()
-    -- Disable/Enable saveslot-buttons
     local object = scene.widgetsTable[2].pointer
-    if scene.save1 then
-        object:setLabel("Save 1")
-    else
-        object:setLabel("-")
-    end
+    local a = 0.4
+    if scene.save1 then a = 1 end
+    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
     
     local object = scene.widgetsTable[3].pointer
-    if scene.save2 then
-        object:setLabel("Save 2")
-    else
-        object:setLabel("-")
-    end
+    local a = 0.4
+    if scene.save2 then a = 1 end
+    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
 
     local object = scene.widgetsTable[4].pointer
-    if scene.save3 then
-        object:setLabel("Save 3")
-    else
-        object:setLabel("-")
-    end
+    local a = 0.4
+    if scene.save3 then a = 1 end
+    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
 end
 
 function scene:fc(t)
@@ -114,20 +107,8 @@ function scene:fc(t)
         -- Only important for key-control
         if lib.control.mode == 'key' then
             scene.widgetIndex = i+1
-            scene:updateUI()
+            scene:hoverObj()
         end
-    end
-
-    local function indexToSelected(i)
-        local s = nil
-        if (i == 2) then
-            s = 1
-        elseif (i == 3) then
-            s = 2
-        elseif (i == 4) then
-            s = 3
-        end
-        return s
     end
 
     local function showButton(selected)
@@ -159,7 +140,7 @@ function scene:fc(t)
 
         else
             if control.mode == 'key' then
-                print("what now?")
+                button.x, button.y = -1500, -1500
             end
         end
 
@@ -187,7 +168,7 @@ function scene:fc(t)
             scene._selected = nil
             scene._indexOfSelected = nil
             
-            local selected = indexToSelected(scene.widgetIndex)
+            local selected = scene.widgetIndex-1
             showButton(selected)
             return
         end
@@ -209,7 +190,8 @@ function scene:fc(t)
             
             if lib.control.mode == 'touch' then
                 scene.widgetIndex = selected+1
-                scene:hoverObj()
+                local params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5} 
+                transition.to( widget.pointer, params )
             end
             
             -- Show manage button
@@ -321,7 +303,7 @@ function scene:loadUI()
                 x = 550,
                 y = 130,
                 id = "buttonInteract",
-                label = "interact",
+                label = "",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
