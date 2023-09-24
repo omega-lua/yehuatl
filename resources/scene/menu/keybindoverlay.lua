@@ -187,9 +187,10 @@ function scene:hoverObj()
 end
 
 function scene:updateUI()
-    -- middleman function
-    scene:hoverObj()
-    handleScrollView()
+    if (lib.control.mode == "key") then
+        scene:hoverObj()
+        handleScrollView()
+    end
 end
 
 function scene:loadUI()
