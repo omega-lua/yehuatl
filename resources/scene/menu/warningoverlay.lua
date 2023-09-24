@@ -11,34 +11,41 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = 'menu'
+scene.isInteractable = false
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
 -- -----------------------------------------------------------------------------------
 local function handleInteraction(event)
-    if (event.phase == 'ended') then
-        local id = event.target.id
-        if (event.target.id == "buttonBack") then
-            composer.hideOverlay( 'fade', 100 )
+    if scene.isInteractable then
+        if (event.phase == 'ended') then
+            local id = event.target.id
+            if (event.target.id == "buttonBack") then
+                scene.isInteractable = false
+                composer.hideOverlay( 'fade', 100 )
             
-        elseif (event.target.id == "buttonApply") then
-            parent:applySettings()
+            elseif (event.target.id == "buttonApply") then
+                scene.isInteractable = false
 
-            -- Message
-            parent:showToast("Settings applied!")
+                parent:applySettings()
+
+                -- Message
+                parent:showToast("Settings applied!")
             
-            -- Hide overlay, show mainmenu, remove settingsmenu-scene
-            composer.hideOverlay("fade", 400)
-            lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
-            composer.removeScene("resources.scene.menu.settingsmenu")
-        elseif (event.target.id == "buttonDiscard") then
-            -- Message
-            parent:showToast("Settings discarded!")
+                -- Hide overlay, show mainmenu, remove settingsmenu-scene
+                composer.hideOverlay("fade", 400)
+                lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
+                composer.removeScene("resources.scene.menu.settingsmenu")
+            elseif (event.target.id == "buttonDiscard") then
+                scene.isInteractable = false
+                -- Message
+                parent:showToast("Settings discarded!")
                  
-            -- Hide overlay, show mainmenu, remove settingsmenu-scene
-            composer.hideOverlay("fade", 400)
-            lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
-            composer.removeScene("resources.scene.menu.settingsmenu")
+                -- Hide overlay, show mainmenu, remove settingsmenu-scene
+                composer.hideOverlay("fade", 400)
+                lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
+                composer.removeScene("resources.scene.menu.settingsmenu")
+            end
         end
     end
 end
@@ -203,6 +210,7 @@ function scene:show( event )
         scene:loadUI()
         scene:updateUI()
 
+        scene.isInteractable = true
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         
@@ -219,6 +227,7 @@ function scene:hide( event )
         -- Code here runs when the scene is on screen (but is about to go off screen)
         parent = nil
  
+        scene.isInteractable = false
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
        --display.getCurrentStage():setFocus( nil )
