@@ -10,6 +10,7 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
+scene.isInteractable = false
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
@@ -24,7 +25,7 @@ function scene:hoverObj()
         else
             params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,alpha=0.5}
         end
-        transition.to(widget.pointer, params)
+       transition.to(widget.pointer, params)
     end
 end
 
@@ -35,15 +36,20 @@ function scene:updateUI(event)
 end
 
 local function handleInteraction(event)
-    if (event.phase == "ended") then
-        local id = event.target.id
-        local options = {effect = "fade", time = 400}
-        if (id == 'buttonPlay') then
-            lib.scene.show( "resources.scene.menu.savemenu", options )
-        elseif (id == 'buttonSettings') then
-            lib.scene.show( "resources.scene.menu.settingsmenu", options )
-        elseif (id == 'buttonCredits') then
-            lib.scene.show( "resources.scene.menu.creditsmenu", options )
+    if scene.isInteractable then
+        if (event.phase == "ended") then
+            local id = event.target.id
+            local options = {effect = "fade", time = 400}
+            if (id == 'buttonPlay') then
+                lib.scene.show( "resources.scene.menu.savemenu", options )
+                scene.isInteractable = false
+
+            elseif (id == 'buttonSettings') then
+                lib.scene.show( "resources.scene.menu.settingsmenu", options )
+
+            elseif (id == 'buttonCredits') then
+                lib.scene.show( "resources.scene.menu.creditsmenu", options )
+            end
         end
     end
 end
@@ -142,9 +148,6 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        -- Refresh
-        scene:updateUI()
-
         -- animation
         local buttonPlay = scene.widgetsTable[1].pointer
         local buttonSettings = scene.widgetsTable[2].pointer
@@ -153,8 +156,14 @@ function scene:show( event )
         transition.from( buttonSettings, {time=1000,delay=250,transition=easing.outCubic,y=-500} )
         transition.from( buttonCredits, {time=1000,transition=easing.outCubic,y=500} )
 
+        -- Refresh
+        scene:updateUI()
+
+        scene.isInteractable = true
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+    
     end
 end
 
@@ -168,6 +177,7 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
  
+        scene.isInteractable = false
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
  
