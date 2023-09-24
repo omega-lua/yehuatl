@@ -46,7 +46,7 @@
         "secondaryWeapon":"9",
         "primaryWeapon":"down",
         "forward":"right",
-        "aneak":"-",
+        "sneak":"-",
         "inventory":"i",
         "interact":"space",
         "ability":"z"
