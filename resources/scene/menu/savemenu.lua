@@ -82,22 +82,17 @@ function scene:fc(t)
     local statusSaveFiles = scene:checkSaveFiles()
     local index = scene.widgetIndex
 
-    local function manageSaveSlot(i, filename, label)
+    local function manageSaveSlot(i, filename)
         local t = scene:checkSaveFiles()
-        local button = scene.widgetsTable[5].pointer
-
-        if (label == 'Create') then
-            label = 'Delete'
-        elseif (label == 'Delete') then
-            label = 'Create'
-        end
+        local label = nil
+        local button = scene.widgetsTable[5].pointer 
 
         if t[i] then
-            print(">>FUNCTION: DELETE")
             lib.file.delete(filename)
+            label = 'Create'
         else
-            print(">>FUNCTION: CREATE")
             lib.savefile.new(filename)
+            label = 'Delete'
         end
 
         scene:checkSaveFiles()
@@ -154,7 +149,7 @@ function scene:fc(t)
         end
 
         -- Change button function
-        widget['function'] = function() manageSaveSlot(selected, filename, label) end
+        widget['function'] = function() manageSaveSlot(selected, filename) end
 
         -- Animation
         scene.animation.tranisitionFromX = transition.from( button,{time=600, transition=easing.outCubic, x=button.x-100})
@@ -398,6 +393,11 @@ function scene:hide( event )
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
  
+        -- reset variables
+        scene._selected = nil
+        scene._indexOfSelected = nil
+        local button = scene.widgetsTable[5].pointer
+        button.x, button.y = -1500, -1500
     end
 end
  
