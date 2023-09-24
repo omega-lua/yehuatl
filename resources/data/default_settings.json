@@ -61,11 +61,7 @@
     "volumeMusic":1,
     "volumeSoundEffects":2,
     "playStereo":true,
-    "vibration":true,
-    "outputDevice":{
-      "current":null,
-      "saved":[]
-    }
+    "vibration":true
   },
   "visual":{
     "renderParticles":true
