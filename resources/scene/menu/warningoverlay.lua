@@ -18,7 +18,7 @@ scene.type = 'menu'
 local function handleInteraction(event)
     if (event.phase == 'ended') then
         local id = event.target.id
-        if (event.target.id == "buttonCancel") then
+        if (event.target.id == "buttonBack") then
             composer.hideOverlay( 'fade', 100 )
             
         elseif (event.target.id == "buttonApply") then
@@ -141,14 +141,14 @@ function scene:create( event )
             ["creation"] = {
                 x = 300,
                 y = 200,
-                id = "buttonCancel",
+                id = "buttonBack",
                 label = "Cancel exit",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
                 labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
             },
-            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonCancel"}, phase="ended"}) end,
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
             ["navigation"] = {nil,4,nil,5},
             ["pointer"] = {},
             ["type"] = "button",
