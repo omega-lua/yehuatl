@@ -272,7 +272,9 @@ function scene:hoverObj()
 end
  
 function scene:updateUI()
-    scene:hoverObj()
+    if (lib.control.mode == "key") then
+        scene:hoverObj()
+    end
 end
 
 -- -----------------------------------------------------------------------------------
