@@ -1,4 +1,6 @@
--- Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
+-- -----------------------------------------------------------------------------------
+-- Localize
+-- -----------------------------------------------------------------------------------
 
 local lib = require( "resources.lib.lib" )
 local widget = require( "widget" )
@@ -10,11 +12,9 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
+scene.isInteractable = false -- To prevent bugs while scene-switching
 scene.widgetIndex = nil
-scene.animation = {}
-scene.save1 = nil
-scene.save2 = nil
-scene.save3 = nil
+scene.save = {}
 
 scene._selected = nil
 scene._indexOfSelected = nil
@@ -31,15 +31,9 @@ function scene:checkSaveFiles()
     -- Check if any savefiles are present --------------------------------------------
     local doesExist = lib.file.doesExist
     local t = {}
-    t[1] = doesExist( "save1.json", system.DocumentsDirectory)
-    t[2] = doesExist( "save2.json", system.DocumentsDirectory)
-    t[3] = doesExist( "save3.json", system.DocumentsDirectory)
-
-    scene.save1 = t[1]
-    scene.save2 = t[2]
-    scene.save3 = t[3]
-
-    return t
+    scene.save[1] = doesExist( "save1.json", system.DocumentsDirectory)
+    scene.save[2] = doesExist( "save2.json", system.DocumentsDirectory)
+    scene.save[3] = doesExist( "save3.json", system.DocumentsDirectory)
 end
 
 function scene:hoverObj()
@@ -62,32 +56,30 @@ end
 function scene:updateSaveSlots()
     local object = scene.widgetsTable[2].pointer
     local a = 0.4
-    if scene.save1 then a = 1 end
-    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
+    if scene.save[1] then a = 1 end
+    transition.to(object, {time = 600, transition = easing.outQuint, alpha = a})
     
     local object = scene.widgetsTable[3].pointer
     local a = 0.4
-    if scene.save2 then a = 1 end
-    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
+    if scene.save[2] then a = 1 end
+    transition.to(object, {time = 600, transition = easing.outQuint, alpha = a})
 
     local object = scene.widgetsTable[4].pointer
     local a = 0.4
-    if scene.save3 then a = 1 end
-    transition.to(object, {time = 400, transition = easing.outQuint, alpha = a})
+    if scene.save[3] then a = 1 end
+    transition.to(object, {time = 600, transition = easing.outQuint, alpha = a})
 end
 
-function scene:fc(t)
+function scene:fcButton(t)
     local selected = t.selected -- currently selected savefile/-slot (1,2 or 3)
     local update = t.update -- when updateUI() gets called while using key-control
-    local statusSaveFiles = scene:checkSaveFiles()
     local index = scene.widgetIndex
 
     local function manageSaveSlot(i, filename)
-        local t = scene:checkSaveFiles()
         local label = nil
         local button = scene.widgetsTable[5].pointer 
 
-        if t[i] then
+        if scene.save[i] then
             lib.file.delete(filename)
             label = 'Create'
         else
@@ -107,29 +99,28 @@ function scene:fc(t)
     end
 
     local function showButton(selected)
-        local x, y, alpha, fc, label = nil, nil, 0, nil, 'Create'
+        local x, y, fc, label = nil, nil, nil, 'Create'
         local nav = nil -- nav(igation)
         local filename = nil
         local widget = scene.widgetsTable[5]
         local button = widget.pointer
-        local s = statusSaveFiles
         local control = lib.control
 
         if selected == 1 then
             if control.mode == 'key' then nav = {2,3,2,4} end
-            if s[1] then label = 'Delete' end
+            if scene.save[1] then label = 'Delete' end
             filename = 'save1.json'
             button.x, button.y = 550, 130
 
         elseif selected == 2 then
             if control.mode == 'key' then nav = {3,4,3,2} end
-            if s[2] then label = 'Delete' end
+            if scene.save[2] then label = 'Delete' end
             filename = 'save2.json'
             button.x, button.y = 550, 200
 
         elseif selected == 3 then
             if control.mode == 'key' then nav = {4,2,4,3} end
-            if s[3] then label = 'Delete' end
+            if scene.save[3] then label = 'Delete' end
             filename = 'save3.json'
             button.x, button.y = 550, 270
 
@@ -139,8 +130,9 @@ function scene:fc(t)
             end
         end
 
-        -- Change button label
+        -- Change button label and alpha
         button:setLabel(label)
+        button.alpha = 0
 
         -- Change only when control.mode is "key"
         if control.mode == 'key' then
@@ -152,8 +144,8 @@ function scene:fc(t)
         widget['function'] = function() manageSaveSlot(selected, filename) end
 
         -- Animation
-        scene.animation.tranisitionFromX = transition.from( button,{time=600, transition=easing.outCubic, x=button.x-100})
-        scene.animation.transitionAlpha = transition.to( button,{time=250, transition=easing.inCirc, alpha=0.7} )
+        local tranisitionFromX = transition.from( button,{time=600, transition=easing.outCubic, x=button.x-100})
+        local transitionAlpha = transition.to( button,{time=250, transition=easing.inCirc, alpha=0.5} )
     end
 
     -- Runs when updateUI() gets called
@@ -173,7 +165,7 @@ function scene:fc(t)
     -- Runs when a saveslot is selected
     if selected then
         if selected == scene._selected or (lib.control.mode == 'key') then
-            if statusSaveFiles[selected] then
+            if scene.save[selected] then
 
                 --lib.savefile.current = 'save1.json'
                 --lib.scene.show("resources.scene.game.game", {effect = "fade", time = 1200})
@@ -197,30 +189,32 @@ end
 
 function scene:updateUI()
     if (lib.control.mode == "key") then
-        scene:fc({update=true})
+        scene:fcButton({update=true})
         scene:hoverObj()
     end
 end
 
 local function handleInteraction(event)
-    if (event.phase == 'ended') then
-        local id = event.target.id
+    if scene.isInteractable then
+        if (event.phase == 'ended') then
+            local id = event.target.id
         
-        if (id == 'buttonBack') then
-            lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
-            return false
+            if (id == 'buttonBack') then
+                lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
+                scene.isInteractable = false
 
-        elseif (id == 'buttonSave1') then
-            scene:fc({selected=1})
+            elseif (id == 'buttonSave1') then
+                scene:fcButton({selected=1})
 
-        elseif (id == 'buttonSave2') then
-            scene:fc({selected=2})
+            elseif (id == 'buttonSave2') then
+                scene:fcButton({selected=2})
 
-        elseif (id == 'buttonSave3') then
-            scene:fc({selected=3})
+            elseif (id == 'buttonSave3') then
+                scene:fcButton({selected=3})
 
-        elseif (id == 'buttonInteract') then
-            scene.widgetsTable[5]["function"]()
+            elseif (id == 'buttonInteract') then
+                scene.widgetsTable[5]["function"]()
+            end
         end
     end
 end
@@ -231,7 +225,7 @@ function scene:loadUI()
     scene.widgetsTable = {
         [1] = {
             ["creation"] = {
-                x = 50,
+                x = 0,
                 y = 50,
                 id = "buttonBack",
                 label = "back",
@@ -302,7 +296,7 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
             },
             ["function"] = nil,
             ["navigation"] = {},
@@ -377,6 +371,8 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
+        scene.isInteractable = true
     end
 end
  
@@ -389,6 +385,8 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
+
+        scene.isInteractable = false
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
