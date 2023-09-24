@@ -15,6 +15,7 @@ scene.widgetsTable = {}
 scene.selectedDevice = nil
 scene.selectedType = nil
 scene._selectedIndex = nil
+scene.showForgetButton = false
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
@@ -104,6 +105,22 @@ function scene:changeSelection(selection)
         scene._selectedIndex = n
         scene.selectedType = _saved.type
 
+        -- Enable/Disable forget button
+        local button = scene.widgetsTable[6].pointer 
+        if lib.settings.table.controls.inputDevice.saved[deviceName] then
+            scene.showForgetButton = true
+            button:setEnabled( true )
+            transition.to(button, {alpha=0.65, time = 400, transition = easing.outQuint})
+            scene.widgetsTable[1].navigation = {6,3,6,3}
+            scene.widgetsTable[4].navigation = {3,6,3,6}
+        else
+            scene.showForgetButton = false
+            button:setEnabled( false )
+            transition.to(button, {alpha=0.15, time = 900, transition = easing.outQuint})
+            scene.widgetsTable[1].navigation = {4,3,4,3}
+            scene.widgetsTable[4].navigation = {3,1,3,1}
+        end
+
         -- Set buttonlabels
         scene.widgetsTable[3].pointer:setLabel(scene.selectedType or "Choose...")
         scene.widgetsTable[4].pointer.text = (scene.selectedDevice or "Choose...")
@@ -136,11 +153,14 @@ local function handleInteraction(event)
 
         elseif (id == "buttonType") then
             scene:changeSelection("type")
+
+        elseif (id == 'buttonForget') then
+            lib.inputdevice.forget(scene.selectedDevice)
+            scene:changeSelection('inputdevice')
         end
     end
 end
 
--- On startup
 function scene:loadUI() 
     local sceneGroup = scene.view
 
@@ -151,8 +171,8 @@ function scene:loadUI()
     scene.widgetsTable = {
         [1] = {
             ["creation"] = {
-                x = 650,
-                y = 350,
+                x = 400,
+                y = 300,
                 id = "buttonApply",
                 label = "Apply",
                 onEvent = handleInteraction,
@@ -161,28 +181,27 @@ function scene:loadUI()
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApply"}, phase="ended"}) end,
-            ["navigation"] = {4,4,3,3},
+            ["navigation"] = {6,3,6,3},
             ["pointer"] = {},
             ["type"] = "button",
         },
-        [2] = {
+        [2] = { -- button only for touch
             ["creation"] = {
-                x = 150,
-                y = 200,
+                x = 100,
+                y = 150,
                 id = "buttonInputDevice",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
-            ["navigation"] = {3,1,1,1},
             ["pointer"] = {},
             ["type"] = "button",
         },
         [3] = {
             ["creation"] = {
-                x = 550,
-                y = 200,
+                x = 500,
+                y = 150,
                 id = "buttonType",
                 label = scene.selectedType or "Choose...",
                 onEvent = handleInteraction,
@@ -191,38 +210,55 @@ function scene:loadUI()
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonType"}, phase="ended"}) end,
-            ["navigation"] = {1,1,4,1},
+            ["navigation"] = {4,1,4,1},
             ["pointer"] = {},
             ["type"] = "button",
         },
         [4] = {
             ["creation"] = {
-                x = 150,
-                y = 200,
+                x = 100,
+                y = 150,
                 width = 200,
                 text = scene.selectedDevice or "Choose...",
                 align = "center",
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
             },
-            ["navigation"] = {3,1,1,1},
+            ["navigation"] = {3,6,3,6},
             ["pointer"] = {},
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
             ["type"] = "text",
         },
         [5] = {
             ["creation"] = {
-                x = 350,
-                y = 200,
+                x = 300,
+                y = 150,
                 width = 200,
                 text = "as a",
                 align = "center",
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 25,
+                fontSize = 20,
             },
             ["pointer"] = {},
             ["type"] = "text",
-        }
+        },
+        [6] = {
+            ["creation"] = {
+                id = "buttonForget",
+                x = 200,
+                y = 300,
+                label = "Forget",
+                onEvent = handleInteraction,
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 25,
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+            },
+            ["navigation"] = {1,4,1,4},
+            ["pointer"] = {},
+            ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonForget"}, phase="ended"}) end,
+            ["type"] = "button",
+        },
+
     }
 
     -- Create widgets
@@ -263,9 +299,17 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5, alpha=1}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.4, yScale = 1.4, alpha=1}     
         else
-            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.7}
+            if i == 6 then
+                if scene.showForgetButton then
+                    params = {time = 400, delay=10, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.65}
+                else
+                    params = {time = 900, delay=10,transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.15}
+                end
+            else
+                params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.65}
+            end
         end
         transition.to(widget.pointer, params)
     end
