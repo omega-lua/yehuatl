@@ -12,8 +12,7 @@ local scene = composer.newScene()
 scene.type = "menu"
 
 -- -----------------------------------------------------------------------------------
--- Code outside of the scene event functions below will only be executed ONCE unless
--- the scene is removed entirely (not recycled) via "composer.removeScene()"
+-- Scene functions
 -- -----------------------------------------------------------------------------------
 
 function scene:hoverObj()
@@ -29,8 +28,10 @@ function scene:hoverObj()
     end
 end
 
-function scene:updateUI()
-    scene:hoverObj()
+function scene:updateUI(event)
+    if (lib.control.mode == "key") then
+        scene:hoverObj()
+    end
 end
 
 local function handleInteraction(event)
@@ -142,7 +143,7 @@ function scene:show( event )
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
         -- Refresh
-        scene:hoverObj()
+        scene:updateUI()
 
         -- animation
         local buttonPlay = scene.widgetsTable[1].pointer
