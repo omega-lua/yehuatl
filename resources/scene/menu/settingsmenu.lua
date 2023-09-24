@@ -109,7 +109,7 @@ function scene:handleSegment(index, value)
     local widget = scene.widgetsTable[index]
 
     -- Music Volume Segment
-    if (index == 12) then
+    if (index == 11) then
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
@@ -127,7 +127,7 @@ function scene:handleSegment(index, value)
         end
     
     -- Sound Effects Volume Segment
-    elseif (index == 14) then
+    elseif (index == 13) then
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
@@ -145,7 +145,7 @@ function scene:handleSegment(index, value)
         end
     
     -- Difficutly Segment
-    elseif (index == 26) then
+    elseif (index == 25) then
         -- For touchcontrol
         if not value then
             local value = widget.pointer.segmentNumber
@@ -167,7 +167,7 @@ end
 function scene:handleSwitch(index, boolean)
     local widget = scene.widgetsTable[index]
     -- Enable Stereo Widget
-    if (index == 16) then
+    if (index == 15) then
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
@@ -187,7 +187,7 @@ function scene:handleSwitch(index, boolean)
             scene.isSaved = false
         end
 
-    elseif (index == 21) then
+    elseif (index == 20) then
         -- Touchcontrol
         if (boolean == nil) then
             local state = widget.pointer.isOn
@@ -362,11 +362,9 @@ function scene:show( event )
             },
             [2] = {
                 ["creation"] = {100,50,320,50},
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "line",
-                ["color"] = { 1, 1, 1, 0.6},
+                ["color"] = {1,1,1,0.6},
             },
             [3] = {
                 ["creation"] = {
@@ -377,16 +375,12 @@ function scene:show( event )
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
-                ["color"] = { 1, 1, 1, 0.6}
+                ["color"] = {1,1,1,0.6}
             },
             [4] = {
                 ["creation"] = {480,50,700,50},
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
@@ -419,14 +413,12 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
-                ["navigation"] = {nil,10,nil,5},
+                ["navigation"] = {nil,11,nil,5},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
             [7] = {
                 ["creation"] = {100,200,340,200},
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
@@ -438,242 +430,200 @@ function scene:show( event )
                     text = "Sound",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20},
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [9] = {
                 ["creation"] = {460,200,700,200},
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [10] = {
                 ["creation"] = {
-                    x = 400,
-                    y = 250,
-                    id = "buttonOutputDevice",
-                    label = "Output Device",
-                    onEvent = handleInteraction,
-                    font = "fonts/BULKYPIX.TTF",
-                    fontSize = 20,
-                    labelColor = { default={ 1, 1, 1}, over={ 1, 1, 1, 0.5 } }
-                },
-                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonOutputDevice"}, phase="ended"}) end,
-                ["navigation"] = {nil,12,nil,6},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [11] = {
-                ["creation"] = {
                     text = "Music Volume",
                     x = 280,
-                    y = 300,
+                    y = 250,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [12] = {
+            [11] = {
                 ["creation"] = {
                     x = 520,
-                    y = 300,
+                    y = 250,
                     id = "segmentMusicVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
                     defaultSegment = lib.settings.tmpTable.sound.volumeMusic,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
-                    onPress = function() scene:handleSegment(12) end,
+                    onPress = function() scene:handleSegment(11) end,
                 },
                 ["function"] = nil, --function()  end
-                ["navigation"] = {function() scene:handleSegment(12,1) end,14, function() scene:handleSegment(12,-1) end,10},
+                ["navigation"] = {function() scene:handleSegment(11,1) end,13, function() scene:handleSegment(11,-1) end,6},
                 ["pointer"] = {},
                 ["type"] = "segment",
             },
-            [13] = {
+            [12] = {
                 ["creation"] = {
                     text = "Effects Volume",
                     x = 280,
-                    y = 350,
+                    y = 300,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [14] = {
+            [13] = {
                 ["creation"] = {
                     x = 520,
-                    y = 350,
+                    y = 300,
                     id = "segmentEffectsVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
                     defaultSegment = lib.settings.tmpTable.sound.volumeSoundEffects,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
-                    onPress = function() scene:handleSegment(14) end,
+                    onPress = function() scene:handleSegment(13) end,
                 },
                 ["function"] = nil,
-                ["navigation"] = {function() scene:handleSegment(14,1) end, 16, function() scene:handleSegment(14,-1) end,12},
+                ["navigation"] = {function() scene:handleSegment(13,1) end, 15, function() scene:handleSegment(13,-1) end,11},
                 ["pointer"] = {},
                 ["type"] = "segment",
             },
-            [15] = {
+            [14] = {
                 ["creation"] = {
                     text = "Stereo",
                     x = 320,
-                    y = 400,
+                    y = 350,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [16] = {
+            [15] = {
                 ["creation"] = {
                     id = "switchStereo",
                     x = 480,
-                    y = 400,
+                    y = 350,
                     initialSwitchState = lib.settings.tmpTable.sound.playStereo,
-                    onRelease = function() scene:handleSwitch(16) end,
+                    onRelease = function() scene:handleSwitch(15) end,
                 },
                 ["function"] = nil,
-                ["navigation"] = {function() scene:handleSwitch(16,true) end,21, function()scene:handleSwitch(16,false) end,14},
+                ["navigation"] = {function() scene:handleSwitch(15,true) end,20, function()scene:handleSwitch(15,false) end,13},
                 ["pointer"] = {},
                 ["type"] = "switch",
             },
-            [17] = {
-                ["creation"] = {100,450,340,450},
-                ["function"] = nil,
-                ["navigation"] = {},
+            [16] = {
+                ["creation"] = {100,400,340,400},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
             },
-            [18] = {
+            [17] = {
                 ["creation"] = {
                     x = 400,
-                    y = 450,
+                    y = 400,
                     text = "Visual",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
+                ["color"] = { 1, 1, 1, 0.6},
+            },
+            [18] = {
+                ["creation"] = {460,400,700,400},
+                ["pointer"] = {},
+                ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [19] = {
-                ["creation"] = {460,450,700,450},
-                ["function"] = nil,
-                ["navigation"] = {},
-                ["pointer"] = {},
-                ["type"] = "line",
-                ["color"] = { 1, 1, 1, 0.6},
-            },
-            [20] = {
                 ["creation"] = {
                     text = "Particles",
                     x = 320,
-                    y = 500,
+                    y = 450,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [21] = {
+            [20] = {
                 ["creation"] = {
                     id = "switchParticles",
                     x = 480,
-                    y = 500,
+                    y = 450,
                     initialSwitchState = lib.settings.tmpTable.visual.renderParticles,
-                    -- onRelease (for Touchcontrol)
+                    onRelease = function() scene:handleSwitch(20) end,
                 },
                 ["function"] = nil,
-                ["navigation"] = {function() scene:handleSwitch(21,true) end,26,function() scene:handleSwitch(21,false) end,16},
+                ["navigation"] = {function() scene:handleSwitch(20,true) end,25,function() scene:handleSwitch(20,false) end,15},
                 ["pointer"] = {},
                 ["type"] = "switch",
             },
-            [22] = {
-                ["creation"] = {100,550,340,550},
-                ["function"] = nil,
-                ["navigation"] = {},
+            [21] = {
+                ["creation"] = {100,500,340,500},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
             },
-            [23] = {
+            [22] = {
                 ["creation"] = {
                     x = 400,
-                    y = 550,
+                    y = 500,
                     text = "Ingame",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
                 ["color"] = { 1, 1, 1, 0.6},
             },
-            [24] = {
-                ["creation"] = {460,550,700,550},
-                ["function"] = nil,
-                ["navigation"] = {},
+            [23] = {
+                ["creation"] = {460,500,700,500},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
             },
-            [25] = {
+            [24] = {
                 ["creation"] = {
                     text = "Difficulty",
                     x = 320,
-                    y = 600,
+                    y = 550,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
-                ["function"] = nil,
-                ["navigation"] = {},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [26] = {
+            [25] = {
                 ["creation"] = {
                     x = 480,
-                    y = 600,
+                    y = 550,
                     id = "segmentDifficulty",
                     segmentWidth = 35,
                     segments = {"1", "2", "3"},
                     defaultSegment = lib.settings.tmpTable.ingame.difficulty,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
-                    onPress = function() scene:handleSegment(26) end,
+                    onPress = function() scene:handleSegment(25) end,
                 },
                 ["function"] = nil,
-                ["navigation"] = {function() scene:handleSegment(26,1) end,27,function() scene:handleSegment(26,-1) end,21},
+                ["navigation"] = {function() scene:handleSegment(25,1) end,26,function() scene:handleSegment(25,-1) end,20},
                 ["pointer"] = {},
                 ["type"] = "segment",
             },
-            [27] = {
+            [26] = {
                 ["creation"] = {
                     x = 250,
-                    y = 700,
+                    y = 650,
                     id = "buttonApplySettings",
                     label = "Apply Settings",
                     onEvent = handleInteraction,
@@ -682,14 +632,14 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApplySettings"}, phase="ended"}) end,
-                ["navigation"] = {28, 1, 28, 26},
+                ["navigation"] = {27, 1, 27, 25},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
-            [28] = {
+            [27] = {
                 ["creation"] = {
                     x = 550,
-                    y = 700,
+                    y = 650,
                     id = "buttonResetSettings",
                     label = "Reset Settings",
                     onEvent = handleInteraction,
@@ -698,13 +648,12 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonResetSettings"}, phase="ended"}) end,
-                ["navigation"] = {27, 1, 27, 26},
+                ["navigation"] = {26, 1, 26, 25},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
         }
 
-        -- UI sollte jedesmal neu geladen werden, nicht aber die ganze Szene, darum kein removeScene().
         scene:loadUI()
         scene:updateUI()
 
