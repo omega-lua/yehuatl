@@ -91,6 +91,8 @@ lib.file = file
 
 local savefile = {}
 savefile.current = nil
+local level = {}
+level.current = nil
 
 function savefile.new(filename)
     local contents = nil
@@ -125,24 +127,47 @@ function savefile.new(filename)
 end
 
 function savefile.load(filename)
-    local path = system.pathForFile(filename, system.DocumentsDirectory)
-    local contents = lib.file.read(path)
-
-    -- 2. Decode JSON-file
-    decoded, pos, msg = json.decode(contents, 1, "emptyTable")
-
-    -- 3. Set Variabels
-    if decoded then
-        -- 3.1 Set map-Variable
-        currentMapPath = decoded['environmentData']['map']
-
-        -- 3.2 Set other Variables
-        playerData = decoded["playerData"]
-        environmentData = decoded["environmentData"]
-
-    else
-        print( "Decode failed at "..tostring(pos)..": "..tostring(msg) )
+    -- handle exception
+    if not filename then
+        print("ERROR: No filename provided in fc(): savefile.load")
     end
+
+    -- read current savefile
+    local filePath = 'resources.data.'..filename
+    local encoded = lib.file.read( filePath )
+    local data = json.decode( encoded, "_")
+
+    -- find current level
+    local currentLevel = data.levels.current
+
+    -- load level
+    local levelPath = "resources.scene.game."..currentLevel
+    composer.loadScene( levelPath, true)
+
+    -- load map with dusk
+    --local loadedMap = dusk.loadMap()
+
+    -- build map with dusk
+    local map = dusk.buildMap(loadedMap)
+
+    -- load entities
+    local entities = data.levels[currentLevel]
+
+    -- connect entities with classes
+    map.extend(entities) -- ?
+    
+    -- copy informations of player in savefile to variables in player.lib
+
+    -- setup and pause physics
+    scene.setUpPhysics()
+
+    -- camera positioning
+
+    -- start physics
+    physics.start()
+
+    -- show scene
+    lib.scene.show(levelPath) -- Might not work, this fc() uses loadScene aswell.
 end
 
 lib.savefile = savefile
@@ -163,7 +188,7 @@ function scene.show(scenePath, options)
     composer.gotoScene(scenePath, options)
 end
 
-function scene.startPhysics()
+function scene.setUpPhysics()
     physics.start() -- physics first startup
     physics.pause() -- pause physics for setup
     physics.setDrawMode("hybrid") -- DEBUG
