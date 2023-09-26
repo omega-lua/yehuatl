@@ -1,0 +1,28 @@
+{
+    "player":{
+        "inventory":{
+            "artefact1":{},
+            "sword":{}
+        },
+        "name":"Mateo",
+        "statuseffects":{}
+    },
+    "levels":{
+        "current":"level1",
+        "level1":{
+            "entities":{
+                "bosses":{},
+                "enemies":{},
+                "passive":{},
+                "items":{}
+            }
+        },
+        "level2":{},
+        "level3":{},
+        "level4":{},
+        "level5":{},
+        "level6":{},
+        "level7":{},
+        "level8":{}
+    }
+}
