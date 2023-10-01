@@ -4,6 +4,7 @@
 
 local lib = {}
 
+local dusk = require("Dusk.Dusk")
 local composer = require( "composer" )
 local json = require( "json" )
 local physics = require( "physics" )
@@ -53,11 +54,12 @@ function file.write(path, contents)
     file = nil
 end
 
-function file.read(path)
+function file.read(path, dir)
     local contents = nil
 
     -- 1. Open savefile
-    local file, errorString = io.open( path, "r" )
+    local absPath = system.pathForFile(path, dir)
+    local file, errorString = io.open( absPath, "r" )
     if not file then
         -- Error occurred; output the cause
         print( "File error: " .. errorString )
@@ -91,8 +93,6 @@ lib.file = file
 
 local savefile = {}
 savefile.current = nil
-local level = {}
-level.current = nil
 
 function savefile.new(filename)
     local contents = nil
@@ -118,56 +118,27 @@ function savefile.new(filename)
     end
 
     -- Read content from initial.json
-    local path = system.pathForFile( "resources/data/initial.json", system.ResourceDirectory )
-    local contents = lib.file.read(path)
+    --local path = system.pathForFile( "resources/data/initial.json", system.ResourceDirectory )
+    local contents = lib.file.read("resources/data/initial.json", system.ResourceDirectory)
 
     -- Make new savefile
     local path = system.pathForFile( filename, system.DocumentsDirectory )
     lib.file.write(path, contents)
 end
 
-function savefile.load(filename)
+function savefile.read(filename)
     -- handle exception
     if not filename then
-        print("ERROR: No filename provided in fc(): savefile.load")
+        print("ERROR: No filename provided in fc(): savefile.read")
+        return false
     end
 
     -- read current savefile
     local filePath = 'resources.data.'..filename
-    local encoded = lib.file.read( filePath )
+    local encoded = lib.file.read( filePath, system.ResourceDirectory)
     local data = json.decode( encoded, "_")
 
-    -- find current level
-    local currentLevel = data.levels.current
-
-    -- load level
-    local levelPath = "resources.scene.game."..currentLevel
-    composer.loadScene( levelPath, true)
-
-    -- load map with dusk
-    --local loadedMap = dusk.loadMap()
-
-    -- build map with dusk
-    local map = dusk.buildMap(loadedMap)
-
-    -- load entities
-    local entities = data.levels[currentLevel]
-
-    -- connect entities with classes
-    map.extend(entities) -- ?
-    
-    -- copy informations of player in savefile to variables in player.lib
-
-    -- setup and pause physics
-    scene.setUpPhysics()
-
-    -- camera positioning
-
-    -- start physics
-    physics.start()
-
-    -- show scene
-    lib.scene.show(levelPath) -- Might not work, this fc() uses loadScene aswell.
+    return data
 end
 
 lib.savefile = savefile
@@ -188,7 +159,16 @@ function scene.show(scenePath, options)
     composer.gotoScene(scenePath, options)
 end
 
-function scene.setUpPhysics()
+lib.scene = scene
+
+--------------------------------------------------------------------------------
+-- level functions
+--------------------------------------------------------------------------------
+
+local level = {}
+level.current = nil
+
+function level.setUpPhysics()
     physics.start() -- physics first startup
     physics.pause() -- pause physics for setup
     physics.setDrawMode("hybrid") -- DEBUG
@@ -196,7 +176,49 @@ function scene.setUpPhysics()
     physics.setGravity( 0, 14 )
 end
 
-lib.scene = scene
+function level.goTo(level)
+    -- Localize
+    local level = level
+    -- get data from current savefile
+    local path = "resources/data/"..lib.savefile.current
+    local encrypted = file.read(path, system.ResourceDirectory)
+    local data = json.decode(encrypted)
+
+    if not level then
+        -- variable n has no value -> load last one used (..levels.current)
+        level = data.levels.current
+    end
+
+    -- load level
+    local scenePath = "resources.scene.game."..level..".scene"
+    composer.loadScene( scenePath, true)
+
+    -- build map with dusk
+    local mapPath = "resources.scene.game."..level..".map.lua"
+    local absMapPath = system.pathForFile(mapPath, system.ResourceDirectory)
+    local map = dusk.buildMap(mapPath)
+
+    -- load entities
+    --local entities = data.levels[currentLevel]
+
+    -- connect entities with classes
+    --map.extend(entities) -- ?
+    
+    -- copy informations of player in savefile to variables in player.lib
+
+    -- setup and pause physics
+    --lib.level.setUpPhysics()
+
+    -- camera positioning
+
+    -- start physics
+    --physics.start()
+
+    -- show scene
+    lib.scene.show(scenePath) -- Might cause problems, it uses loadScene aswell.
+end
+
+lib.level = level
 
 --------------------------------------------------------------------------------
 -- settings functions
@@ -205,14 +227,6 @@ lib.scene = scene
 local settings = {}
 settings.table = {}
 settings.tmpTable = {}
-
-function settings.get(path)
-    -- Read file
-    local data = lib.file.read(path)
-    -- decode data
-    local decoded = json.decode(data, 1, "emptyTable")
-    return decoded
-end
 
 function settings.initiate(table)
     if not table then
@@ -251,8 +265,8 @@ end
 
 function settings.reset()
     -- Get data from initial_setting.json
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    local data = settings.get(path)
+    local encoded = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
+    local data = json.decode(encoded)
 
     -- Save data
     settings.save(data)
@@ -266,8 +280,8 @@ function settings.onStartup()
     local data = nil
     local doesExist = lib.file.doesExist("settings.json", system.DocumentsDirectory)
     if doesExist then
-        local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
-        data = settings.get(path)
+        local encoded = lib.file.read("settings.json", system.DocumentsDirectory)
+        data = json.decode(encoded)
     else
         data = settings.reset()
     end
@@ -298,8 +312,7 @@ inputdevice.available = {}
 
 function inputdevice.createKeybinds(inputDeviceType)
     -- get default_settings from ResourceDirectory
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    local default_settings = lib.settings.get(path)
+    local default_settings = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
     
     if inputDeviceType == "controller" then
         keybinds = default_settings.controls.keybinds.controller
@@ -693,7 +706,7 @@ lib.control = control
 -- DEBUG ------------------------------------------------------------------------------
 
 function lib.print(node)
-    if type(node) == table then
+    if (type(node) == "table") then
         -- To print a table if needed. Source: https://gist.github.com/revolucas/dd1ecccfca32d558fddf70ddb39eb8a6
         local cache, stack, output = {},{},{}
         local depth = 1
@@ -772,7 +785,7 @@ function lib.print(node)
   
         print(output_str)
 
-    elseif type(node) == string or type(node) == number then
+    elseif (type(node) == "string") or (type(node) == "number") then
         print(node)
     end
 end
