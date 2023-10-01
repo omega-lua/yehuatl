@@ -1,10 +1,11 @@
 -- Scene Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
-local composer = require "composer"
-local library = require "library"
-local scene = composer.newScene()
+local lib = require( "resources.lib.lib" )
 
+local composer = require "composer"
 local json = require "json"
 local physics = require "physics"
+
+local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 overlaySceneStatus = false
@@ -29,7 +30,7 @@ function handlePauseScreen()
         -- For Consistency Reasons
         overlaySceneStatus = nil
         
-        -- Hide pausescrean-Overlay
+        -- Hide pausescreen-Overlay
         composer.hideOverlay(false, "fade", 500)
         
         -- unpause map
@@ -57,10 +58,11 @@ function scene:create( event )
     local sceneGroup = self.view
 
     -- Only occurs when no savefiles found, and user presses play. For example during first time launching.
-    if not currentSaveFile then
-        library.newSaveFile()
+    if not lib.savefile.current then
+        lib.savefile.new()
+        lib.savefile.current = "save1.json"
     end
-    library.loadSaveFile(currentSaveFile)
+    lib.savefile.load(lib.savefile.current)
 end
 
  
@@ -73,7 +75,7 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
-        library.handleSceneChange(currentMapPath, "game", {})
+        lib.scene.show(currentMapPath, {})
     
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen

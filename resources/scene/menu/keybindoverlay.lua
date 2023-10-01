@@ -1,12 +1,19 @@
+-- Localize
+local lib = require( "resources.lib.lib" )
 local composer = require( "composer" )
 local widget = require( "widget" )
-local library = require("library")
 
 local scene = composer.newScene()
  
 -- -----------------------------------------------------------------------------------
--- Code outside of the scene event functions below will only be executed ONCE unless
--- the scene is removed entirely (not recycled) via "composer.removeScene()"
+-- Scene variables
+-- -----------------------------------------------------------------------------------
+
+scene.type = 'menu'
+scene.selectedKeybind = nil
+
+-- -----------------------------------------------------------------------------------
+-- Scene functions
 -- -----------------------------------------------------------------------------------
  
 function scene:showToast(message)
@@ -17,14 +24,13 @@ function scene:showToast(message)
         width = 256,
         font = "fonts/BULKYPIX.TTF",   
         fontSize = 18,
-        align = "center"  -- Alignment parameter
+        align = "center"
     })
  
     local params = {
         time = 1000,
         tag = "toast",
         transition = easing.outQuart,
-        delay = 00,
         alpha = 0
     }
     
@@ -33,7 +39,6 @@ function scene:showToast(message)
 end
 
 local function handleScrollView(i,o)     
-    --local m, n = scrollView:getContentPosition()
     local x,y = o:localToContent(0,0)
     -- Upscrolling
     if (y <= display.contentCenterY - scrollView.height*0.5) then
@@ -57,83 +62,99 @@ function scene:hoverObj()
     end
 end
 
--- Even necessary?
-local function handleButtonEvent(event)
-    if (event.phase == "ended") then
-        local id = event.target.id
-        if (id == "buttonBack") then
-            parent:hideOverlay()
-            return
-
-        -- For now just simulate the navigateMenu style.
-        elseif (id == "keybindEscape" ) then
-            scene.widgetIndex = 5
-        elseif (id == "keybindInteract" ) then
-            scene.widgetIndex = 7
-        elseif (id == "keybindForward" ) then
-            scene.widgetIndex = 9
-        elseif (id == "keybindBackward" ) then
-            scene.widgetIndex = 11
-        elseif (id == "keybindJump" ) then
-            scene.widgetIndex = 13
-        elseif (id == "keybindSneak" ) then
-            scene.widgetIndex = 15
-        elseif (id == "keybindPrimaryWeapon" ) then
-            scene.widgetIndex = 17
-        elseif (id == "keybindSecondaryWeapon" ) then
-            scene.widgetIndex = 19
-        elseif (id == "keybindBlock" ) then
-            scene.widgetIndex = 21
-        elseif (id == "keybindAbility" ) then
-            scene.widgetIndex = 23
-        elseif (id == "keybindInventory" ) then
-            scene.widgetIndex = 25
-        end
-        scene:handleKeybindChange()
-    end
-end
-
--- listener for handleKeybindChange()
-local function handleKeybindInput(event)
-    if ( event.phase == "up" ) then
-        -- Localize
-        local widgetIndex = scene.widgetIndex
-        local widget = scene.widgetsTable[widgetIndex].pointer
-        local keybindName = scene.keybindTable[widgetIndex]
-        
-        -- Set pressed key as new keybind in tmpSettings
-        tmpSettings[keybindName] = event.keyName
-
-        -- Change isSaved Variable
-        parent.isSaved = false
-
-        -- Remove eventlistener after one key input
-        Runtime:removeEventListener("key", handleKeybindInput)
+local function listener(event)
+    if (event.phase == "up" ) then
+        -- Set pressed key as new keybind in lib.settings.tmpTable
+        local inputDevice = lib.inputdevice.current.name
+        local keybindName = scene.selectedKeybind.name
+        lib.settings.tmpTable.controls.keybinds[inputDevice][keybindName] = event.keyName
 
         -- Reload widget text
-        widget:setLabel(tmpSettings[keybindName])
+        local index = scene.selectedKeybind.index
+        local widget = scene.widgetsTable[index].pointer
+        widget:setLabel(lib.settings.tmpTable.controls.keybinds[inputDevice][keybindName])
         transition.cancel( scene.transitionBlinking )
         widget.alpha = 1
 
-        -- Add normal eventListener again
-        Runtime:addEventListener("key", library.navigateMenu)
+        -- Change isSaved variable
+        local _scene = composer.getScene( "resources.scene.menu.settingsmenu" )
+        _scene.isSaved = false
+        
+        -- Change selectedKeybind variable
+        scene.selectedKeybind = nil
 
+        -- Change EventListeners
+        Runtime:removeEventListener("key", listener)
+        Runtime:addEventListener("key", lib.control.key.menu)
     end
 end
 
-function scene:handleKeybindChange()
-    local widgetIndex = scene.widgetIndex
-    local widget = scene.widgetsTable[widgetIndex].pointer
+local function addListener()
+    -- Change EventListeners
+    Runtime:removeEventListener("key", lib.control.key.menu)
+    Runtime:addEventListener("key", listener)
 
+    -- Change buttonlable to a blinking undercase.
+    local index = scene.selectedKeybind.index
+    local widget = scene.widgetsTable[index].pointer
     widget:setLabel("_")
     scene.transitionBlinking = transition.to( widget, {time=1000,transition=easing.continuousLoop,alpha=0, iterations=-1} )
-    
-    -- Add EventListener for next keyEvent
-    Runtime:addEventListener("key", handleKeybindInput)
-
-    -- Remove normal eventListener to get rid of some bugs.
-    Runtime:removeEventListener("key", library.navigateMenu)
 end
+
+local function handleInteraction(event)
+    if (event.phase == "ended") and (not scene.selectedKeybind) then
+        local id = event.target.id
+        if (id == "buttonBack") then
+            lib.scene.show("resources.scene.menu.settingsmenu", {time=400, effect='fade'})
+            return
+
+        elseif (id == "escape") then
+            scene.selectedKeybind = {name=id, index=5}
+            addListener()
+
+        elseif (id == "interact") then
+            scene.selectedKeybind = {name=id, index=7}
+            addListener()
+
+        elseif (id == "forward") then
+            scene.selectedKeybind = {name=id, index=9}
+            addListener()
+
+        elseif (id == "backward") then
+            scene.selectedKeybind = {name=id, index=11}
+            addListener()
+
+        elseif (id == "jump") then
+            scene.selectedKeybind = {name=id, index=13}
+            addListener()
+
+        elseif (id == "sneak") then
+            scene.selectedKeybind = {name=id, index=15}
+            addListener()
+
+        elseif (id == "primaryWeapon") then
+            scene.selectedKeybind = {name=id, index=17}
+            addListener()
+
+        elseif (id == "secondaryWeapon") then
+            scene.selectedKeybind = {name=id, index=19}
+            addListener()
+
+        elseif (id == "block") then
+            scene.selectedKeybind = {name=id, index=21}
+            addListener()
+
+        elseif (id == "ability") then
+            scene.selectedKeybind = {name=id, index=23}
+            addListener()
+
+        elseif (id == "inventory") then
+            scene.selectedKeybind = {name=id, index=25}
+            addListener()
+        end
+    end
+end
+
 
 local function handleScrollView()     
     local widget = scene.widgetsTable[scene.widgetIndex]
@@ -165,10 +186,11 @@ function scene:hoverObj()
     end
 end
 
--- middleman function
 function scene:updateUI()
-    scene:hoverObj()
-    handleScrollView()
+    if (lib.control.mode == "key") then
+        scene:hoverObj()
+        handleScrollView()
+    end
 end
 
 function scene:loadUI()
@@ -225,9 +247,7 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        
-        runtime.currentScene = scene
-        runtime.currentSceneType = "menu"
+
         scene.widgetIndex = 5
         scene.widgetsTable = {
             [1] = {
@@ -236,10 +256,10 @@ function scene:show( event )
                     label="back",
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() parent:hideOverlay() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
                 ["navigation"] = {nil,5,nil,25},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -267,14 +287,14 @@ function scene:show( event )
             },
             [5] = {
                 ["creation"] = {x=520,y=150,
-                    id="keybindEscape",
-                    label=tmpSettings.keybindEscape,
+                    id="escape",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].escape,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end, 
+                ["function"] = function() scene:dispatchEvent({name="interaction", target={id="escape"}, phase="ended"}) end,
                 ["navigation"] = {nil,7,nil,1},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -288,14 +308,14 @@ function scene:show( event )
             },
             [7] = {
                 ["creation"] = {x=520,y=200,
-                    id="keybindInteract",
-                    label=tmpSettings.keybindInteract,
+                    id="interact",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].interact,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({name="interaction", target={id="interact"}, phase="ended"}) end,
                 ["navigation"] = {nil,9,nil,5},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -309,14 +329,14 @@ function scene:show( event )
             },
             [9] = {
                 ["creation"] = {x=520,y=250,
-                    id="keybindForward",
-                    label=tmpSettings.keybindForward,
+                    id="forward",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].forward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="forward"}, phase="ended"}) end,
                 ["navigation"] = {nil,11,nil,7},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -330,14 +350,14 @@ function scene:show( event )
             },
             [11] = {
                 ["creation"] = {x=520,y=300,
-                    id="keybindBackward",    
-                    label=tmpSettings.keybindBackward,
+                    id="backward",    
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].backward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="backward"}, phase="ended"}) end,
                 ["navigation"] = {nil,13,nil,9},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -351,14 +371,14 @@ function scene:show( event )
             },
             [13] = {
                 ["creation"] = {x=520,y=350,
-                    id="keybindJump",
-                    label=tmpSettings.keybindJump,
+                    id="jump",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].jump,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="jump"}, phase="ended"}) end,
                 ["navigation"] = {nil,15,nil,11},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -372,14 +392,14 @@ function scene:show( event )
             },
             [15] = {
                 ["creation"] = {x=520,y=400,
-                    id="keybindSneak",
-                    label=tmpSettings.keybindSneak,
+                    id="sneak",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].sneak,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="sneak"}, phase="ended"}) end,
                 ["navigation"] = {nil,17,nil,13},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -393,14 +413,14 @@ function scene:show( event )
             },
             [17] = {
                 ["creation"] = {x=520,y=450,
-                    id="keybindPrimaryWeapon",
-                    label=tmpSettings.keybindPrimaryWeapon,
+                    id="primaryWeapon",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].primaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="primaryWeapon"}, phase="ended"}) end,
                 ["navigation"] = {nil,19,nil,15},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -414,14 +434,14 @@ function scene:show( event )
             },
             [19] = {
                 ["creation"] = {x=520,y=500,
-                    id="keybindSecondaryWeapon",
-                    label=tmpSettings.keybindSecondaryWeapon,
+                    id="secondaryWeapon",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].secondaryWeapon,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="secondaryWeapon"}, phase="ended"}) end,
                 ["navigation"] = {nil,21,nil,17},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -435,14 +455,14 @@ function scene:show( event )
             },
             [21] = {
                 ["creation"] = {x=520,y=550,
-                    id="keybindBlock",
-                    label=tmpSettings.keybindBlock,
+                    id="block",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].block,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="block"}, phase="ended"}) end,
                 ["navigation"] = {nil,23,nil,19},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -456,14 +476,14 @@ function scene:show( event )
             },
             [23] = {
                 ["creation"] = {x=520,y=600,
-                    id="keybindAbility",
-                    label=tmpSettings.keybindAbility,
+                    id="ability",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].ability,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="ability"}, phase="ended"}) end,
                 ["navigation"] = {nil,25,nil,21},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -477,14 +497,14 @@ function scene:show( event )
             },
             [25] = {
                 ["creation"] = {x=520,y=650,
-                    id="keybindInventory",
-                    label=tmpSettings.keybindInventory,
+                    id="inventory",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].inventory,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
-                    onEvent=handleButtonEvent,
+                    onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                 },
-                ["function"] = function() scene:handleKeybindChange() end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="inventory"}, phase="ended"}) end,
                 ["navigation"] = {nil,1,nil,23},
                 ["pointer"] = {},
                 ["type"] = "button",
@@ -498,25 +518,14 @@ function scene:show( event )
             },
 
         }
-        scene.keybindTable = {
-            [5] = "keybindEscape",
-            [7] = "keybindInteract",
-            [9] = "keybindForward",
-            [11] = "keybindBackward",
-            [13] = "keybindJump",
-            [15] = "keybindSneak",
-            [17] = "keybindPrimaryWeapon",
-            [19] = "keybindSecondaryWeapon",
-            [21] = "keybindBlock",
-            [23] = "keybindAbility",
-            [24] = "keybindInventory",
-        }
 
         scene:loadUI()
         scene:updateUI()
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
+        scene:addEventListener("interaction", handleInteraction)
 
     end
 end
@@ -530,6 +539,8 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
+
+        scene:removeEventListener("interaction", handleInteraction)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
@@ -553,5 +564,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
- 
+
 return scene

@@ -11,7 +11,7 @@ function M.new( instance, options )
         
         local options = {effect = "slideUp", time = 800}
         print(instance.MoveTo)
-        composer.gotoScene(instance.MoveTo, options)
+        composer.changeToScene(instance.MoveTo, options)
     end
 
     

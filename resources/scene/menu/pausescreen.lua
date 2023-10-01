@@ -1,11 +1,18 @@
 -- Template from Solar2D-Guide: https://docs.coronalabs.com/guide/system/composer/index.html#template
 
+local lib = require( "resources.lib.lib" )
 local widget = require( "widget" )
 local composer = require( "composer" )
 local scene = composer.newScene()
- 
+
 -- -----------------------------------------------------------------------------------
--- Scene event functions
+-- Scene variables
+-- -----------------------------------------------------------------------------------
+
+scene.type = 'menu'
+
+-- -----------------------------------------------------------------------------------
+-- Scene functions
 -- -----------------------------------------------------------------------------------
 
 local function handleButtonEvent(event)
@@ -13,17 +20,21 @@ local function handleButtonEvent(event)
         if (event.target.id == "buttonResume") then
             handlePauseScreen()
         elseif (event.target.id == 'buttonExit') then  
-            local goTo = "resources.scene.menu.mainmenu"
+            local changeTo = "resources.scene.menu.mainmenu"
             local sceneType = "menu"
             local options = { effect = "fade", time = 800,}
-            handleSceneChange(goTo, sceneType, options)
+            lib.scene.show(changeTo, sceneType, options)
         elseif (event.target.id == 'buttonSave') then  
             print("saving...")
             saveGameProgress()
-            --gotoscene
+            --changeToscene
         end
     end
 end
+
+-- -----------------------------------------------------------------------------------
+-- Scene event functions
+-- -----------------------------------------------------------------------------------
 
 
 -- create()

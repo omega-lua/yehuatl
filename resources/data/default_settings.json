@@ -1,0 +1,72 @@
+{
+  "controls":{
+    "keybinds":{
+      "keyboard":{
+        "attack":"a",
+        "jump":"space",
+        "backward":"left",
+        "escape":"escape",
+        "block":"b",
+        "secondaryWeapon":"9",
+        "primaryWeapon":"down",
+        "forward":"right",
+        "sneak":"-",
+        "inventory":"i",
+        "interact":"space",
+        "ability":"z",
+        "navigateUp":"up",
+        "navigateDown":"down",
+        "navigateLeft":"left",
+        "navigateRight":"right"
+      },
+      "controller":{
+        "attack":"button A",
+        "jump":"button B",
+        "backward":"left",
+        "escape":"escape",
+        "block":"b",
+        "secondaryWeapon":"9",
+        "primaryWeapon":"down",
+        "forward":"right",
+        "sneak":"down",
+        "inventory":"i",
+        "interact":"button3",
+        "ability":"z",
+        "navigateUp":"up",
+        "navigateDown":"down",
+        "navigateLeft":"left",
+        "navigateRight":"right"
+      },
+      "touchscreen":{
+        "attack":"button A",
+        "jump":"button B",
+        "backward":"left",
+        "escape":"button5",
+        "block":"b",
+        "secondaryWeapon":"9",
+        "primaryWeapon":"down",
+        "forward":"right",
+        "sneak":"-",
+        "inventory":"i",
+        "interact":"space",
+        "ability":"z"
+      }
+    },
+    "inputDevice":{
+      "current":null,
+      "saved":[]
+    }
+  },
+  "sound":{
+    "volumeMusic":1,
+    "volumeSoundEffects":2,
+    "playStereo":true,
+    "vibration":true
+  },
+  "visual":{
+    "renderParticles":true
+  },
+  "ingame":{
+    "difficulty":2
+  }
+}
