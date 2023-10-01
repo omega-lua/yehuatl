@@ -166,9 +166,9 @@ function scene:fcButton(t)
         if selected == scene._selected or (lib.control.mode == 'key') then
             if scene.save[selected] then
 
-                --lib.savefile.current = 'save1.json'
-                --lib.scene.show("resources.scene.game.game", {effect = "fade", time = 1200})
-                print(">> RUN THE GAME")
+                lib.savefile.current = 'savefile1.json'
+                lib.level.goTo()
+                print(">> RUN THE GAME <<")
             end
         else 
             scene._selected = selected
