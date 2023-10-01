@@ -104,25 +104,13 @@ function lib_tilesets.get(data, dirTree)
 				c = c + 1
 				table_insert(options.config.frames, gid, element) -- Add to the frames of the sheet
 				tileIndex[c] = {tilesetIndex = i, gid = gid}
-				
-				-- Vermutlich performance killer, nur für DEBUGGING
-				for i=1, #tilesInTileset do
-					table1 = tilesInTileset[i]
-					if table1["id"] == gid then
-						
-						table2 = {}
-						for i=1, #table1.properties do
-							local properties = table1.properties
-							local key = properties[i]['name']
-							local value = properties[i]['value']
-							table2[key] = value
-						end
 
-						tilesetProperties[gid] = getProperties(table2, "tile", false)
-
-						if tilesetProperties[gid].object["!tileID!"] then
-							tileIDs[tilesetProperties[gid].object["!tileID!"] ] = gid
-						end
+				local strGID = tostring(gid - 1) -- Tile properties start at 0, so we must subtract 1. Because of the sparse table that tileset properties usually are, they're encoded into JSON with string keys, thus we must tostring() the GID first
+			
+				if data.tilesets[i].tileproperties[strGID] then
+					tilesetProperties[gid] = getProperties(data.tilesets[i].tileproperties[strGID], "tile", false)
+					if tilesetProperties[gid].object["!tileID!"] then
+						tileIDs[tilesetProperties[gid].object["!tileID!"] ] = gid
 					end
 				end
 			end
