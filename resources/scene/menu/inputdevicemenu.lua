@@ -348,6 +348,8 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
+        scene:addEventListener("interaction", handleInteraction)
     end
 end
 
@@ -360,6 +362,8 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
+
+        scene:removeEventListener("interaction", handleInteraction)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
@@ -385,6 +389,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
-scene:addEventListener( "interaction", handleInteraction )
 
 return scene

@@ -10,7 +10,6 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
-scene.isInteractable = false
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
@@ -36,20 +35,21 @@ function scene:updateUI(event)
 end
 
 local function handleInteraction(event)
-    if scene.isInteractable then
-        if (event.phase == "ended") then
-            local id = event.target.id
-            local options = {effect = "fade", time = 400}
-            if (id == 'buttonPlay') then
-                lib.scene.show( "resources.scene.menu.savemenu", options )
-                scene.isInteractable = false
+    if (event.phase == "ended") then
+        local id = event.target.id
+        local options = {effect = "fade", time = 400}
+        if (id == 'buttonPlay') then
+            scene:removeEventListener("interaction", handleInteraction)
+            lib.scene.show( "resources.scene.menu.savemenu", options )
+            
 
-            elseif (id == 'buttonSettings') then
-                lib.scene.show( "resources.scene.menu.settingsmenu", options )
+        elseif (id == 'buttonSettings') then
+            scene:removeEventListener("interaction", handleInteraction)
+            lib.scene.show( "resources.scene.menu.settingsmenu", options )
 
-            elseif (id == 'buttonCredits') then
-                lib.scene.show( "resources.scene.menu.creditsmenu", options )
-            end
+        elseif (id == 'buttonCredits') then
+            scene:removeEventListener("interaction", handleInteraction)
+            lib.scene.show( "resources.scene.menu.creditsmenu", options )
         end
     end
 end
@@ -96,7 +96,6 @@ function scene:create( event )
             ["navigation"] = {2,3,2,3},
             ["pointer"] = {},
             ["type"] = "button",
-            ["isInteractable"] = true
         },
         [2] = {
             ["creation"] = {
@@ -113,7 +112,6 @@ function scene:create( event )
             ["navigation"] = {1,3,1,3},
             ["pointer"] = {},
             ["type"] = "button",
-            ["isInteractable"] = true
         },
         [3] = {
             ["creation"] = {
@@ -130,7 +128,6 @@ function scene:create( event )
             ["navigation"] = {1,1,2,1},
             ["pointer"] = {},
             ["type"] = "button",
-            ["isInteractable"] = true
         },
     }
 
@@ -158,11 +155,11 @@ function scene:show( event )
 
         -- Refresh
         scene:updateUI()
-
-        scene.isInteractable = true
-
+        
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+
+        scene:addEventListener( "interaction", handleInteraction )
     
     end
 end
@@ -175,9 +172,8 @@ function scene:hide( event )
     local phase = event.phase
  
     if ( phase == "will" ) then
-        -- Code here runs when the scene is on screen (but is about to go off screen)
- 
-        scene.isInteractable = false
+        scene:removeEventListener( "interaction", handleInteraction )
+
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
  
@@ -200,6 +196,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
-scene:addEventListener( "interaction", handleInteraction )
 
 return scene

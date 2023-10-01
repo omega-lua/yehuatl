@@ -12,7 +12,6 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
-scene.isInteractable = false -- To prevent bugs while scene-switching
 scene.widgetIndex = nil
 scene.save = {}
 
@@ -195,26 +194,24 @@ function scene:updateUI()
 end
 
 local function handleInteraction(event)
-    if scene.isInteractable then
-        if (event.phase == 'ended') then
-            local id = event.target.id
+    if (event.phase == 'ended') then
+        local id = event.target.id
         
-            if (id == 'buttonBack') then
-                lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
-                scene.isInteractable = false
+        if (id == 'buttonBack') then
+            scene:removeEventListener("interaction", handleInteraction)
+            lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
 
-            elseif (id == 'buttonSave1') then
-                scene:fcButton({selected=1})
+        elseif (id == 'buttonSave1') then
+            scene:fcButton({selected=1})
 
-            elseif (id == 'buttonSave2') then
-                scene:fcButton({selected=2})
+        elseif (id == 'buttonSave2') then
+            scene:fcButton({selected=2})
 
-            elseif (id == 'buttonSave3') then
-                scene:fcButton({selected=3})
+        elseif (id == 'buttonSave3') then
+            scene:fcButton({selected=3})
 
-            elseif (id == 'buttonInteract') then
-                scene.widgetsTable[5]["function"]()
-            end
+        elseif (id == 'buttonInteract') then
+            scene.widgetsTable[5]["function"]()
         end
     end
 end
@@ -372,7 +369,7 @@ function scene:show( event )
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
 
-        scene.isInteractable = true
+        scene:addEventListener("interaction", handleInteraction)
     end
 end
  
@@ -386,7 +383,7 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
 
-        scene.isInteractable = false
+        scene:addEventListener("interaction", handleInteraction)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
@@ -417,6 +414,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
-scene:addEventListener( "interaction", handleInteraction )
 
 return scene

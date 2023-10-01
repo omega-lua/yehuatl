@@ -11,41 +11,38 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = 'menu'
-scene.isInteractable = false
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
 -- -----------------------------------------------------------------------------------
 local function handleInteraction(event)
-    if scene.isInteractable then
-        if (event.phase == 'ended') then
-            local id = event.target.id
-            if (event.target.id == "buttonBack") then
-                scene.isInteractable = false
-                composer.hideOverlay( 'fade', 100 )
+    if (event.phase == 'ended') then
+        local id = event.target.id
+        if (event.target.id == "buttonBack") then
+            scene.isInteractable = false
+            composer.hideOverlay( 'fade', 100 )
             
-            elseif (event.target.id == "buttonApply") then
-                scene.isInteractable = false
+        elseif (event.target.id == "buttonApply") then
+            scene:removeEventListener("interaction", handleInteraction)
 
-                parent:applySettings()
+            parent:applySettings()
 
-                -- Message
-                parent:showToast("Settings applied!")
+            -- Message
+            parent:showToast("Settings applied!")
             
-                -- Hide overlay, show mainmenu, remove settingsmenu-scene
-                composer.hideOverlay("fade", 400)
-                lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
-                composer.removeScene("resources.scene.menu.settingsmenu")
-            elseif (event.target.id == "buttonDiscard") then
-                scene.isInteractable = false
-                -- Message
-                parent:showToast("Settings discarded!")
+            -- Hide overlay, show mainmenu, remove settingsmenu-scene
+            composer.hideOverlay("fade", 400)
+            lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
+            composer.removeScene("resources.scene.menu.settingsmenu")
+        elseif (event.target.id == "buttonDiscard") then
+            scene:removeEventListener("interaction", handleInteraction)
+            -- Message
+            parent:showToast("Settings discarded!")
                  
-                -- Hide overlay, show mainmenu, remove settingsmenu-scene
-                composer.hideOverlay("fade", 400)
-                lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
-                composer.removeScene("resources.scene.menu.settingsmenu")
-            end
+            -- Hide overlay, show mainmenu, remove settingsmenu-scene
+            composer.hideOverlay("fade", 400)
+            lib.scene.show("resources.scene.menu.mainmenu", { effect = "fade", time = 800})
+            composer.removeScene("resources.scene.menu.settingsmenu")
         end
     end
 end
@@ -209,8 +206,8 @@ function scene:show( event )
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         scene:loadUI()
         scene:updateUI()
+        scene:addEventListener("interaction", handleInteraction)
 
-        scene.isInteractable = true
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         
@@ -227,7 +224,7 @@ function scene:hide( event )
         -- Code here runs when the scene is on screen (but is about to go off screen)
         parent = nil
  
-        scene.isInteractable = false
+        scene:removeEventListener("interaction", handleInteraction)
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
        --display.getCurrentStage():setFocus( nil )
@@ -250,6 +247,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
-scene:addEventListener( "interaction", handleInteraction )
 
 return scene

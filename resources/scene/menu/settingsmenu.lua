@@ -10,7 +10,6 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
 
 scene.type = "menu"
-scene.isInteractable = false
 scene.isSaved = true
 
 -- -----------------------------------------------------------------------------------
@@ -238,31 +237,26 @@ function scene:resetSettings()
 end
 
 local function handleInteraction(event)
-    if scene.isInteractable then
-        if (event.phase == 'ended') then
-            local id = event.target.id
-            if (id == 'buttonBack') then
-                scene.isInteractable = false
-                scene:back()
+    if (event.phase == 'ended') then
+        local id = event.target.id
+        if (id == 'buttonBack') then
 
-            elseif (id == 'buttonApplySettings') then
-                scene:applySettings()
+            scene:back()
 
-            elseif (id == 'buttonResetSettings') then
-                scene:resetSettings()
+        elseif (id == 'buttonApplySettings') then
+            scene:applySettings()
 
-            elseif (id == 'buttonKeybinds') then
-                scene.isInteractable = false
-                lib.scene.show("resources.scene.menu.keybindoverlay", {effect='fade', time=400})
+        elseif (id == 'buttonResetSettings') then
+            scene:resetSettings()
 
-            elseif (id == 'buttonInputDevice') then
-                scene.isInteractable = false
-                lib.scene.show("resources.scene.menu.inputdevicemenu", {effect='fade', time=400})
+        elseif (id == 'buttonKeybinds') then
+            lib.scene.show("resources.scene.menu.keybindoverlay", {effect='fade', time=400})
 
-            elseif (id == 'buttonOutputDevice') then
-                scene.isInteractable = false
-                lib.scene.show("resources.scene.menu.outputdeviceoverlay", {effect='fade', time=400})
-            end
+        elseif (id == 'buttonInputDevice') then
+            lib.scene.show("resources.scene.menu.inputdevicemenu", {effect='fade', time=400})
+
+        elseif (id == 'buttonOutputDevice') then
+            lib.scene.show("resources.scene.menu.outputdeviceoverlay", {effect='fade', time=400})
         end
     end 
 end
@@ -663,7 +657,8 @@ function scene:show( event )
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
 
-        scene.isInteractable = true
+        scene:addEventListener("interaction", handleInteraction)
+
     end
 end
  
@@ -677,7 +672,7 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
  
-        scene.isInteractable = false
+        scene:removeEventListener("interaction", handleInteraction)
 
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
@@ -704,6 +699,5 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
-scene:addEventListener("interaction", handleInteraction)
  
 return scene
