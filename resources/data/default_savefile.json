@@ -1,0 +1,10 @@
+{
+    "player":{
+        "inventory":{},
+        "name":"_",
+        "statuseffects":{}
+    },
+    "levels":{
+        "current":"_"
+    }
+}
