@@ -30,9 +30,9 @@ function scene:checkSaveFiles()
     -- Check if any savefiles are present --------------------------------------------
     local doesExist = lib.file.doesExist
     local t = {}
-    scene.save[1] = doesExist( "save1.json", system.DocumentsDirectory)
-    scene.save[2] = doesExist( "save2.json", system.DocumentsDirectory)
-    scene.save[3] = doesExist( "save3.json", system.DocumentsDirectory)
+    scene.save[1] = doesExist( "savefile1.json", system.DocumentsDirectory)
+    scene.save[2] = doesExist( "savefile2.json", system.DocumentsDirectory)
+    scene.save[3] = doesExist( "savefile3.json", system.DocumentsDirectory)
 end
 
 function scene:hoverObj()
@@ -67,6 +67,13 @@ function scene:updateSaveSlots()
     local a = 0.4
     if scene.save[3] then a = 1 end
     transition.to(object, {time = 600, transition = easing.outQuint, alpha = a})
+end
+
+function scene:redirect()
+    if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
+        lib.savefile.new()
+        lib.level.goTo()
+    end
 end
 
 function scene:fcButton(t)
@@ -108,19 +115,19 @@ function scene:fcButton(t)
         if selected == 1 then
             if control.mode == 'key' then nav = {2,3,2,4} end
             if scene.save[1] then label = 'Delete' end
-            filename = 'save1.json'
+            filename = 'savefile1.json'
             button.x, button.y = 550, 130
 
         elseif selected == 2 then
             if control.mode == 'key' then nav = {3,4,3,2} end
             if scene.save[2] then label = 'Delete' end
-            filename = 'save2.json'
+            filename = 'savefile2.json'
             button.x, button.y = 550, 200
 
         elseif selected == 3 then
             if control.mode == 'key' then nav = {4,2,4,3} end
             if scene.save[3] then label = 'Delete' end
-            filename = 'save3.json'
+            filename = 'savefile3.json'
             button.x, button.y = 550, 270
 
         else
@@ -341,8 +348,8 @@ function scene:create( event )
     scene.widgetIndex = 2
     scene:loadUI()
 end
- 
- 
+
+
 -- show()
 function scene:show( event )
  
@@ -352,13 +359,7 @@ function scene:show( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         
-        -- Skip the savemenu-Interface
-        if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
-            -- Set var to nil if no savefiles are available
-            lib.savefile.current = nil
-            composer.gotoScene("resources.scene.game.game",{effect = "fade", time = 500,})
-            return
-        end
+        scene:redirect()
 
         scene.widgetIndex = 2
 
