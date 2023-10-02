@@ -38,9 +38,10 @@ function file.doesExist( filename, path )
     return results
 end
 
-function file.write(path, contents)
+function file.write(path, dir, contents)
     -- 2. Make new SaveFile
-    local file, errorString = io.open( path, "w+" )
+    local absPath = system.pathForFile(path, dir)
+    local file, errorString = io.open( absPath, "w+" )
     if not file then
         -- Error occurred; output the cause
         print( "File error: " .. errorString )
@@ -56,8 +57,7 @@ end
 
 function file.read(path, dir)
     local contents = nil
-
-    -- 1. Open savefile
+    -- Open savefile
     local absPath = system.pathForFile(path, dir)
     local file, errorString = io.open( absPath, "r" )
     if not file then
@@ -100,30 +100,28 @@ function savefile.new(filename)
     -- Searches for available filename
     if not filename then
         -- Find out which savefiles already exist
-        local saveFile1 = lib.file.doesExist("save1.json", system.DocumentsDirectory)
-        local saveFile2 = lib.file.doesExist("save2.json", system.DocumentsDirectory)
-        local saveFile3 = lib.file.doesExist("save3.json", system.DocumentsDirectory)
+        local saveFile1 = lib.file.doesExist("savefile1.json", system.DocumentsDirectory)
+        local saveFile2 = lib.file.doesExist("savefile2.json", system.DocumentsDirectory)
+        local saveFile3 = lib.file.doesExist("savefile3.json", system.DocumentsDirectory)
         
         -- Give the new savefile a name not already used (1-3)
         if (saveFile1 == false) then
-            filename = "save1.json"
+            filename = "savefile1.json"
         elseif (saveFile2 == false) then
-            filename = "save2.json"
+            filename = "savefile2.json"
         elseif (saveFile3 == false) then
-            filename = "save3.json"
+            filename = "savefile3.json"
         else 
             print("---Something went wrong while making a new saveslot... All 3 savefiles are present.---")
             return false
         end
     end
 
-    -- Read content from initial.json
-    --local path = system.pathForFile( "resources/data/initial.json", system.ResourceDirectory )
-    local contents = lib.file.read("resources/data/initial.json", system.ResourceDirectory)
+    -- Read content from default_savefile.json
+    local contents = lib.file.read("resources/data/default_savefile.json", system.ResourceDirectory)
 
     -- Make new savefile
-    local path = system.pathForFile( filename, system.DocumentsDirectory )
-    lib.file.write(path, contents)
+    lib.file.write(filename, system.DocumentsDirectory, contents)
 end
 
 function savefile.read(filename)
@@ -133,7 +131,7 @@ function savefile.read(filename)
         return false
     end
 
-    -- read current savefile
+    -- read savefile
     local filePath = 'resources.data.'..filename
     local encoded = lib.file.read( filePath, system.ResourceDirectory)
     local data = json.decode( encoded, "_")
@@ -194,8 +192,7 @@ function level.goTo(level)
     composer.loadScene( scenePath, true)
 
     -- build map with dusk
-    local mapPath = "resources.scene.game."..level..".map.lua"
-    local absMapPath = system.pathForFile(mapPath, system.ResourceDirectory)
+    local mapPath = "resources/scene/game/"..level.."/map.json"
     local map = dusk.buildMap(mapPath)
 
     -- load entities
@@ -256,8 +253,7 @@ function settings.save(table)
         local encoded = json.encode(table, { indent=true })
 
         -- Write file
-        local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
-        lib.file.write(path, encoded)
+        lib.file.write("settings.json", system.DocumentsDirectory, encoded)
     else
         print("ERROR: No table provided to saveSettings()")
     end
@@ -272,7 +268,7 @@ function settings.reset()
     settings.save(data)
 
     -- Load resetted settings
-    settings.initiate(table)
+    settings.initiate(data)
     return data
 end
 
@@ -289,16 +285,6 @@ function settings.onStartup()
     settings.initiate(data)
 end
 
--- DEBUG
-function settings.setUpInitial()
-    local data = {}
-
-    local encoded = json.encode(data, {indent=true})
-
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    lib.file.write(path, encoded)
-end
-
 lib.settings = settings
 
 --------------------------------------------------------------------------------
@@ -312,15 +298,14 @@ inputdevice.available = {}
 
 function inputdevice.createKeybinds(inputDeviceType)
     -- get default_settings from ResourceDirectory
-    local default_settings = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
-    
-    if inputDeviceType == "controller" then
-        keybinds = default_settings.controls.keybinds.controller
-    elseif inputDeviceType == "keyboard" then
-        keybinds = default_settings.controls.keybinds.keyboard
-    elseif inputDeviceType == "touchscreen" then
-        keybinds = default_settings.controls.keybinds.touchscreen
-    else print("ERROR: unkown or unsupported Input Device Type") return end
+    local encoded = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
+    local default_settings = json.decode(encoded)
+
+    if inputDeviceType then
+        keybinds = default_settings.controls.keybinds[inputDeviceType]
+    else
+        print("ERROR: No inputdevicetype given.")
+    end
 
     -- Changes are all stored together, so not here.
     return keybinds
