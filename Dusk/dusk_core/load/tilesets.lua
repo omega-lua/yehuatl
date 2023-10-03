@@ -54,11 +54,7 @@ function lib_tilesets.get(data, dirTree)
 		data.tilesets[i].tileproperties = data.tilesets[i].tileproperties or {}
 
 		-- von mir geändert...
-		local lib = require("resources.lib.lib")
-		lib.print(dirTree)
-		local directoryPath, filename = getDirectory(dirTree, data.tilesets[i].image or data.tilesets[i].tiles["image"])--.image
-		print("directoryPath:", directoryPath)
-		print("filename", filename)
+		local directoryPath, filename = getDirectory(dirTree, data.tilesets[i].image or data.tilesets[i].tiles["image"])
 
 		options = {
 			config = {
