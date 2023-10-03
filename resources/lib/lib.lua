@@ -40,9 +40,7 @@ end
 
 function file.write(path, dir, contents)
     -- 2. Make new SaveFile
-    print("path,dir;", path, dir)
     local absPath = system.pathForFile(path, dir)
-    print("HEHHEHEHHE absPath:", absPath)
     local file, errorString = io.open( absPath, "w+" )
     if not file then
         -- Error occurred; output the cause
@@ -176,6 +174,13 @@ function level.setUpPhysics()
     physics.setGravity( 0, 14 )
 end
 
+function level.save()
+    for object in map.layer['entities'].objects() do
+        -- Do something to object
+        lib.print(object)
+    end
+end
+
 function level.goTo(level)
     -- Localize
     local level = level
@@ -185,66 +190,45 @@ function level.goTo(level)
 
     -- if no variable is given to function, load current (-> last used) level.
     if not level then
-        local c = savefile.levels.current
-        if (c == "_") then
+        local current = savefile.levels.current
+        if (current == "_") then
             savefile.levels.current = "level1"
         end
         level = savefile.levels.current
-    end
-
-    if not savefile.levels.level then
-        -- Level gets opened first time
-        --load map-structure from ResourceDir
-        local filePath = "resources/scene/game/"..level.."/map.json"
-        print("filePath:", filePath)
-        local encoded = lib.file.read(filePath, system.ResourceDirectory)
-        local mapData = json.decode(encoded)
-
-        -- update table
-        savefile.levels[level] = mapData
-        -- save changes in savefile
-        local encoded = json.encode(savefile)
-        lib.file.write(lib.savefile.current, system.DocumentsDirectory, encoded)
     end
 
     -- load level-scene
     local scenePath = "resources.scene.game."..level..".scene"
     composer.loadScene( scenePath, true )
 
-    -- TESTING
-    --local filePath = "resources/scene/game/"..level.."/map.json"
-    --local mapData = dusk.loadMap(filePath)
-    --print("-------------------------------------")
-    --lib.print(mapData)
-
-    local filePath = "resources/scene/game/"..level.."/map.lua"
-    local map = dusk.buildMap(filePath)
-    local player = map.layer[2] --.objects["player"] -- The object named "object" in Tiled
-    print("------------player with object access, used to save level----------")
-    lib.print(player)
-
-    -- build map with dusk engine (VERY UGLY WORK AROUND)
-    --local mapData = savefile.levels.level
-    --local encoded = json.encode(mapData, {indent=true})
-    --lib.file.write("tmpMapData.json", system.DocumentsDirectory, encoded)
-    --local path = system.pathForFile("tmpMapData.json", system.DocumentsDirectory)
-    --local map = dusk.buildMap("tmpMapData.json", system.DocumentsDirectory)
-
     -- setup and pause physics
     lib.level.setUpPhysics()
 
-    -- load entities
-    --> Erübrigt sich, da diese zu ladenden Properties in der Map-JSON-Struktur abgespeichert wurden.
+    -- build map with dusk engine
+    local filePath = "resources/scene/game/"..level.."/map.lua"
+    local map = dusk.buildMap(filePath)
+    -- add to sceneGroup?
 
-    -- connect entities with classes
-    --map.extend(entities) -- ?
-    
-    -- copy informations of player in savefile to variables in player.lib
+    -- update entities
+    if savefile.levels[level] then
+        local entities = savefile.levels[level].entities
+        for i, entity in pairs(entities) do
+            --check variables
+            -- connect entities with classes
+            -- map.extend(entities) -- ?
+        end
+    end
 
-    -- camera positioning
+    -- update player
+    local player = map.layer["entities"].object['player']
+
+    -- camera setup
+    map.enableFocusTracking(true)
+    map.setCameraFocus(player)
+    map.setTrackingLevel(0.1)
 
     -- start physics
-    --physics.start()
+    physics.start()
 
     -- show scene
     lib.scene.show(scenePath) -- Might cause problems, it uses loadScene aswell.
