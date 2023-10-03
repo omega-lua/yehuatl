@@ -10,7 +10,7 @@ return {
   tilewidth = 32,
   tileheight = 32,
   nextlayerid = 3,
-  nextobjectid = 13,
+  nextobjectid = 15,
   properties = {},
   tilesets = {
     {
@@ -143,6 +143,34 @@ return {
           properties = {
             ["costumProperty"] = "Trivago"
           }
+        },
+        {
+          id = 13,
+          name = "enemy1",
+          type = "enemy",
+          shape = "rectangle",
+          x = 354,
+          y = 529,
+          width = 101,
+          height = 101,
+          rotation = 0,
+          gid = 49,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 14,
+          name = "enemy2",
+          type = "enemy",
+          shape = "rectangle",
+          x = 473.5,
+          y = 531.5,
+          width = 101,
+          height = 101,
+          rotation = 0,
+          gid = 49,
+          visible = true,
+          properties = {}
         }
       }
     }
