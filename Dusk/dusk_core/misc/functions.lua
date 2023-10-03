@@ -172,11 +172,16 @@ local function getProperties(data, objPrefix, isLayer)
 
 	local prefixes = getSetting("escapedPrefixMethods")
 
+	local lib = require("resources.lib.lib")
+	print("--------------data--------------------")
+	lib.print(data)
 	for key, value in pairs(data) do
 		local k, v
 
 		local dotMode
 
+		print("key:", key)
+		print("value:", value)
 		if key:match("^!noDot!") then
 			key = key:sub((getSetting("spaceAfterEscapedPrefix") and 9) or 8)
 			dotMode = false

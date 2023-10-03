@@ -36,15 +36,21 @@
         {
          "draworder":"topdown",
          "id":2,
-         "name":"Object Layer",
+         "name":"entities",
          "objects":[
                 {
                  "gid":49,
                  "height":101,
                  "id":12,
-                 "name":"",
+                 "name":"player",
+                 "properties":[
+                        {
+                         "name":"costumProperty",
+                         "type":"string",
+                         "value":"Trivago"
+                        }],
                  "rotation":0,
-                 "type":"",
+                 "type":"player",
                  "visible":true,
                  "width":101,
                  "x":318,

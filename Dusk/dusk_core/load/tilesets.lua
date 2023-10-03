@@ -43,9 +43,6 @@ function lib_tilesets.get(data, dirTree)
 	-- Iterate Through Tilesets
 	------------------------------------------------------------------------------
 
-	-- Problem: Es scheint, als würde Dusk keine Collection of images unterstützen.
-	-- Hier jene tilesets aussortieren, if (data.tilesets.tiles
-
 	for i = 1, #data.tilesets do
 		local gid = 0						-- The GID for this tileset
 		local tilesetProperties = {}		-- Element to add to the tileProperties table for this tileset
@@ -57,7 +54,11 @@ function lib_tilesets.get(data, dirTree)
 		data.tilesets[i].tileproperties = data.tilesets[i].tileproperties or {}
 
 		-- von mir geändert...
+		local lib = require("resources.lib.lib")
+		lib.print(dirTree)
 		local directoryPath, filename = getDirectory(dirTree, data.tilesets[i].image or data.tilesets[i].tiles["image"])--.image
+		print("directoryPath:", directoryPath)
+		print("filename", filename)
 
 		options = {
 			config = {

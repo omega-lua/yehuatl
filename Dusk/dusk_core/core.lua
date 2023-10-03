@@ -79,10 +79,15 @@ end
 -- Load Map
 --------------------------------------------------------------------------------
 function core.loadMap(filename, base)
+	print("filename of map:", filename)
 	local f1, f2 = filename:find("/?([^/]+%..+)$")
-	local actualFileName = filename:sub(f1 + 1, f2)
-	local dirTree = {}; for dir in filename:sub(1, f1):gmatch("(.-)/") do table_insert(dirTree, dir) end
-
+	print("f1, f2:", f1, f2)
+	--local actualFileName = filename:sub(f1 + 1, f2)
+	print("WAS IST DAS:", filename:sub(1, f1))
+	local dirTree = {}; for dir in filename:sub(1, f1):gmatch("(.-)/") do table_insert(dirTree, dir) print(dir) end
+	local lib = require("resources.lib.lib")
+	print("dirTree TABLE:")
+	lib.print(dirTree)
 	-- Load other things
 	local data = lib_data.get(filename, base)
 	local stats = lib_functions.getMapStats(data); data.stats = stats

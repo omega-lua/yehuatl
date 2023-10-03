@@ -42,9 +42,11 @@ function dusk.buildMap(data, base)
 	local map
 
 	if type(data) == "string" then
+		print("load and build map")
 		local mapData = dusk_core.loadMap(data, base)
 		map = dusk_core.buildMap(mapData)
 	elseif type(data) == "table" then
+		print("load map")
 		map = dusk_core.buildMap(data)
 	end
 

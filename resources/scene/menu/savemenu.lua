@@ -72,6 +72,7 @@ end
 function scene:redirect()
     if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
         lib.savefile.new()
+        lib.savefile.current = "savefile1.json"
         lib.level.goTo()
     end
 end
