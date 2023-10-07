@@ -4,10 +4,11 @@
 
 local lib = {}
 
-local dusk = require("Dusk.Dusk")
 local composer = require( "composer" )
 local json = require( "json" )
 local physics = require( "physics" )
+
+local dusk = require("Dusk.Dusk")
 
 --------------------------------------------------------------------------------
 -- file functions
@@ -92,7 +93,7 @@ lib.file = file
 --------------------------------------------------------------------------------
 
 local savefile = {}
-savefile.current = nil
+savefile.current = {name=nil, data={}}
 
 function savefile.new(filename)
     local contents = nil
@@ -169,29 +170,65 @@ level.current = nil
 function level.setUpPhysics()
     physics.start() -- physics first startup
     physics.pause() -- pause physics for setup
-    physics.setDrawMode("hybrid") -- DEBUG
-    physics.setScale( 60 )
-    physics.setGravity( 0, 14 )
+    physics.setScale( 35 )
+    physics.setGravity( 0, 9.81 )
 end
 
 function level.save()
+    local scene = composer.getScene(composer.getSceneName("current"))
+    local savefile = lib.savefile.current.data
+    local map = scene.map
+
+    -- get data of entities
+    local e = {}
     for object in map.layer['entities'].objects() do
-        -- Do something to object
-        lib.print(object)
+        local t = {}
+        t.x, t.y = object.x, object.y
+        t.health = object.health
+        t.isDead = object.isDead
+        t.inventory = object.inventory
+
+        e[object._name] = t
     end
+
+    -- get data of player (x and y values are stored in entities, so they are stored in level data.)
+    local player = map.layer["entities"].object['player']
+    local Player = require("resources.lib.player")
+    local p = {}
+    p.isDead = player.isDead or "nil"
+    p.attributes = Player.attributes or {}
+    p.inventory = Player.inventory or {}
+    p.name = Player.name or "nil"
+
+    -- get story progress
+    -- weiss noch nicht wie oder was
+
+    -- store in savefile table
+    local savefile = lib.savefile.current.data
+    local currentLevel = lib.level.current
+    savefile.player = p
+    savefile.levels.current = currentLevel
+    savefile.levels[currentLevel] = {}
+    savefile.levels[currentLevel].entities = e
+
+    -- save table to savefile
+    local name = lib.savefile.current.name
+    local encoded = json.encode(savefile, {indent=true})
+    lib.file.write(name, system.DocumentsDirectory, encoded)
 end
 
-function level.goTo(level)
+function level.load(level)
     -- Localize
     local level = level
     -- get data from current savefile
-    local encoded = file.read(lib.savefile.current, system.DocumentsDirectory)
+    local encoded = file.read(lib.savefile.current.name, system.DocumentsDirectory)
     local savefile = json.decode(encoded)
+    lib.savefile.current.data = savefile
 
-    -- if no variable is given to function, load current (-> last used) level.
+    -- if no variable is given to the function, load current (-> last used) level.
     if not level then
         local current = savefile.levels.current
-        if (current == "_") then
+        if (current == "nil") then
             savefile.levels.current = "level1"
         end
         level = savefile.levels.current
@@ -200,6 +237,7 @@ function level.goTo(level)
     -- load level-scene
     local scenePath = "resources.scene.game."..level..".scene"
     composer.loadScene( scenePath, true )
+    local scene = composer.getScene(scenePath)
 
     -- setup and pause physics
     lib.level.setUpPhysics()
@@ -207,22 +245,45 @@ function level.goTo(level)
     -- build map with dusk engine
     local filePath = "resources/scene/game/"..level.."/map.lua"
     local map = dusk.buildMap(filePath)
-    -- add to sceneGroup?
+    scene.map = map
 
-    -- update entities
+    -- extend classes
+    local classes = {}
+    for object in map.layer['entities'].objects() do
+        local class = object._type
+        if (class ~= "") then
+            if not table.indexOf(classes, class) then
+                classes[#classes+1] = class
+            end
+        end
+    end
+    lib.print(classes) -- DEBUG
+    map.extend(unpack(classes))
+
+    -- update entities, if level was found in savefile
     if savefile.levels[level] then
         local entities = savefile.levels[level].entities
-        for i, entity in pairs(entities) do
-            --check variables
-            -- connect entities with classes
-            -- map.extend(entities) -- ?
+        for name, data in pairs(entities) do
+            if not (name == 'player') then
+                -- update other entities
+                local entity = map.layer["entities"].object[name]
+                entity.x = data.x
+                entity.y = data.y
+                if data.health then entity.health = data.health end
+                entity.isDead = data.isDead
+                entity.inventory = data.inventory
+            end
         end
     end
 
     -- update player
-    local player = map.layer["entities"].object['player']
+    local Player = require("resources.lib.player")
+    local attributes = savefile.player.attributes
+    Player.attributes = attributes
+    player = map.layer["entities"].object['player']
 
     -- camera setup
+    map:scale(1.5, 1.5)
     map.enableFocusTracking(true)
     map.setCameraFocus(player)
     map.setTrackingLevel(0.1)
@@ -232,6 +293,9 @@ function level.goTo(level)
 
     -- show scene
     lib.scene.show(scenePath) -- Might cause problems, it uses loadScene aswell.
+    lib.level.current = level
+
+    --lib.level.save()
 end
 
 lib.level = level
@@ -587,61 +651,73 @@ function control.key.menu(event)
 end
 
 function control.key.game(event)
-    -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
-    if (event.phase == "down") then
-        if (event.keyName == keybindJump) then
-            player:Jump()
+    local phase = event.phase
+    local keyName = event.keyName
+    local keybind = lib.keybind
+    if (phase == "down") then
+        if (keyName == keybind.jump) then
+            player.pressingJump = true
+            player:jump()
 
-        elseif (event.keyName == keybindForward) then
-            movF = true
+        elseif (keyName == keybind.forward) then
+            player.pressingForward = true
             
-        elseif (event.keyName == keybindBackward) then
-            movB = true
+        elseif (keyName == keybind.backward) then
+            player.pressingBackward = true
                  
-        elseif (event.keyName == keybindSneak) then
-            player.movement["speed"] = 0.3
+        elseif (keyName == keybind.sneak) then
+            player.isSneaking = true
 
-        elseif (event.keyName == keybindInteract) then
-            player:Interact()
-        elseif (event.keyName == keybindMeleeAttack) then
-            player:MeleeAttack()
-        elseif  (event.keyName == keybindEscape) then
+        elseif (keyName == keybind.interact) then
+            player:interact()
+        elseif (keyName == keybind.primaryWeapon) then
+            player:meleeAttack()
+        elseif (keyName == keybind.secondaryWeapon) then
+            player:rangedAttack()
+        elseif (keyName == keybind.block) then
+            player:block('begin')
+        
+        elseif  (keyName == keybind.escape) then
             -- Problem: Durch diesen Weg wird status immer "pause", egal ob Overlay geöffnet ist oder nicht.
             handlePauseScreen()
         end
         
-    elseif (event.phase == "up") then
-        if (event.keyName == keybindJump) then
-            --
+    elseif (phase == "up") then
+        if (keyName == keybind.jump) then
+            player.pressingJump = false
 
-        elseif (event.keyName == keybindForward) then
-            movF = false
+        elseif (keyName == keybind.forward) then
+            player.pressingForward = false
 
-        elseif (event.keyName == keybindBackward) then
-            movB = false
+        elseif (keyName == keybind.backward) then
+            player.pressingBackward = false
 
-        elseif (event.keyName == keybindSneak) then
-            player.movement["speed"] = 1
-            
+        elseif (keyName == keybind.sneak) then
+            player.isSneaking = false
+        elseif (keyName == keybind.block) then
+            player:block('cancel')
         end
     end
-        
+    
     local vx, vy = player:getLinearVelocity()
-    if (movF == movB) then
+    local pressingForward = player.pressingForward
+    local pressingBackward = player.pressingBackward
+    local multiplier
+    if player.isSneaking then multiplier = 0.4 else multiplier = 1 end
+    if pressingForward == pressingBackward then
         vx = 0
-    elseif (movF == true) then
-        vx = player.movement["speed"]*350
-    elseif (movB == true) then
-        vx = player.movement["speed"]*-350
+    elseif pressingForward then
+        vx = player.movement.speed * multiplier
+    elseif pressingBackward then
+        vx = -player.movement.speed * multiplier
     end
     player:setLinearVelocity(vx, vy)
-        
-    if (overlaySceneStatus == false) then
-        if (vx < 0) then
-            player.xScale = -1
-        elseif (vx > 0) then
-            player.xScale = 1
-        end
+       
+    -- set direction of playerobject (visual)
+    if (vx < 0) then
+        player.xScale = -1
+    elseif (vx > 0) then
+        player.xScale = 1
     end
 end
 
@@ -658,7 +734,7 @@ function control.setMode(sceneType)
     local inputType = lib.inputdevice.current.type
     local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
     
-    -- Rwemove all active Control-Eventlisteners
+    -- Remove all active Control-Eventlisteners
     Runtime:removeEventListener("key", lib.control.key.menu)
     Runtime:removeEventListener("key", lib.control.key.game)
     Runtime:removeEventListener("touch", lib.control.touch.menu)
