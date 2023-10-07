@@ -102,7 +102,8 @@ function lib_tilesets.get(data, dirTree)
 				table_insert(options.config.frames, gid, element) -- Add to the frames of the sheet
 				tileIndex[c] = {tilesetIndex = i, gid = gid}
 
-				local strGID = tostring(gid - 1) -- Tile properties start at 0, so we must subtract 1. Because of the sparse table that tileset properties usually are, they're encoded into JSON with string keys, thus we must tostring() the GID first
+				-- VERÄNDERT, vorher: local strGID = tostring(gid -1)
+				local strGID = tostring(gid) -- Tile properties start at 0, so we must subtract 1. Because of the sparse table that tileset properties usually are, they're encoded into JSON with string keys, thus we must tostring() the GID first
 			
 				if data.tilesets[i].tileproperties[strGID] then
 					tilesetProperties[gid] = getProperties(data.tilesets[i].tileproperties[strGID], "tile", false)
