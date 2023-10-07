@@ -1,10 +1,15 @@
 {
     "player":{
         "inventory":{},
-        "name":"_",
-        "statuseffects":{}
+        "name":"nil",
+        "attributes":{
+            "statuseffects":{},
+            "health":{"hey":"ho"},
+            "movement":{},
+            "combat":{}
+        }
     },
     "levels":{
-        "current":"_"
+        "current":"nil"
     }
 }
