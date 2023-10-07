@@ -9,8 +9,8 @@ return {
   height = 20,
   tilewidth = 32,
   tileheight = 32,
-  nextlayerid = 3,
-  nextobjectid = 15,
+  nextlayerid = 7,
+  nextobjectid = 32,
   properties = {},
   tilesets = {
     {
@@ -40,20 +40,29 @@ return {
       properties = {},
       wangsets = {},
       tilecount = 48,
-      tiles = {}
+      tiles = {
+        {
+          id = 29,
+          properties = {
+            ["bodyType"] = "static",
+            ["isGround"] = "true",
+            ["physics:enabled"] = "true"
+          }
+        }
+      }
     },
     {
-      name = "tileset_player",
+      name = "projectile",
       firstgid = 49,
       class = "",
-      tilewidth = 1013,
-      tileheight = 1013,
+      tilewidth = 16,
+      tileheight = 16,
       spacing = 0,
       margin = 0,
       columns = 1,
-      image = "player.png",
-      imagewidth = 1013,
-      imageheight = 1013,
+      image = "../../../graphics/projectile.png",
+      imagewidth = 16,
+      imageheight = 16,
       transparentcolor = "#000000",
       objectalignment = "unspecified",
       tilerendersize = "tile",
@@ -64,8 +73,98 @@ return {
       },
       grid = {
         orientation = "orthogonal",
-        width = 1013,
-        height = 1013
+        width = 16,
+        height = 16
+      },
+      properties = {},
+      wangsets = {},
+      tilecount = 1,
+      tiles = {}
+    },
+    {
+      name = "tileset_enemy",
+      firstgid = 50,
+      class = "",
+      tilewidth = 64,
+      tileheight = 64,
+      spacing = 0,
+      margin = 0,
+      columns = 8,
+      image = "../../../graphics/enemy.png",
+      imagewidth = 512,
+      imageheight = 256,
+      transparentcolor = "#000000",
+      objectalignment = "unspecified",
+      tilerendersize = "tile",
+      fillmode = "stretch",
+      tileoffset = {
+        x = 0,
+        y = 0
+      },
+      grid = {
+        orientation = "orthogonal",
+        width = 64,
+        height = 64
+      },
+      properties = {},
+      wangsets = {},
+      tilecount = 32,
+      tiles = {}
+    },
+    {
+      name = "tileset_player",
+      firstgid = 82,
+      class = "",
+      tilewidth = 64,
+      tileheight = 64,
+      spacing = 0,
+      margin = 0,
+      columns = 7,
+      image = "../../../graphics/player.png",
+      imagewidth = 448,
+      imageheight = 320,
+      transparentcolor = "#000000",
+      objectalignment = "unspecified",
+      tilerendersize = "tile",
+      fillmode = "stretch",
+      tileoffset = {
+        x = 0,
+        y = 0
+      },
+      grid = {
+        orientation = "orthogonal",
+        width = 64,
+        height = 64
+      },
+      properties = {},
+      wangsets = {},
+      tilecount = 35,
+      tiles = {}
+    },
+    {
+      name = "tileset_background",
+      firstgid = 117,
+      class = "",
+      tilewidth = 1400,
+      tileheight = 875,
+      spacing = 0,
+      margin = 0,
+      columns = 1,
+      image = "background.png",
+      imagewidth = 1400,
+      imageheight = 875,
+      transparentcolor = "#000000",
+      objectalignment = "unspecified",
+      tilerendersize = "tile",
+      fillmode = "stretch",
+      tileoffset = {
+        x = 0,
+        y = 0
+      },
+      grid = {
+        orientation = "orthogonal",
+        width = 1400,
+        height = 875
       },
       properties = {},
       wangsets = {},
@@ -74,6 +173,36 @@ return {
     }
   },
   layers = {
+    {
+      type = "objectgroup",
+      draworder = "topdown",
+      id = 5,
+      name = "background",
+      class = "",
+      visible = true,
+      opacity = 1,
+      offsetx = 0,
+      offsety = 0,
+      parallaxx = 0.5,
+      parallaxy = 1,
+      properties = {},
+      objects = {
+        {
+          id = 30,
+          name = "",
+          type = "",
+          shape = "rectangle",
+          x = -60,
+          y = 714,
+          width = 1400,
+          height = 875,
+          rotation = 0,
+          gid = 117,
+          visible = true,
+          properties = {}
+        }
+      }
+    },
     {
       type = "tilelayer",
       x = 0,
@@ -105,10 +234,10 @@ return {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 30, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        30, 0, 0, 0, 30, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30,
+        30, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30,
         30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30,
         30, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 30,
-        30, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 30,
+        30, 30, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 30,
         30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -129,48 +258,58 @@ return {
       properties = {},
       objects = {
         {
-          id = 12,
-          name = "player",
-          type = "player",
-          shape = "rectangle",
-          x = 318,
-          y = 277,
-          width = 101,
-          height = 101,
-          rotation = 0,
-          gid = 49,
-          visible = true,
-          properties = {
-            ["costumProperty"] = "Trivago"
-          }
-        },
-        {
-          id = 13,
+          id = 26,
           name = "enemy1",
           type = "enemy",
           shape = "rectangle",
-          x = 354,
-          y = 529,
-          width = 101,
-          height = 101,
+          x = 262,
+          y = 476.667,
+          width = 64,
+          height = 64,
           rotation = 0,
-          gid = 49,
+          gid = 50,
           visible = true,
-          properties = {}
+          properties = {
+            ["isGround"] = "false",
+            ["isInteractive"] = "false",
+            ["isVurnerable"] = "true"
+          }
         },
         {
-          id = 14,
+          id = 27,
           name = "enemy2",
           type = "enemy",
           shape = "rectangle",
-          x = 473.5,
-          y = 531.5,
-          width = 101,
-          height = 101,
+          x = 532.667,
+          y = 455.333,
+          width = 64,
+          height = 64,
           rotation = 0,
-          gid = 49,
+          gid = 50,
           visible = true,
-          properties = {}
+          properties = {
+            ["isGround"] = "false",
+            ["isInteractive"] = "false",
+            ["isVurnerable"] = "true"
+          }
+        },
+        {
+          id = 28,
+          name = "player",
+          type = "player",
+          shape = "rectangle",
+          x = 398.667,
+          y = 525.333,
+          width = 64,
+          height = 64,
+          rotation = 0,
+          gid = 82,
+          visible = true,
+          properties = {
+            ["costumProperty"] = "costumValue",
+            ["isGround"] = "false",
+            ["isVurnerable"] = "true"
+          }
         }
       }
     }
