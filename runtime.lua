@@ -3,6 +3,9 @@ local lib = require( "resources.lib.lib" )
 -- setup settings
 lib.settings.onStartup()
 
+-- setup DEBUGGING
+physics.setDrawMode("hybrid")
+
 -- setup inputdevices
 local isInputdevicemenuOpen = lib.inputdevice.onStartup()
 if not isInputdevicemenuOpen then
