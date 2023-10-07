@@ -3,149 +3,284 @@ local M = {}
 
 function M.new( instance, options )
     if not instance then error( "ERROR: Expected display object" ) end
+    print("Object has been extended with player class.")
 
-    print(options)
-    
-    -- Variabeln. Kommen später evt. in ein config-file.
-    instance.primaryWeapon = playerData['primaryWeapon'] -- Leere Tables bekommen den Wert "emptyTable". Dieser wird bspw. beim Laden des Inventars mit if-statement überprüft.
-    instance.secondaryWeapon = playerData['secondaryWeapon']
+    ------------------------------------------------------------------
+    -- instance variables
+    ------------------------------------------------------------------
+    instance.bodyContacts = 0
+    instance.groundContacts = 0
+    instance.rightWallContacts = 0
+    instance.leftWallContacts = 0
+    instance.interactionTable = {}
+    instance.attackTable = {}
 
-    instance.health = playerData['health']
-    instance.attack = playerData['attack']
-    instance.movement = playerData['movement']
-    instance.inventory = playerData['inventory']
+    instance.pressingForward = false
+    instance.pressingBackward = false
+    instance.pressingJump = false
+    instance.isSneaking = false
 
-    -- Load Spritesheet; IMAGE NAME?
-    --instance = display.newSprite( parent, sheet, sequenceData )
+    instance.movement = {
+        speed = 200,
+        jumpHeight = -32
+    }
+    instance.health = {
+        hitpoints = 15,
+        maxHitpoints = 15,
+    }
+    instance.combat = {
+        strength = 5,
+        lastMeleeAttack = 0,
+        cooldownMeleeAttack = 1.5,
+        lastRangedAttack = 0,
+        cooldownRangedAttack = 3,
+        lastBlock = 0,
+        cooldownBlock = 5,
+        isBlocking = false
+    }
 
-    -- Add physics
-    --local image_outline = graphics.newOutline( 100, "player2.png")
-    local scaleFactor = scaleFactor
-    --filter = CollisionFilterPlayer
+    local bodyShape = {-16,-32, 16,-32, 16,32, -16,32}
     physics.addBody(instance, "dynamic",
-        { density=3.5, friction=0, bounce=0, shape={-35,-65, 35,-65, 35,65, -35,65}  }, -- 1: Main body element für abstumpfen: 5,65, -5,65 als 3- und 2-letzte einfügen.
-        { box={ halfWidth=20, halfHeight=8, x=0, y=75 }, isSensor=true },               -- 2: Foot sensor element
-        { box={ halfWidth=10, halfHeight=10, x=45, y=70 }, isSensor=true },             -- 3: Right Side sensor element
-        { box={ halfWidth=10, halfHeight=10, x=-45, y=70 }, isSensor=true },            -- 4: Left Side sensor element
-        { box={ halfWidth=100, halfHeight=20, x=0, y=20 }, isSensor=true }              -- 5: Reach/Range sensor element
-        ) 
+        { density=3.5, friction=0, bounce=0, shape= bodyShape  },            -- 1: Main body element für abstumpfen: 5,65, -5,65 als 3- und 2-letzte einfügen.
+        { box={ halfWidth=16, halfHeight=4, x=0, y=32 }, isSensor=true },    -- 2: Foot sensor element
+        { box={ halfWidth=4, halfHeight=32, x=20, y=0 }, isSensor=true },    -- 3: Right Side sensor element
+        { box={ halfWidth=4, halfHeight=32, x=-20, y=0 }, isSensor=true },   -- 4: Left Side sensor element
+        { box={ halfWidth=64, halfHeight=32, x=0, y=0 }, isSensor=true } ,   -- 5: Reach/Range sensor element
+        { box={ halfWidth=32, halfHeight=16, x=0, y=0 }, isSensor=true }     -- 6: Attack sensor element
+    ) 
     instance.isFixedRotation = true
-    instance.sensorOverlaps = 0
     
-    function instance:Jump() --> siehe: https://docs.coronalabs.com/tutorial/games/allowJumps/index.html
-        if (instance.sensorOverlaps > 0) then
-            instance:applyLinearImpulse(nil, -60)
+    function instance:jump()
+        if instance.groundContacts > 0 then
+            local jumpHeight = instance.movement.jumpHeight
+            instance:setLinearVelocity(nil, 0)
+            instance:applyLinearImpulse(nil, jumpHeight)
         end
     end
-    
 
-    instance.iOiR = 0   -- "isObjectinRange",  OiR = "ObjectinRange"
-    local function SensorCollide( event )
-        -- Confirm that the colliding elements are the foot sensor and a ground object
-        if ( event.selfElement == 2 and event.other.interactType == "ground" ) then
-            -- Foot sensor has entered (overlapped) a ground object
-            if ( event.phase == "began" ) then
-                instance.sensorOverlaps = instance.sensorOverlaps + 1
+    -- not finished
+    function instance:interact()
+        local interactions = player.interactionTable
 
-                -- Foot sensor has exited a ground object
-            elseif ( event.phase == "ended" ) then
-                instance.sensorOverlaps = instance.sensorOverlaps - 1
+        if (#interactions == 1) then
+            print("only one interaction possible.")
+            -- pick it. But how?
+        elseif (#interactions > 1) then
+            print("multiple interactions possible.")
+            -- multiple interactions possible, choose nearest
+        else
+            print("no interactions possible.")
+        end
+    end
+
+    local function handleCollision(event)
+        -- Localize
+        local selfElement = event.selfElement
+        local other = event.other
+        local phase = event.phase
+        local var
+
+        -- distinct between body-elements
+        if (selfElement == 1) and not other.isGround then
+            var = 'bodyContacts'
+        elseif (selfElement == 2) and other.isGround then
+            var = 'groundContacts'
+        elseif (selfElement == 3) and other.isGround then
+            var = 'rightWallContacts'
+        elseif (selfElement == 4) and other.isGround then
+            var = 'leftWallContacts'
+        elseif (selfElement == 5) and not other.isGround then
+            local isInteractive = other.isInteractive
+            local name = other._name
+            local t = instance.interactionTable
+            if (phase == 'began') and isInteractive then
+                t[#t+1] = name
+            elseif (phase == 'ended') and isInteractive then
+                local index = table.indexOf( t, name )
+                if index then t[index] = nil end
+            end
+            return false
+        elseif (selfElement == 6) and not other.isGround then
+            local isVurnerable = other.isVurnerable
+            if isVurnerable and (event.otherElement == 1) then
+                local name = other._name
+                local t = instance.attackTable
+                if (phase == 'began') then
+                    t[#t+1] = name
+                elseif (phase == 'ended') then
+                    t[table.indexOf( t, name )] = nil
+                end
+            end
+            return false
+        else
+            return false
+        end
+
+        -- change value
+        if (phase == 'began') then
+            instance[var] = instance[var] + 1
+        elseif (phase == 'ended') then
+            instance[var] = instance[var] - 1
+        end
+
+        -- special cases
+        if (phase == 'ended') and (event.selfElement == 4) then
+            if (instance.leftWallContacts == 0) then
+                if instance.pressingBackward then
+                    local _vx, vy = instance:getLinearVelocity()
+                    local vx = math.abs(_vx) 
+                    if (vx < 10) then
+                        local x = instance.movement.jumpHeight
+                        instance:applyLinearImpulse(x, nil)
+                    end
+                end
             end
 
-        -- Colliding with rightside wall.
-        elseif ( event.selfElement == 3) and (event.other.interactType== "ground") and (instance.sensorOverlaps == 0) then
-            local vx, vy = instance:getLinearVelocity()
-            if (event.phase == "ended") and (movB == false) and (movF == true) then
-                instance:setLinearVelocity(instance.movement["speed"]*300, vy)
-                return
-            end      
-        -- Colliding with leftside wall.
-        elseif ( event.selfElement == 4) and (event.other.interactType == "ground") and (instance.sensorOverlaps == 0) then
-            local vx, vy = instance:getLinearVelocity()
-            if (event.phase == "ended") and (movF == false) and (movB == true) then
-                instance:setLinearVelocity(instance.movement["speed"]*-300, vy)
-                return
-            end      
-        -- Interact with other object.
-        elseif (event.selfElement == 5) and (event.other.objType == "interaction") then
-            if (event.phase == "began") then
-                instance.OiR = event.other
-                instance.iOiR = instance.iOiR + 1
-            elseif (event.phase == "ended") then
-                instance.iOiR = instance.iOiR - 1
-            end 
+        elseif (phase == 'ended') and (event.selfElement == 3) then
+            if (instance.rightWallContacts == 0) then
+                if instance.pressingForward then
+                    local vx, vy = instance:getLinearVelocity()
+                    if (vx == 0) then
+                        local x = instance.movement.jumpHeight
+                        instance:applyLinearImpulse(-x, nil)
+                    end
+                end
+            end
         end
     end
 
+    function instance:meleeAttack()
+        local last = instance.combat.lastMeleeAttack
+        local cooldown = instance.combat.cooldownMeleeAttack
+        local now = os.clock()
+        if (now-last) >= cooldown then
+            print("player attacks.") -- DEBUG
 
-    function instance:MeleeAttack()
-        -- Animation
-        -- SFX
-        local other = instance.OiR
-        if (instance.iOiR == 1) and (other.isDead == false) then
-            local amount = instance.attack["strength"] * instance.attack["accuracy"]
-            local options = {["type"] = "hurt",["amount"] = amount}
-            other:HandleHealth(options)
-            print("ATTACK")
-            -- COOLDOWN!
+            local composer = require("composer")
+            local scene = composer.getScene(composer.getSceneName("current"))
+            local map = scene.map
+            local strength = instance.combat.strength
+            local xScale = instance.xScale
+            local ix = instance.x
+            local t = instance.attackTable
+            -- iterate through attackTable
+            for i, name in pairs(t) do
+                local entity = map.layer['entities'].object[name]
+                local x = entity.x
+                -- Attacks only enemies which player faces.
+                if (xScale == 1) and (x > ix)then
+                    entity:handleHealth(strength)
+                elseif (xScale == -1) and (x < ix) then
+                    entity:handleHealth(strength)
+                end
+            end
+
+            -- update attack cooldown
+            instance.combat.lastMeleeAttack = os.clock()
         end
     end
 
-    -- instance:RangedAttack()
+    function instance:rangedAttack()
+        -- Localize
+        local last = instance.combat.lastRangedAttack
+        local cooldown = instance.combat.cooldownRangedAttack
+        local now = os.clock()
+        if (now-last) >= cooldown then
+            print("player makes ranged attack.")
+            
+            -- 1. create projectile
+            local x, y = instance.x, instance.y
+            local projectile = display.newImage('resources/graphics/projectile.png', x, y )
+            projectile:scale(1.3, 1.3)
 
-    -- instance:SpecialAttack()
+            -- 2. connect with class
+            local class = require("resources.lib.projectile")
+            local projectile = class.new(projectile)
+            
+            -- 3. insert in map
+            local composer = require("composer")
+            local scene = composer.getScene(composer.getSceneName('current'))
+            local map = scene.map
+            map.layer['entities']:insert(projectile)
+        
+            -- 4. set velocity
+            local xScale = instance.xScale
+            projectile:setLinearVelocity(300*xScale,-100)
 
-    -- instance:Dodge()
-
-    -- instance:Block()
-
-    function instance:Interact()
-        if (instance.iOiR > 0) then
-            -- Animation
-            -- SFX
-            -- Interaction here. Maybe send it to the other objects class.
+            -- 5. update attack cooldown
+            instance.combat.lastRangedAttack = os.clock()
         end
     end
 
     function instance:die()
-        print("---------Instance died-----------")
+        print(">> GAME OVER <<")
+        -- Set the rectangle's active state
+        instance.isBodyActive = false
         -- Audio
         -- Animation
     end
 
-    function instance:HandleHealth(options)
-        local HealthChange
-        -- distinguish between "hurt" and "heal".
-        if (options["type"] == "hurt") then
-            HealthChange = - ( options["amount"] * instance.health["defense"] )
-
-        elseif (options["type"] == "heal") then
-            HealthChange = options["amount"]
+    function instance:handleHealth(amount, heal)
+        local hitpoints = instance.health.hitpoints
+        local maxHitpoints = instance.health.maxHitpoints
+        if heal then
+            hitpoints = hitpoints + amount
+            if hitpoints > maxHitpoints then hitpoints = maxHitpoints end
+        else
+            if instance.isBlocking then
+                -- update blocking state, no damage
+                instance:block('blocked')
+            else
+                hitpoints = hitpoints - amount
+            end
         end
 
-        -- Change the currentHealth of instance by the amount of "HealthChange"
-        local currentHealth = ( instance.health["currentHealth"] + HealthChange )
-        instance.health["currentHealth"] = currentHealth
-    
-        -- temporary visual for currentHealth
-        instance.alpha = currentHealth / instance.health["maxHealth"]
-        
-        -- Handle Death
-        if (currentHealth <= 0) then
-            instance.isDead = true
+        -- debug visual for current hitpoints
+        instance.alpha = hitpoints / maxHitpoints
+
+        -- update variable
+        instance.health.hitpoints = hitpoints
+
+        -- check if dead
+        if hitpoints <= 0 then
             instance:die()
+        end
+
+        print("player now has "..hitpoints.. " out of max. "..maxHitpoints.." hitpoints.")
+        -- update HUD from player
+    end
+
+    function instance:block(state)
+        -- Localize
+        local last = instance.combat.lastBlock
+        local cooldown = instance.combat.cooldownBlock
+        local now = os.clock()
+
+        if (state == 'begin') then
+            if (now-last) >= cooldown then
+                print("blocking")
+                instance.isBlocking = true
+            end
+        elseif (state == 'cancel') then
+            print("cancel block")
+            instance.isBlocking = false
+
+        elseif (state == 'blocked') then
+            print("block successfull.")
+            instance.isBlocking = false
+            -- update block cooldown
+            instance.combat.lastBlock = os.clock()
         end
     end
 
-
-    -- instance:Finalize()   --> Remove EventListeners when removing player
+    function instance:ability()
+        --
+    end
     
-    -- EventListener hinzufügen
-    instance:addEventListener("collision", SensorCollide)
+    -- add EventListeners
+    instance:addEventListener("collision", handleCollision)
 
     -- Return instance
-	instance.name = "player"
-	instance.type = "player"
 	return instance
 end
 
