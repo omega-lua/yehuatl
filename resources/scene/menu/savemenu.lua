@@ -72,8 +72,8 @@ end
 function scene:redirect()
     if (scene.save1==false) and (scene.save2==false) and (scene.save3==false) then
         lib.savefile.new()
-        lib.savefile.current = "savefile1.json"
-        lib.level.goTo()
+        lib.savefile.current.name = "savefile1.json"
+        lib.level.load()
     end
 end
 
@@ -174,8 +174,8 @@ function scene:fcButton(t)
         if selected == scene._selected or (lib.control.mode == 'key') then
             if scene.save[selected] then
 
-                lib.savefile.current = 'savefile1.json'
-                lib.level.goTo()
+                lib.savefile.current.name = 'savefile'..selected..'.json'
+                lib.level.load()
                 print(">> RUN THE GAME <<")
             end
         else 
