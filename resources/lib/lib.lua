@@ -125,21 +125,6 @@ function savefile.new(filename)
     lib.file.write(filename, system.DocumentsDirectory, contents)
 end
 
-function savefile.read(filename)
-    -- handle exception
-    if not filename then
-        print("ERROR: No filename provided in fc(): savefile.read")
-        return false
-    end
-
-    -- read savefile
-    local filePath = 'resources.data.'..filename
-    local encoded = lib.file.read( filePath, system.ResourceDirectory)
-    local data = json.decode( encoded, "_")
-
-    return data
-end
-
 lib.savefile = savefile
 
 --------------------------------------------------------------------------------
@@ -149,13 +134,17 @@ lib.savefile = savefile
 local scene = {}
 scene.current = nil
 
-function scene.show(scenePath, options)
+function scene.show( scenePath, options, isOverlay )
     composer.loadScene( scenePath )
 
     local _scene = composer.getScene( scenePath )
     lib.control.setMode(_scene.type)
 
-    composer.gotoScene(scenePath, options)
+    if isOverlay then
+        composer.showOverlay( scenePath, options )
+    else
+        composer.gotoScene( scenePath, options )
+    end
 end
 
 lib.scene = scene
@@ -180,7 +169,7 @@ function level.save()
     local map = scene.map
 
     -- get data of entities
-    local e = {}
+    local entities = {}
     for object in map.layer['entities'].objects() do
         local t = {}
         t.x, t.y = object.x, object.y
@@ -188,7 +177,7 @@ function level.save()
         t.isDead = object.isDead
         t.inventory = object.inventory
 
-        e[object._name] = t
+        entities[object._name] = t
     end
 
     -- get data of player (x and y values are stored in entities, so they are stored in level data.)
@@ -218,8 +207,9 @@ function level.save()
 end
 
 function level.load(level)
+    print("----- loading level ----------")
     -- Localize
-    local level = level
+    local reload
     -- get data from current savefile
     local encoded = file.read(lib.savefile.current.name, system.DocumentsDirectory)
     local savefile = json.decode(encoded)
@@ -232,11 +222,16 @@ function level.load(level)
             savefile.levels.current = "level1"
         end
         level = savefile.levels.current
+    elseif level == 'reload' then
+        reload = true
+        level = lib.level.current
     end
 
-    -- load level-scene
+    -- load scene
     local scenePath = "resources.scene.game."..level..".scene"
-    composer.loadScene( scenePath, true )
+    if not reload then
+        composer.loadScene( scenePath, true )
+    end
     local scene = composer.getScene(scenePath)
 
     -- setup and pause physics
@@ -244,10 +239,11 @@ function level.load(level)
 
     -- build map with dusk engine
     local filePath = "resources/scene/game/"..level.."/map.lua"
+    -- make map a global variable for easier access?
     local map = dusk.buildMap(filePath)
     scene.map = map
 
-    -- extend classes
+    -- get all classes
     local classes = {}
     for object in map.layer['entities'].objects() do
         local class = object._type
@@ -257,10 +253,11 @@ function level.load(level)
             end
         end
     end
-    lib.print(classes) -- DEBUG
+
+    -- extend classes
     map.extend(unpack(classes))
 
-    -- update entities, if level was found in savefile
+    -- update entities, if the level was found in savefile
     if savefile.levels[level] then
         local entities = savefile.levels[level].entities
         for name, data in pairs(entities) do
@@ -277,13 +274,13 @@ function level.load(level)
     end
 
     -- update player
-    local Player = require("resources.lib.player")
-    local attributes = savefile.player.attributes
-    Player.attributes = attributes
-    player = map.layer["entities"].object['player']
+    -- local plugin = require("resources.lib.player")
+    --local attributes = savefile.player.attributes
+    --plugin.attributes = attributes
+    local player = map.layer["entities"].object['player']
 
     -- camera setup
-    map:scale(1.5, 1.5)
+    map:scale(3.5, 3.5)
     map.enableFocusTracking(true)
     map.setCameraFocus(player)
     map.setTrackingLevel(0.1)
@@ -292,10 +289,14 @@ function level.load(level)
     physics.start()
 
     -- show scene
-    lib.scene.show(scenePath) -- Might cause problems, it uses loadScene aswell.
-    lib.level.current = level
+    if not reload then
+        lib.scene.show(scenePath)
+        lib.level.current = level
+    end
 
-    --lib.level.save()
+    -- can only be called after scene is shown
+    local sceneGroup = scene.view
+    sceneGroup:insert(map)
 end
 
 lib.level = level
@@ -396,14 +397,12 @@ end
 
 function inputdevice.initiateKeybinds(key)
     keybind.jump = key.jump
-    keybind.sneak = key.sneak
     keybind.forward = key.forward
     keybind.backward = key.backward
     keybind.interact = key.interact
     keybind.escape = key.escape
-    keybind.primaryWeapon = key.primaryWeapon
-    keybind.secondaryWeapon = key.secondaryWeapon
-    keybind.inventory = key.inventory
+    keybind.meleeAttack = key.meleeAttack
+    keybind.rangedAttack = key.rangedAttack
     keybind.ability  = key.ability
     keybind.block  = key.block
     keybind.navigateLeft = key.navigateLeft
@@ -610,14 +609,14 @@ lib.keybind = keybind
 --------------------------------------------------------------------------------
 
 local control = {key = {}, touch = {}, mode=nil}
-local moveF, moveB, MoveJ, interact = false, false, false, false
 
 function control.key.menu(event)
     if (event.phase == "up") then
         local keyName = event.keyName
         local next = nil
-        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
-        local widget = scene.widgetsTable[scene.widgetIndex]
+        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current")) or {}
+        local widgetsTable = scene.widgetsTable or {}
+        local widget = widgetsTable[scene.widgetIndex] or {}
         local keybind = lib.keybind
 
         if (keyName == keybind.navigateRight) then
@@ -633,7 +632,7 @@ function control.key.menu(event)
             next = widget.navigation[4]
 
         elseif (keyName == keybind.interact) then
-            widget["function"]()
+            if widget['function'] then widget["function"]() end
         elseif (keyName == keybind.escape) then
             scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"})
         end
@@ -651,9 +650,14 @@ function control.key.menu(event)
 end
 
 function control.key.game(event)
+    -- Localize
     local phase = event.phase
     local keyName = event.keyName
     local keybind = lib.keybind
+    local scene = composer.getScene( composer.getSceneName( 'current' ))
+    local map = scene.map
+    local player = map.layer["entities"].object['player']
+    
     if (phase == "down") then
         if (keyName == keybind.jump) then
             player.pressingJump = true
@@ -670,16 +674,15 @@ function control.key.game(event)
 
         elseif (keyName == keybind.interact) then
             player:interact()
-        elseif (keyName == keybind.primaryWeapon) then
+        elseif (keyName == keybind.meleeAttack) then
             player:meleeAttack()
-        elseif (keyName == keybind.secondaryWeapon) then
+        elseif (keyName == keybind.rangedAttack) then
             player:rangedAttack()
         elseif (keyName == keybind.block) then
             player:block('begin')
         
-        elseif  (keyName == keybind.escape) then
-            -- Problem: Durch diesen Weg wird status immer "pause", egal ob Overlay geöffnet ist oder nicht.
-            handlePauseScreen()
+        elseif (keyName == keybind.escape) then
+            scene:pause()
         end
         
     elseif (phase == "up") then
@@ -698,27 +701,8 @@ function control.key.game(event)
             player:block('cancel')
         end
     end
-    
-    local vx, vy = player:getLinearVelocity()
-    local pressingForward = player.pressingForward
-    local pressingBackward = player.pressingBackward
-    local multiplier
-    if player.isSneaking then multiplier = 0.4 else multiplier = 1 end
-    if pressingForward == pressingBackward then
-        vx = 0
-    elseif pressingForward then
-        vx = player.movement.speed * multiplier
-    elseif pressingBackward then
-        vx = -player.movement.speed * multiplier
-    end
-    player:setLinearVelocity(vx, vy)
-       
-    -- set direction of playerobject (visual)
-    if (vx < 0) then
-        player.xScale = -1
-    elseif (vx > 0) then
-        player.xScale = 1
-    end
+
+    player:handleMovement()
 end
 
 function control.touch.menu(event)
@@ -726,10 +710,75 @@ function control.touch.menu(event)
 end
 
 function control.touch.game(event)
-    --
+    local target = event.target
+    local command = target.command
+    local phase = event.phase
+
+    -- Cancel unwanted event-phase
+    if phase == 'moved' then return false end
+
+    local scene = composer.getScene( composer.getSceneName( 'current' ) )
+    local map = scene.map
+    local player = map.layer["entities"].object['player']
+
+    if phase == 'began' then
+        -- visual
+        display.getCurrentStage():setFocus( event.target, event.id )
+        target.alpha = 0.5
+        
+        if command == 'jump' then
+            player:jump()
+            player.pressingJump = true
+
+        elseif command == 'pressingBackward' or command == 'pressingForward' then
+            player[command] = true
+            player:handleMovement()
+
+        elseif command == 'meleeAttack' then
+            player:meleeAttack()
+        elseif command == 'rangedAttack' then
+            player:rangedAttack()
+        elseif command == 'block' then
+            player:block('begin')
+        elseif command == 'ability' then
+            player:ability()
+        elseif command == 'pause' then
+            -- doesnt get handled
+        elseif command == 'interact' then
+            player:interact()
+        end
+
+    elseif phase == 'ended' then
+        -- visual
+        display.getCurrentStage():setFocus( event.target, nil )
+        target.alpha = 1
+
+        if command == 'jump' then
+            player.pressingJump = false
+
+        elseif command == 'pressingBackward' or command == 'pressingForward' then
+            target.alpha = 1
+            player[command] = false
+            player:handleMovement()
+
+        elseif command == 'meleeAttack' then
+            -- doesnt get handled
+        elseif command == 'rangedAttack' then
+            -- doesnt get handled
+        elseif command == 'block' then
+            player:block('cancel')
+        elseif command == 'ability' then
+            -- doesnt get handled
+        elseif command == 'interact' then
+            -- doesnt get handled
+        elseif command == 'pause' then
+            scene:pause()
+        end
+    end
 end
 
-function control.setMode(sceneType)
+function control.setMode(sceneType, deactivateControls)
+    print("opened control.setMode")
     -- Localize
     local inputType = lib.inputdevice.current.type
     local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
@@ -740,10 +789,13 @@ function control.setMode(sceneType)
     Runtime:removeEventListener("touch", lib.control.touch.menu)
     Runtime:removeEventListener("touch", lib.control.touch.game)
 
-    -- Error handling
+    if deactivateControls then
+        -- removes all eventListeners, but doesnt add the current. So no controls.
+        return true
+    end
+
     if not sceneType then
-        print("WARNING: control.setMode(): sceneType is nil.")
-        return false
+        sceneType = scene.type
     end
 
     if (inputType == "keyboard") then
@@ -756,12 +808,14 @@ function control.setMode(sceneType)
         end
     
     elseif (inputType == "touchscreen") then
+        system.activate( "multitouch" )
         lib.control.mode = "touch"
         if (sceneType == "menu") then
             --Runtime:addEventListener("touch", lib.control.touch.menu)
 
         elseif (sceneType == "game") then
-            Runtime:addEventListener("touch", lib.control.touch.game)
+            -- We dont need global eventListener for touch-ingame
+            --Runtime:addEventListener("touch", lib.control.touch.game)
         end
     elseif (inputType == "controller") then
         lib.control.mode = "key"

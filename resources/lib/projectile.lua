@@ -18,9 +18,11 @@ function M.new( instance, options )
 
     function instance:die()
         local function fc()
-            instance:removeSelf()
+            display.remove( instance )
             instance = nil
+            print("Died. "..collectgarbage('count').." kilobytes using now.")
         end
+        timer.cancel('deathTimer')
         timer.performWithDelay(20, fc)
     end
 
@@ -32,11 +34,21 @@ function M.new( instance, options )
                 if other.isVurnerable then
                     other:handleHealth(instance.damage)
                     instance:die()
+                elseif other.isGround then
+                    instance:die()
                 end
             end
         end
     end
 
+    -- function to let projectile despawn after 3 seconds of flight time.
+    local function onDelay(event)
+        instance:die()
+    end
+ 
+    timer.performWithDelay( 3000, onDelay, 'deathTimer')
+
+    -- add eventListener
     instance:addEventListener("collision", onCollision)
 
     -- Return instance

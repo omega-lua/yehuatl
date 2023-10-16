@@ -68,7 +68,7 @@ function lib_tilelayer.createLayer(map, mapData, data, dataIndex, tileIndex, ima
 	-- Added by myself (6.10.2023)
 	layer.xParallax = data.parallaxx
 	layer.yParallax = data.parallaxy
-	
+
 	layer._leftmostTile = mapData._dusk.layers[dataIndex].leftTile - 1
 	layer._rightmostTile = mapData._dusk.layers[dataIndex].rightTile + 1
 	layer._highestTile = mapData._dusk.layers[dataIndex].topTile - 1

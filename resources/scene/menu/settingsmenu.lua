@@ -75,7 +75,7 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.2, yScale = 1.2}     
         else
             params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1}
         end
@@ -91,9 +91,7 @@ function scene:updateUI()
 end
 
 function scene:back()
-    if (scene.isSaved == false) then
-        -- Darken scene behind...
-        
+    if (scene.isSaved == false) then    
         -- Show Overlay... Overlay hat drei Buttons, Speichern, Abbrechen, nicht speichern
         composer.showOverlay("resources.scene.menu.warningoverlay", {effect = "fade", time = 200,isModal=true})
     else
@@ -290,10 +288,10 @@ function scene:loadUI()
 
         elseif (type == "line") then
             scene.widgetsTable[i].pointer = display.newLine(unpack(object.creation))
-            scrollView:insert(scene.widgetsTable[i].pointer)
-            if object.color then
-                scene.widgetsTable[i].pointer:setStrokeColor(unpack(object.color))
-            end
+            local pointer = scene.widgetsTable[i].pointer
+            scrollView:insert(pointer)
+            if object.color then pointer:setStrokeColor(unpack(object.color)) end
+            if object.width then pointer.strokeWidth = object.width end
         
         elseif (type == "button") then
             scene.widgetsTable[i].pointer = widget.newButton( object.creation )
@@ -334,23 +332,49 @@ function scene:show( event )
         -- Code here runs when the scene is still off screen (but is about to come on screen)
 
         if lib.settings.tmpTable == nil then
-            print("lib.settings.tmpTable is nil")
             lib.settings.tmpTable = deepcopy(lib.settings.table)
             scene.isSaved = true
         end
+
+        scene.widgetIndex = 5
+
+        -- Create imagesheet for segmented display
+        local options = { frames = {
+            {x = 0, y = 0, width = 32, height = 32},
+            {x = 65, y = 0, width = 32, height = 32},
+            {x = 160, y = 0, width = 32, height = 32},
+            {x = 0, y = 33, width = 32, height = 32},
+            {x = 65, y = 33, width = 32, height = 32},
+            {x = 160, y = 33, width = 32, height = 32},
+            {x = 197, y = 0, width = 2, height = 32},
+        }}
+        local segmentImageSheet = graphics.newImageSheet('resources/graphics/ui/simple.png', options)
+
+        -- Create imagesheet for switch
+        local options = {
+            frames = {
+                {x = 0, y = 0, width = 39, height = 39}, -- frame on
+                {x = 40, y = 0, width = 39, height = 39}, -- frame off
+            },
+        }
+        local switchImageSheet = graphics.newImageSheet( "resources/graphics/ui/switch.png", options )
 
         -- Has to be here, so that it refreshes the UI everytime. Has to be set before scene:loadUI()
         scene.widgetsTable = {
             [1] = {
                 ["creation"] = {
-                    x = 50,
+                    id = 'buttonBack',
+                    x = 70,
                     y = 50,
-                    id = "buttonBack",
-                    label = "back",
-                    onEvent = handleInteraction,
+                    width = 100,
+                    height = 40,
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    label = "Back",
+                    onRelease = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
                 ["navigation"] = {5,5,5,27},
@@ -358,10 +382,11 @@ function scene:show( event )
                 ["type"] = "button"
             },
             [2] = {
-                ["creation"] = {100,50,320,50},
+                ["creation"] = {140,50,320,50},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = {1,1,1,0.6},
+                ["width"] = 3,
             },
             [3] = {
                 ["creation"] = {
@@ -381,17 +406,22 @@ function scene:show( event )
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [5] = {
                 ["creation"] = {
+                    id = 'buttonKeybinds',
                     x = 400,
                     y = 100,
-                    id = "buttonKeybinds",
+                    width = 150,
+                    height = 40,
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
                     label = "Keybinds",
-                    onEvent = handleInteraction,
+                    onRelease = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonKeybinds"}, phase="ended"}) end,
                 ["navigation"] = {nil,6,nil,1},
@@ -400,14 +430,18 @@ function scene:show( event )
             },
             [6] = {
                 ["creation"] = {
+                    id = 'buttonInputDevice',
                     x = 400,
-                    y = 150,
-                    id = "buttonInputDevice",
+                    y = 160,
+                    width = 200,
+                    height = 40,
+                    defaultFile = 'resources/graphics/ui/buttonLong.png',
+                    overFile = 'resources/graphics/ui/buttonLongPressed.png',
                     label = "Input Device",
-                    onEvent = handleInteraction,
+                    onRelease = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonInputDevice"}, phase="ended"}) end,
                 ["navigation"] = {nil,11,nil,5},
@@ -415,15 +449,16 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [7] = {
-                ["creation"] = {100,200,340,200},
+                ["creation"] = {100,220,340,220},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [8] = {
                 ["creation"] = {
                     x = 400,
-                    y = 200,
+                    y = 220,
                     text = "Sound",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20},
@@ -432,16 +467,18 @@ function scene:show( event )
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [9] = {
-                ["creation"] = {460,200,700,200},
+                ["creation"] = {460,220,700,220},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
+                
             },
             [10] = {
                 ["creation"] = {
                     text = "Music Volume",
                     x = 280,
-                    y = 250,
+                    y = 280,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
@@ -451,7 +488,7 @@ function scene:show( event )
             [11] = {
                 ["creation"] = {
                     x = 520,
-                    y = 250,
+                    y = 280,
                     id = "segmentMusicVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
@@ -459,6 +496,20 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(11) end,
+
+                    sheet = segmentImageSheet,
+                    leftSegmentFrame = 1,
+                    middleSegmentFrame = 2,
+                    rightSegmentFrame = 3,
+                    leftSegmentSelectedFrame = 4,
+                    middleSegmentSelectedFrame = 5,
+                    rightSegmentSelectedFrame = 6,
+                    segmentFrameWidth = 32,
+                    segmentFrameHeight = 32,
+             
+                    dividerFrame = 7,
+                    dividerFrameWidth = 4,
+                    dividerFrameHeight = 32,
                 },
                 ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(11,1) end,13, function() scene:handleSegment(11,-1) end,6},
@@ -469,7 +520,7 @@ function scene:show( event )
                 ["creation"] = {
                     text = "Effects Volume",
                     x = 280,
-                    y = 300,
+                    y = 340,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
@@ -479,7 +530,7 @@ function scene:show( event )
             [13] = {
                 ["creation"] = {
                     x = 520,
-                    y = 300,
+                    y = 340,
                     id = "segmentEffectsVolume",
                     segmentWidth = 35,
                     segments = { "0", "1", "2", "3", "4" },
@@ -487,6 +538,20 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(13) end,
+
+                    sheet = segmentImageSheet,
+                    leftSegmentFrame = 1,
+                    middleSegmentFrame = 2,
+                    rightSegmentFrame = 3,
+                    leftSegmentSelectedFrame = 4,
+                    middleSegmentSelectedFrame = 5,
+                    rightSegmentSelectedFrame = 6,
+                    segmentFrameWidth = 32,
+                    segmentFrameHeight = 32,
+             
+                    dividerFrame = 7,
+                    dividerFrameWidth = 4,
+                    dividerFrameHeight = 32,
                 },
                 ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(13,1) end, 15, function() scene:handleSegment(13,-1) end,11},
@@ -497,20 +562,26 @@ function scene:show( event )
                 ["creation"] = {
                     text = "Stereo",
                     x = 320,
-                    y = 350,
+                    y = 400,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
                 ["pointer"] = {},
                 ["type"] = "text",
+                ["width"] = 3,
             },
             [15] = {
                 ["creation"] = {
                     id = "switchStereo",
+                    style = 'checkbox',
                     x = 480,
-                    y = 350,
+                    y = 400,
                     initialSwitchState = lib.settings.tmpTable.sound.playStereo,
                     onRelease = function() scene:handleSwitch(15, 'touch') end,
+                    
+                    sheet = switchImageSheet,
+                    frameOff = 2,
+                    frameOn = 1
                 },
                 ["function"] = function() scene:handleSwitch(15, 'key') end,
                 ["navigation"] = {function() scene:handleSwitch(15,'key') end,20, function()scene:handleSwitch(15,'key') end,13},
@@ -518,15 +589,16 @@ function scene:show( event )
                 ["type"] = "switch",
             },
             [16] = {
-                ["creation"] = {100,400,340,400},
+                ["creation"] = {100,460,340,460},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [17] = {
                 ["creation"] = {
                     x = 400,
-                    y = 400,
+                    y = 460,
                     text = "Visual",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
@@ -536,16 +608,17 @@ function scene:show( event )
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [18] = {
-                ["creation"] = {460,400,700,400},
+                ["creation"] = {460,460,700,460},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [19] = {
                 ["creation"] = {
                     text = "Particles",
                     x = 320,
-                    y = 450,
+                    y = 520,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
@@ -555,10 +628,15 @@ function scene:show( event )
             [20] = {
                 ["creation"] = {
                     id = "switchParticles",
+                    style= "checkbox",
                     x = 480,
-                    y = 450,
+                    y = 520,
                     initialSwitchState = lib.settings.tmpTable.visual.renderParticles,
                     onRelease = function() scene:handleSwitch(20, 'touch') end,
+
+                    sheet = switchImageSheet,
+                    frameOff = 2,
+                    frameOn = 1
                 },
                 ["function"] = function() scene:handleSwitch(20, 'key') end,
                 ["navigation"] = {function() scene:handleSwitch(20, 'key') end,25,function() scene:handleSwitch(20, 'key') end,15},
@@ -566,15 +644,16 @@ function scene:show( event )
                 ["type"] = "switch",
             },
             [21] = {
-                ["creation"] = {100,500,340,500},
+                ["creation"] = {100,580,340,580},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [22] = {
                 ["creation"] = {
                     x = 400,
-                    y = 500,
+                    y = 580,
                     text = "Ingame",
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
@@ -584,16 +663,17 @@ function scene:show( event )
                 ["color"] = { 1, 1, 1, 0.6},
             },
             [23] = {
-                ["creation"] = {460,500,700,500},
+                ["creation"] = {460,580,700,580},
                 ["pointer"] = {},
                 ["type"] = "line",
                 ["color"] = { 1, 1, 1, 0.6},
+                ["width"] = 3,
             },
             [24] = {
                 ["creation"] = {
                     text = "Difficulty",
                     x = 320,
-                    y = 550,
+                    y = 640,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
                 },
@@ -603,7 +683,7 @@ function scene:show( event )
             [25] = {
                 ["creation"] = {
                     x = 480,
-                    y = 550,
+                    y = 640,
                     id = "segmentDifficulty",
                     segmentWidth = 35,
                     segments = {"1", "2", "3"},
@@ -611,6 +691,20 @@ function scene:show( event )
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
                     labelFont = "fonts/BULKYPIX.TTF",
                     onPress = function() scene:handleSegment(25) end,
+
+                    sheet = segmentImageSheet,
+                    leftSegmentFrame = 1,
+                    middleSegmentFrame = 2,
+                    rightSegmentFrame = 3,
+                    leftSegmentSelectedFrame = 4,
+                    middleSegmentSelectedFrame = 5,
+                    rightSegmentSelectedFrame = 6,
+                    segmentFrameWidth = 32,
+                    segmentFrameHeight = 32,
+             
+                    dividerFrame = 7,
+                    dividerFrameWidth = 4,
+                    dividerFrameHeight = 32,
                 },
                 ["function"] = function()  end,
                 ["navigation"] = {function() scene:handleSegment(25,1) end,26,function() scene:handleSegment(25,-1) end,20},
@@ -620,13 +714,17 @@ function scene:show( event )
             [26] = {
                 ["creation"] = {
                     x = 250,
-                    y = 650,
+                    y = 720,
                     id = "buttonApplySettings",
                     label = "Apply Settings",
                     onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonLong.png',
+                    overFile = 'resources/graphics/ui/buttonLongPressed.png',
+                    width = 240,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApplySettings"}, phase="ended"}) end,
                 ["navigation"] = {27, 1, 27, 25},
@@ -636,13 +734,17 @@ function scene:show( event )
             [27] = {
                 ["creation"] = {
                     x = 550,
-                    y = 650,
+                    y = 720,
                     id = "buttonResetSettings",
                     label = "Reset Settings",
                     onEvent = handleInteraction,
                     font = "fonts/BULKYPIX.TTF",
                     fontSize = 20,
-                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                    labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonLong.png',
+                    overFile = 'resources/graphics/ui/buttonLongPressed.png',
+                    width = 240,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonResetSettings"}, phase="ended"}) end,
                 ["navigation"] = {26, 1, 26, 25},
@@ -658,7 +760,6 @@ function scene:show( event )
         -- Code here runs when the scene is entirely on screen
 
         scene:addEventListener("interaction", handleInteraction)
-
     end
 end
  

@@ -117,19 +117,19 @@ function scene:fcButton(t)
             if control.mode == 'key' then nav = {2,3,2,4} end
             if scene.save[1] then label = 'Delete' end
             filename = 'savefile1.json'
-            button.x, button.y = 550, 130
+            button.x, button.y = 570, 130
 
         elseif selected == 2 then
             if control.mode == 'key' then nav = {3,4,3,2} end
             if scene.save[2] then label = 'Delete' end
             filename = 'savefile2.json'
-            button.x, button.y = 550, 200
+            button.x, button.y = 570, 200
 
         elseif selected == 3 then
             if control.mode == 'key' then nav = {4,2,4,3} end
             if scene.save[3] then label = 'Delete' end
             filename = 'savefile3.json'
-            button.x, button.y = 550, 270
+            button.x, button.y = 570, 270
 
         else
             if control.mode == 'key' then
@@ -175,8 +175,9 @@ function scene:fcButton(t)
             if scene.save[selected] then
 
                 lib.savefile.current.name = 'savefile'..selected..'.json'
-                lib.level.load()
                 print(">> RUN THE GAME <<")
+                Runtime:removeEventListener()
+                lib.level.load()
             end
         else 
             scene._selected = selected
@@ -205,8 +206,8 @@ local function handleInteraction(event)
     if (event.phase == 'ended') then
         local id = event.target.id
         
+        scene:removeEventListener("interaction", handleInteraction )
         if (id == 'buttonBack') then
-            scene:removeEventListener("interaction", handleInteraction)
             lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
 
         elseif (id == 'buttonSave1') then
@@ -219,6 +220,7 @@ local function handleInteraction(event)
             scene:fcButton({selected=3})
 
         elseif (id == 'buttonInteract') then
+
             scene.widgetsTable[5]["function"]()
         end
     end
@@ -237,7 +239,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                width = 120,
+                height = 40,
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
             ["navigation"] = {2,2,2,4},
@@ -253,7 +259,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                width = 120,
+                height = 40,
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonSave1"}, phase="ended"}) end,
             ["navigation"] = {5,3,1,1},
@@ -269,7 +279,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                width = 120,
+                height = 40,
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonSave2"}, phase="ended"}) end,
             ["navigation"] = {5,4,1,2},
@@ -285,7 +299,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                width = 120,
+                height = 40,
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonSave3"}, phase="ended"}) end,
             ["navigation"] = {5,2,1,3},
@@ -302,6 +320,10 @@ function scene:loadUI()
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
                 labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                width = 120,
+                height = 40,
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
             },
             ["function"] = nil,
             ["navigation"] = {},
@@ -385,7 +407,7 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
 
-        scene:addEventListener("interaction", handleInteraction)
+        scene:removeEventListener("interaction", handleInteraction)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen

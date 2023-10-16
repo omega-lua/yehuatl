@@ -100,11 +100,13 @@ local data = {
 
 	-- Allow Dusk to clip and draw tiles as needed
 	enableTileCulling = true,
-	enableObjectCulling = false, --DEBUG: War auf "true"
+	enableObjectCulling = false,
+	--DEBUG: was on "true". Atleast one of those options have to be set on true,
+	-- otherwise them map breaks.
 	
 	-- Tiles outside the screen to draw. If you're seeing tiles being drawn and
 	-- erased, set this as needed. Otherwise, a value of 1 should be fine.
-	cullingMargin = 1,
+	cullingMargin = 200,
 
 	-- Functions called to style objects
 	stylePointBasedObject = function(p) p.strokeWidth = 5 p:setStrokeColor(1, 1, 1, 0.5) end,
@@ -133,7 +135,7 @@ local data = {
 
 	-- Allow multiple culling fields. If unneeded, this adds a performance drop.
 	-- Otherwise, enable it.
-	enableMultipleCullingFields = true,
+	enableMultipleCullingFields = false,
 
 	-- Math evaluation variables for use with !math! properties
 	mathVariables = {
