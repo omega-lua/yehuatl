@@ -38,8 +38,11 @@ local function handleInteraction( event )
         local parent = composer.getScene( composer.getSceneName( 'current' ) )
         
         if (id == 'buttonBack') then
+            scene:removeEventListener( 'interaction', handleInteraction )
             parent:resume()
+        
         elseif (id == 'buttonExit') then
+            scene:removeEventListener( 'interaction', handleInteraction )
             local parent = composer.getSceneName( 'current' )
             composer.removeScene( parent )
             lib.scene.show('resources.scene.menu.mainmenu', {'fade', 1500})

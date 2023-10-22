@@ -17,13 +17,15 @@ function M.new( instance, options )
     instance.isBodyActive = true
 
     function instance:die()
-        local function fc()
-            display.remove( instance )
-            instance = nil
-            print("Died. "..collectgarbage('count').." kilobytes using now.")
+        if not instance.isDead then
+            instance.isDead = true
+            local function fc()
+                display.remove( instance )
+                instance = nil
+            end
+            timer.cancel('deathTimer')
+            timer.performWithDelay(20, fc)
         end
-        timer.cancel('deathTimer')
-        timer.performWithDelay(20, fc)
     end
 
     local function onCollision(event)

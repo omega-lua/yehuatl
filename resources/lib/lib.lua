@@ -8,8 +8,6 @@ local composer = require( "composer" )
 local json = require( "json" )
 local physics = require( "physics" )
 
-local dusk = require("Dusk.Dusk")
-
 --------------------------------------------------------------------------------
 -- file functions
 --------------------------------------------------------------------------------
@@ -27,7 +25,7 @@ function file.doesExist( filename, path )
  
         if not _file then
             -- Error occurred; output the cause
-            print(errorString )
+            -- print( errorString )
         else
             -- File exists!
             results = true
@@ -45,7 +43,7 @@ function file.write(path, dir, contents)
     local file, errorString = io.open( absPath, "w+" )
     if not file then
         -- Error occurred; output the cause
-        print( "File error: " .. errorString )
+        -- print( "File error: " .. errorString )
     else
         -- Write data to file
         file:write( contents )
@@ -63,7 +61,7 @@ function file.read(path, dir)
     local file, errorString = io.open( absPath, "r" )
     if not file then
         -- Error occurred; output the cause
-        print( "File error: " .. errorString )
+        -- print( "File error: " .. errorString )
         file = nil
         return contents, errorString
     else
@@ -78,12 +76,6 @@ end
 
 function file.delete(filename)
     local result, reason = os.remove( system.pathForFile( filename, system.DocumentsDirectory ) )
-  
-    if result then
-        print( "File removed" )
-    else
-        print( "File does not exist:", reason )
-    end
 end
 
 lib.file = file
@@ -113,7 +105,6 @@ function savefile.new(filename)
         elseif (saveFile3 == false) then
             filename = "savefile3.json"
         else 
-            print("---Something went wrong while making a new saveslot... All 3 savefiles are present.---")
             return false
         end
     end
@@ -207,96 +198,24 @@ function level.save()
 end
 
 function level.load(level)
-    print("----- loading level ----------")
     -- Localize
-    local reload
-    -- get data from current savefile
     local encoded = file.read(lib.savefile.current.name, system.DocumentsDirectory)
     local savefile = json.decode(encoded)
     lib.savefile.current.data = savefile
 
-    -- if no variable is given to the function, load current (-> last used) level.
+    -- if no variable is given to the function, load current (-> last used) level again.
     if not level then
         local current = savefile.levels.current
         if (current == "nil") then
             savefile.levels.current = "level1"
         end
         level = savefile.levels.current
-    elseif level == 'reload' then
-        reload = true
-        level = lib.level.current
     end
-
-    -- load scene
-    local scenePath = "resources.scene.game."..level..".scene"
-    if not reload then
-        composer.loadScene( scenePath, true )
-    end
-    local scene = composer.getScene(scenePath)
-
-    -- setup and pause physics
-    lib.level.setUpPhysics()
-
-    -- build map with dusk engine
-    local filePath = "resources/scene/game/"..level.."/map.lua"
-    -- make map a global variable for easier access?
-    local map = dusk.buildMap(filePath)
-    scene.map = map
-
-    -- get all classes
-    local classes = {}
-    for object in map.layer['entities'].objects() do
-        local class = object._type
-        if (class ~= "") then
-            if not table.indexOf(classes, class) then
-                classes[#classes+1] = class
-            end
-        end
-    end
-
-    -- extend classes
-    map.extend(unpack(classes))
-
-    -- update entities, if the level was found in savefile
-    if savefile.levels[level] then
-        local entities = savefile.levels[level].entities
-        for name, data in pairs(entities) do
-            if not (name == 'player') then
-                -- update other entities
-                local entity = map.layer["entities"].object[name]
-                entity.x = data.x
-                entity.y = data.y
-                if data.health then entity.health = data.health end
-                entity.isDead = data.isDead
-                entity.inventory = data.inventory
-            end
-        end
-    end
-
-    -- update player
-    -- local plugin = require("resources.lib.player")
-    --local attributes = savefile.player.attributes
-    --plugin.attributes = attributes
-    local player = map.layer["entities"].object['player']
-
-    -- camera setup
-    map:scale(3.5, 3.5)
-    map.enableFocusTracking(true)
-    map.setCameraFocus(player)
-    map.setTrackingLevel(0.1)
-
-    -- start physics
-    physics.start()
 
     -- show scene
-    if not reload then
-        lib.scene.show(scenePath)
-        lib.level.current = level
-    end
-
-    -- can only be called after scene is shown
-    local sceneGroup = scene.view
-    sceneGroup:insert(map)
+    local scenePath = "resources.scene.game."..level..".scene"
+    lib.scene.show(scenePath)
+    lib.level.current = level
 end
 
 lib.level = level
@@ -617,19 +536,20 @@ function control.key.menu(event)
         local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current")) or {}
         local widgetsTable = scene.widgetsTable or {}
         local widget = widgetsTable[scene.widgetIndex] or {}
+        local navigation = widget.navigation or {}
         local keybind = lib.keybind
 
         if (keyName == keybind.navigateRight) then
-            next = widget.navigation[1]
+            next = navigation[1]
 
         elseif (keyName == keybind.navigateDown) then
-            next = widget.navigation[2]
+            next = navigation[2]
 
         elseif (keyName == keybind.navigateLeft) then
-            next = widget.navigation[3]
+            next = navigation[3]
 
         elseif (keyName == keybind.navigateUp) then
-            next = widget.navigation[4]
+            next = navigation[4]
 
         elseif (keyName == keybind.interact) then
             if widget['function'] then widget["function"]() end

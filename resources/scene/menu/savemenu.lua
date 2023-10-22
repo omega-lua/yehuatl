@@ -145,6 +145,8 @@ function scene:fcButton(t)
         if control.mode == 'key' then
             -- Change navigation of manage button
             widget["navigation"] = nav
+        else
+            widget.x = 2000
         end
 
         -- Change button function
@@ -312,7 +314,7 @@ function scene:loadUI()
         },
         [5] = {
             ["creation"] = {
-                x = 550,
+                x = 2000,
                 y = 130,
                 id = "buttonInteract",
                 label = "",

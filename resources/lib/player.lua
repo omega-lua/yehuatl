@@ -3,9 +3,9 @@ local M = {}
 
 function M.new( instance, options )
     if not instance then error( "ERROR: Expected display object" ) end
-    print("Object has been extended with player class.")
 
     local composer = require( 'composer' )
+    local lib = require("resources.lib.lib")
 
     ------------------------------------------------------------------
     -- instance variables
@@ -17,6 +17,7 @@ function M.new( instance, options )
     instance.interactionTable = {}
     instance.attackTable = {}
     instance.isDead = false
+    instance.isVurnerable = true
 
     instance.pressingForward = false
     instance.pressingBackward = false
@@ -52,14 +53,14 @@ function M.new( instance, options )
     local bodyShape = {-7,-10, 7,-10, 7,24, -7,24} --16, 34
     physics.addBody(instance, "dynamic",
         { density=3.5, friction=0, bounce=0, shape=bodyShape  },             -- 1: Main body element
-        { box={ halfWidth=7, halfHeight=2, x=0, y=24 }, isSensor=true },     -- 2: Foot sensor element
+        { box={ halfWidth=6, halfHeight=2, x=0, y=24 }, isSensor=true },     -- 2: Foot sensor element
         { box={ halfWidth=2, halfHeight=17, x=8, y=7 }, isSensor=true },     -- 3: Right Side sensor element
         { box={ halfWidth=2, halfHeight=17, x=-8, y=7 }, isSensor=true },    -- 4: Left Side sensor element
         { box={ halfWidth=32, halfHeight=17, x=0, y=7 }, isSensor=true } ,   -- 5: Reach/Range sensor element
         { box={ halfWidth=28, halfHeight=10, x=0, y=7 }, isSensor=true }     -- 6: Attack sensor element
     ) 
     instance.isFixedRotation = true
-
+    
     ------------------------------------------------------------------
     -- Instance functions
     ------------------------------------------------------------------
@@ -112,7 +113,6 @@ function M.new( instance, options )
     function instance:die()
         if not instance.isDead then
             instance.isDead = true
-            print(">> PLAYER DIED <<")
             -- Set the rectangle's active state
             instance.isBodyActive = false
             -- Audio
@@ -209,6 +209,7 @@ function M.new( instance, options )
         if (now-last) >= cooldown then
             local enoughStamina = instance:handleStamina(10,false)
             if enoughStamina then
+                -- localize
                 local scene = composer.getScene(composer.getSceneName("current"))
                 local map = scene.map
                 local strength = instance.combat.strength
@@ -230,6 +231,12 @@ function M.new( instance, options )
 
                 -- update attack cooldown
                 instance.combat.lastMeleeAttack = os.time()
+
+                -- update visual
+                local hud = composer.getScene( composer.getSceneName( 'overlay' ) )
+                if hud and hud._name == 'hud' then
+                    hud:updateCooldown('meleeAttack')
+                end
             end
         end
     end
@@ -264,6 +271,12 @@ function M.new( instance, options )
 
                 -- 5. update attack cooldown
                 instance.combat.lastRangedAttack = os.time()
+
+                -- 5. update visual
+                local hud = composer.getScene( composer.getSceneName( 'overlay' ) )
+                if hud and hud._name == 'hud' then
+                    hud:updateCooldown('rangedAttack')
+                end
             end
         end
     end
@@ -416,18 +429,20 @@ function M.new( instance, options )
 
         if (state == 'begin') then
             if (now-last) >= cooldown then
-                print("blocking")
                 instance.isBlocking = true
             end
         elseif (state == 'cancel') then
-            print("cancel block")
             instance.isBlocking = false
 
         elseif (state == 'blocked') then
-            print("block successfull.")
             instance.isBlocking = false
             -- update block cooldown
             instance.combat.lastBlock = os.time()
+        end
+
+        local hud = composer.getScene( composer.getSceneName( 'overlay' ) )
+        if hud and hud._name == 'hud' then
+            hud:updateCooldown('block', state)
         end
     end
 

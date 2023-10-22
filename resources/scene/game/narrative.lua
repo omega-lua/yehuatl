@@ -50,8 +50,6 @@ local function onButtonPress(event)
             -- update current page variable
             scene.currentPage = currentPage + 1
         else
-            -- execute function
-            params.fc()
             -- close overlay
             composer.hideOverlay('fade', 500)       
             -- open last overlay again (hud)
@@ -62,6 +60,8 @@ local function onButtonPress(event)
             if lib.control.mode == 'key' then
                 Runtime:removeEventListener('key', onButtonPress)
             end
+            -- execute function
+            params.fc()
         end
     end
 end

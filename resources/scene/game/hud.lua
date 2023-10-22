@@ -12,90 +12,119 @@ scene.type = 'game'
 scene.parent = nil
 scene.healthbar = {imageSheet=nil, object=nil}
 scene.staminabar = {imageSheet=nil, object=nil}
+scene.buttonTable = {}
 
 -- -----------------------------------------------------------------------------------
 -- Scene functions
 -- -----------------------------------------------------------------------------------
 
-local function updateCooldowns()
+function scene:updateCooldown( instance, state )
     -- Localize
     local map = scene.parent.map
     local player = map.layer['entities'].object['player']
-    local lastMeleeAttack = player.lastMeleeAttack
-    local lastRangedAttack = player.lastRangedAttack
-    local lastBlock = player.lastBlock
-    local lastAbility = player.lastAbility
 
-    -- we have to use transitions here, so its smooth.
+    local function update(cooldown, last)
+        local now = os.time()
+        local delta = now - last
+        local remaining = cooldown - delta
+        if remaining >= 0 then
+            local button = scene.buttonTable[instance] or {}
+            local time = remaining * 1000
+            button.alpha = 0.1
+            local function fc()
+                button.alpha = 0
+                transition.to(button, {time=200, transisition=easing.inExpo, alpha=1})
+            end
+            transition.to(button, {time=time, transisition=easing.inExpo, alpha=1, onComplete=fc})
+        end
+    end
+
+    if instance == 'all' then
+        --
+    elseif instance == 'meleeAttack' then
+        local cooldown = player.combat.cooldownMeleeAttack
+        local last = player.combat.lastMeleeAttack  
+        update(cooldown, last)
+    
+    elseif instance == 'rangedAttack' then
+        local cooldown = player.combat.cooldownRangedAttack
+        local last = player.combat.lastRangedAttack
+        update(cooldown, last)
+    
+    elseif instance == 'block' then
+        local cooldown = player.combat.cooldownBlock
+        local last = player.combat.lastBlock
+        local isBlocking = player.isBlocking
+
+        local button = scene.buttonTable[instance] or {}
+        
+        if state == 'blocked' then
+            update(cooldown, last)
+        elseif state == 'cancel' then
+            transition.cancel( scene.transitionBlockingPressing )
+            button.alpha = 1
+        elseif state == 'begin' then
+            scene.transitionBlockingPressing = transition.to(button, {time=1000, easing=easing.continuousLoop, alpha=0, iterations=-1})
+        end
+
+    elseif instance == 'ability' then
+        --
+    end
 end
 
-local function buildTouchControls()
+local function buildButtons()
     -- ----------------------------------
     -- Create buttons
     -- ----------------------------------
     local sceneGroup = scene.view
     local rightBorder = 600 + (display.actualContentWidth - 600)*0.5
     local leftBorder = -(display.actualContentWidth - 600)*0.5
-    
-    local moveBackward = display.newImage(sceneGroup,'resources/graphics/hud/arrow_left.png', -20, 300)
-    moveBackward.command = 'pressingBackward'
-    moveBackward:scale(1.2, 1.2)
-    moveBackward:toFront()
-    
-    local moveForward = display.newImage(sceneGroup,'resources/graphics/hud/arrow_right.png', 80, 300)
-    moveForward.command = 'pressingForward'
-    moveForward:scale(1.2, 1.2)
-    moveForward:toFront()
-
-    local jump = display.newImage(sceneGroup,'resources/graphics/hud/jump.png', rightBorder-65, 200)
-    jump.command = 'jump'
-    jump:scale(1.2, 1.2)
-    jump:toFront()
-
-    local meleeAttack = display.newImage(sceneGroup,'resources/graphics/hud/meleeAttack.png', rightBorder-145, 280 )
-    meleeAttack:scale(1.5, 1.5)
-    meleeAttack.command = 'meleeAttack'
-    meleeAttack:scale(1.2, 1.2)
-    meleeAttack:toFront()
-
-    local rangedAttack = display.newImage(sceneGroup,'resources/graphics/hud/rangedAttack.png', rightBorder-235, 350)
-    rangedAttack.command = 'rangedAttack'
-    rangedAttack:scale(1.2, 1.2)
-    rangedAttack:toFront()
-    
-    local block = display.newImage(sceneGroup,'resources/graphics/hud/block.png', rightBorder-175, 180 )
-    block.command = 'block'
-    block:scale(1.2, 1.2)
-    block:toFront()
-    
-    local ability = display.newImage(sceneGroup,'resources/graphics/hud/ability.png', rightBorder-250, 255)
-    ability.command = 'ability'
-    ability:scale(1.2, 1.2)
-    ability:toFront()
-    
-    local pause = display.newImage(sceneGroup,'resources/graphics/hud/pause.png', leftBorder+30, 25 )
-    pause.command = 'pause'
-    pause:scale(1.2, 1.2)
-    pause:toFront()
-
-    local interact = display.newImage(sceneGroup,'resources/graphics/hud/interact.png', rightBorder-55, 350 )
-    interact.command = 'interact'
-    interact:scale(1.2, 1.2)
-    interact:toFront()
-
-    -- ----------------------------------
-    -- Add touch eventListener
-    -- ----------------------------------
     local listener = lib.control.touch.game
-    moveBackward:addEventListener( 'touch', listener )
-    moveForward:addEventListener( 'touch', listener )
-    jump:addEventListener( 'touch', listener )
-    meleeAttack:addEventListener( 'touch', listener )
-    rangedAttack:addEventListener( 'touch', listener )
-    block:addEventListener( 'touch', listener )
-    ability:addEventListener( 'touch', listener )
-    pause:addEventListener( 'touch', listener )
-    interact:addEventListener( 'touch', listener )
+    local t = {}
+    
+    -- differentiate between control modes
+    if lib.control.mode == 'key' then
+        t['meleeAttack'] = display.newImage(sceneGroup,'resources/graphics/hud/meleeAttack.png', 380, 350 )
+        t['rangedAttack'] = display.newImage(sceneGroup,'resources/graphics/hud/rangedAttack.png', 300, 350)
+        t['block'] = display.newImage(sceneGroup,'resources/graphics/hud/block.png', 220, 350 )
+
+        -- iterate through all buttons
+        for name, button in pairs(t) do
+            -- transform button
+            button:scale(1.6, 1.6)
+            button:toFront()
+            -- add a handle
+            scene.buttonTable[name] = button
+        end
+
+    else
+        t['pressingBackward'] = display.newImage(sceneGroup,'resources/graphics/hud/arrow_left.png', -20, 300)
+        t['pressingForward'] = display.newImage(sceneGroup,'resources/graphics/hud/arrow_right.png', 80, 300)
+        t['jump'] = display.newImage(sceneGroup,'resources/graphics/hud/jump.png', rightBorder-65, 200)
+        t['meleeAttack'] = display.newImage(sceneGroup,'resources/graphics/hud/meleeAttack.png', rightBorder-145, 280 )
+        t['rangedAttack'] = display.newImage(sceneGroup,'resources/graphics/hud/rangedAttack.png', rightBorder-235, 350)
+        t['block'] = display.newImage(sceneGroup,'resources/graphics/hud/block.png', rightBorder-175, 180 )
+        t['ability'] = display.newImage(sceneGroup,'resources/graphics/hud/ability.png', rightBorder-250, 255)
+        t['interact'] = display.newImage(sceneGroup,'resources/graphics/hud/interact.png', rightBorder-55, 350 )
+        t['pause'] = display.newImage(sceneGroup,'resources/graphics/hud/pause.png', leftBorder+30, 25 )
+
+        -- iterate through all buttons
+        for name, button in pairs(t) do
+            -- add event listener
+            button:addEventListener( 'touch', listener )
+            -- add command variable for handleInteraction()
+            button.command = name
+            -- transform button
+            button:scale(1.6, 1.6)
+            button:toFront()
+            -- add a handle
+            scene.buttonTable[name] = button
+        end
+
+        -- small visual adjustments
+        t['pause']:scale(0.7,0.7)
+        t['meleeAttack']:scale(1.7, 1.7)
+    end
 end
 
 function scene:build()
@@ -105,9 +134,87 @@ function scene:build()
     -- ----------------------------------
     -- Create healthbar
     -- ----------------------------------
-    local options = {width = 200, height = 11, numFrames = 10}
+    local options = { frames = {
+        -- Frame 1
+        {
+            x = 0,
+            y = 0,
+            width = 86,
+            height = 4
+        },  
+        -- Frame 2
+        {
+            x = 0,
+            y = 4,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 3
+        {
+            x = 0,
+            y = 8,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 4
+        {
+            x = 0,
+            y = 12,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 5
+        {
+            x = 0,
+            y = 16,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 6
+        {
+            x = 0,
+            y = 20,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 7
+        {
+            x = 0,
+            y = 24,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 8
+        {
+            x = 0,
+            y = 28,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 9
+        {
+            x = 0,
+            y = 32,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 10
+        {
+            x = 0,
+            y = 36,
+            width = 86,
+            height = 4
+        }, 
+        -- Frame 11
+        {
+            x = 0,
+            y = 40,
+            width = 86,
+            height = 4
+        }}
+    }
     local imageSheet = graphics.newImageSheet( "resources/graphics/hud/healthbar.png", options )
-    local image = display.newImage(sceneGroup, imageSheet, 10 )
+    local image = display.newImage(sceneGroup, imageSheet, 1 )
     -- transform
     image:scale(2.2, 2.2)
     image.x = 300
@@ -276,7 +383,7 @@ function scene:build()
     local image = display.newImage( sceneGroup, imageSheet, 21 )
     -- transform
     image:scale(2.2, 2.2)
-    image.x = 290
+    image.x = 300
     image.y = 13
     image:toFront()
     -- Set variables
@@ -300,14 +407,7 @@ function scene:build()
     local text = display.newText( options )
     text:setFillColor( 0.2, 0.2, 0.2 )
 
-    -- add touchscreen-controls if type is 'touch'
-    --local inputDeviceType = lib.inputdevice.current.type
-    local inputDeviceType = 'touch' --DEBUG
-    if inputDeviceType == 'touch' then
-        buildTouchControls()
-    else
-        -- show ability cooldown
-    end
+    buildButtons()
 end
 
 function scene:update()
@@ -329,7 +429,6 @@ function scene:update()
     local maxHitpoints = player.health.maxHitpoints
     local ratio = hitpoints / maxHitpoints
     local frameNumber = math.round( ratio * 10 ) + 1
-    if frameNumber == 11 then frameNumber = 10 end
     -- remove old image
     local image = scene.healthbar.object
     image:removeSelf()
@@ -337,9 +436,9 @@ function scene:update()
     local imageSheet = scene.healthbar.imageSheet
     local image = display.newImage( sceneGroup, imageSheet, frameNumber )
     -- transform
-    image:scale(2.2, 2.2)
+    image:scale(3, 2.2)
     image.x = 300
-    image.y = 30
+    image.y = 22
     -- set variable
     scene.healthbar.object = image
 
@@ -360,7 +459,7 @@ function scene:update()
 
     -- transform 
     image:scale(2.2, 2.2)
-    image.x = 290
+    image.x = 300
     image.y = 13
 
     -- set variable
@@ -370,7 +469,7 @@ function scene:update()
     --local inputDeviceType = lib.inputdevice.current.type
     local inputDeviceType = 'touch'
     if inputDeviceType == 'touch' then
-        updateCooldowns()
+        scene:updateCooldown('all')
     else
         --
     end

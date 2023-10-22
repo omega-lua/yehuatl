@@ -39,12 +39,12 @@ function M.new( instance, options )
     ------------------------------------------------------------------
 
     local bodyShape = {-16,-26, 16,-26, 16,31, -16,31}
-    physics.addBody( instance, "dynamic", {shape=bodyShape, density=4},              -- 1: body element (hitbox)
+    physics.addBody( instance, "dynamic", {shape=bodyShape, density=4},       -- 1: body element (hitbox)
         { box={ halfWidth=14, halfHeight=2, x=0, y=32 }, isSensor=true },     -- 2: Foot sensor element
         { box={ halfWidth=2, halfHeight=17, x=18, y=12 }, isSensor=true },    -- 3: Right Side sensor element
-        { box={ halfWidth=2, halfHeight=17, x=-18, y=12 }, isSensor=true },    -- 4: Left Side sensor element
+        { box={ halfWidth=2, halfHeight=17, x=-18, y=12 }, isSensor=true },   -- 4: Left Side sensor element
         { box={ halfWidth=32, halfHeight=17, x=0, y=7 }, isSensor=true } ,    -- 5: Reach/Range sensor element
-        { box={ halfWidth=28, halfHeight=20, x=0, y=7 }, isSensor=true }     -- 6: Attack sensor element
+        { box={ halfWidth=28, halfHeight=20, x=0, y=7 }, isSensor=true }      -- 6: Attack sensor element
     )
     instance.isFixedRotation = true
     
@@ -52,9 +52,8 @@ function M.new( instance, options )
     -- Instance functions
     ------------------------------------------------------------------
 
-    local function handleLoop(_tag, listener, delay)
+    function instance:handleLoop(_tag, listener, delay)
         local activeLoops = instance.activeLoops
-        
         -- stop all timers/loops
         if not _tag then
             for i, tag in pairs(activeLoops) do
@@ -103,25 +102,10 @@ function M.new( instance, options )
             instance.isDead = true
 
             -- stop all timers/loops
-            handleLoop(nil)
+            instance:handleLoop(false)
             
             -- perform action with delay to prevent bugs while in physics collision
             timer.performWithDelay(18, fc)
-        end
-    end
-
-    function instance:block(state)
-        if (state == 'begin') then
-            print("blocking")
-            instance.isBlocking = true
-        
-        elseif (state == 'cancel') then
-            print("cancel block")
-            instance.isBlocking = false
-        
-        elseif (state == 'blocked') then
-            print("block successfull.")
-            instance.isBlocking = false
         end
     end
 
@@ -133,7 +117,7 @@ function M.new( instance, options )
             instance:applyLinearImpulse(nil, jumpHeight)
             
             -- cancel behaviour loop
-            handleLoop('tryToJump', nil)
+            instance:handleLoop('tryToJump', nil)
         end
     end
     
@@ -151,7 +135,7 @@ function M.new( instance, options )
                             -- define local function
                             local function f1() instance:jump() end
                             -- add loop
-                            handleLoop('tryToJump', f1, 1200)
+                            instance:handleLoop('tryToJump', f1, 1200)
                             -- try on once on direct contact
                             instance:jump()
                         end
@@ -190,11 +174,11 @@ function M.new( instance, options )
             end
 
             -- add loop
-            handleLoop('goTo', updateWalkDirection, 700)
+            instance:handleLoop('goTo', updateWalkDirection, 700)
         else
             -- stop behaviour loops
-            handleLoop('goTo', nil)
-            handleLoop('tryToJump', nil)
+            instance:handleLoop('goTo', nil)
+            instance:handleLoop('tryToJump', nil)
 
             -- stop velocity
             instance:setLinearVelocity(0, nil)
@@ -206,7 +190,6 @@ function M.new( instance, options )
 
     local function behaviour(event)
         if event.vision then -- only receives starting event
-            print("- vision on player")
             -- walk to player
             instance:goTo('player')
 
@@ -215,14 +198,13 @@ function M.new( instance, options )
         elseif event.contact then -- only gets called from handleCollision on direct contact, sends start and stop input
             local tag = 'attacking'
             if event.contact.state then
-                print("event.contact")
                 -- define local function
                 local function f1() instance:meleeAttack() end
                 -- add Loop
-                handleLoop(tag, f1, 2000)
+                instance:handleLoop(tag, f1, 2000)
             else
                 -- stop attack loop
-                handleLoop(tag, nil)
+                instance:handleLoop(tag, nil)
             end
         else
             -- go to idle
@@ -230,22 +212,24 @@ function M.new( instance, options )
     end
 
     function instance:meleeAttack()
-        print("meleeAttack!")
         -- Localize
         local scene = composer.getScene(composer.getSceneName("current"))
+        local gamePaused = scene.gamePaused
         local map = scene.map
         local strength = instance.combat.strength
         local xScale = instance.xScale
         local ix = instance.x
         local t = instance.attackTable
         
-        -- iterate through attackTable
-        for i, name in pairs(t) do
-            local entity = map.layer['entities'].object[name]
-            local x = entity.x
-            -- Attacks only enemies which instance faces.
-            if (xScale == 1) and (x < ix) or (xScale == -1) and (x > ix)then
-                entity:handleHealth(strength)
+        if not gamePaused then
+            -- iterate through attackTable
+            for i, name in pairs(t) do
+                local entity = map.layer['entities'].object[name]
+                local x = entity.x
+                -- Attacks only enemies which instance faces.
+                if (xScale == 1) and (x < ix) or (xScale == -1) and (x > ix)then
+                    entity:handleHealth(strength)
+                end
             end
         end
     end
@@ -385,7 +369,7 @@ function M.new( instance, options )
     
     -- Behaviour: Add loop for updateVision
     local fc = function() updateVision() end
-    handleLoop('updateVision', fc, 1000)
+    instance:handleLoop('updateVision', fc, 1000)
 
     -- Return instance
 	return instance

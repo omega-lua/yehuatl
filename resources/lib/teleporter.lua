@@ -3,10 +3,32 @@ local M = {}
 
 function M.new( instance, options )
     if not instance then error( "ERROR: Expected display object" ) end
-    print("Object has been extended with teleporter class.")
 
     local function teleport(event)
-        print("teleporting...")
+        -- teleporting
+    end
+
+
+    local function showNarrative()
+        -- get scene table
+        local composer = require( 'composer' )
+        local json = require( 'json' )
+        local scene = composer.getScene( composer.getSceneName( 'current' ) )
+        local lib = require("resources.lib.lib")
+        
+        local encoded = instance.text
+        local text = json.decode(encoded)
+        local listener
+
+        if instance.exitAfterNarrative then
+            listener = function()
+                --scene:destroy()
+                local parent = composer.getSceneName( 'current' )
+                composer.removeScene( parent )
+                lib.scene.show('resources.scene.menu.mainmenu', {'fade', 1500})
+            end
+        end
+        scene:showNarrative(true, text, listener)
     end
     
     local function handleCollision(event)
@@ -15,21 +37,15 @@ function M.new( instance, options )
         if (phase == 'began') then
             if (other._name == 'player') and (event.otherElement == 1) then
                 -- remove EventListener so handleCollision() gets only called once.
-                instance:removeEventListener("collision", handleCollision)
+                instance:removeEventListener( "collision", handleCollision )
 
-                -- get scene table
-                local composer = require("composer")
-                local scene = composer.getScene( composer.getSceneName( 'current' ) )
-                
-                local text = {'..Where am I?', "...", "What happened?", "Is this hell?"}
-                local listener = function() print("function after narrative.") end
-                scene:showNarrative(true, text, listener)
+                showNarrative()
             end
         end
     end
 
     -- add EventListeners
-    instance:addEventListener("collision", handleCollision)
+    instance:addEventListener( "collision", handleCollision )
 
     -- Return instance
 	return instance

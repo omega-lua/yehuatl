@@ -4,18 +4,18 @@
       "keyboard":{
         "attack":"a",
         "jump":"space",
-        "backward":"left",
+        "backward":"a",
         "escape":"escape",
         "block":"b",
-        "rangedAttack":"9",
-        "meleeAttack":"down",
-        "forward":"right",
-        "interact":"space",
-        "ability":"z",
-        "navigateUp":"up",
-        "navigateDown":"down",
-        "navigateLeft":"left",
-        "navigateRight":"right"
+        "rangedAttack":"r",
+        "meleeAttack":"e",
+        "forward":"d",
+        "interact":"i",
+        "ability":"q",
+        "navigateUp":"w",
+        "navigateDown":"s",
+        "navigateLeft":"a",
+        "navigateRight":"d"
       },
       "controller":{
         "attack":"button A",

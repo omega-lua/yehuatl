@@ -10,7 +10,7 @@ return {
   tilewidth = 16,
   tileheight = 16,
   nextlayerid = 6,
-  nextobjectid = 387,
+  nextobjectid = 393,
   properties = {},
   tilesets = {
     {
@@ -43,37 +43,8 @@ return {
       tiles = {}
     },
     {
-      name = "tileset_player",
-      firstgid = 36,
-      class = "",
-      tilewidth = 32,
-      tileheight = 48,
-      spacing = 0,
-      margin = 0,
-      columns = 8,
-      image = "../../../graphics/player.png",
-      imagewidth = 256,
-      imageheight = 240,
-      objectalignment = "unspecified",
-      tilerendersize = "tile",
-      fillmode = "stretch",
-      tileoffset = {
-        x = 0,
-        y = 0
-      },
-      grid = {
-        orientation = "orthogonal",
-        width = 32,
-        height = 48
-      },
-      properties = {},
-      wangsets = {},
-      tilecount = 40,
-      tiles = {}
-    },
-    {
       name = "tileset_obsidian_golem",
-      firstgid = 76,
+      firstgid = 36,
       class = "",
       tilewidth = 48,
       tileheight = 64,
@@ -102,7 +73,7 @@ return {
     },
     {
       name = "tileset_background",
-      firstgid = 116,
+      firstgid = 76,
       class = "",
       tilewidth = 96,
       tileheight = 48,
@@ -128,6 +99,35 @@ return {
       wangsets = {},
       tilecount = 1,
       tiles = {}
+    },
+    {
+      name = "tileset_player",
+      firstgid = 77,
+      class = "",
+      tilewidth = 32,
+      tileheight = 48,
+      spacing = 0,
+      margin = 0,
+      columns = 8,
+      image = "../../../graphics/player.png",
+      imagewidth = 256,
+      imageheight = 48,
+      objectalignment = "unspecified",
+      tilerendersize = "tile",
+      fillmode = "stretch",
+      tileoffset = {
+        x = 0,
+        y = 0
+      },
+      grid = {
+        orientation = "orthogonal",
+        width = 32,
+        height = 48
+      },
+      properties = {},
+      wangsets = {},
+      tilecount = 8,
+      tiles = {}
     }
   },
   layers = {
@@ -137,7 +137,7 @@ return {
       id = 2,
       name = "background",
       class = "",
-      visible = false,
+      visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
@@ -155,7 +155,7 @@ return {
       id = 1,
       name = "terrain",
       class = "",
-      visible = false,
+      visible = true,
       opacity = 1,
       offsetx = 0,
       offsety = 0,
@@ -242,7 +242,7 @@ return {
       objects = {
         {
           id = 11,
-          name = "teleporter1",
+          name = "teleporter2",
           type = "teleporter",
           shape = "rectangle",
           x = 1727.64,
@@ -255,8 +255,10 @@ return {
           properties = {
             ["alpha"] = "0",
             ["bodyType"] = "static",
+            ["exitAfterNarrative"] = "true",
             ["isSensor"] = "true",
-            ["physics:enabled"] = "true"
+            ["physics:enabled"] = "true",
+            ["text"] = "[\"I see light..\", \"Maybe an exit?\", \"To be continued...\", \"...More Levels in progress!\"]"
           }
         },
         {
@@ -4080,20 +4082,6 @@ return {
           }
         },
         {
-          id = 247,
-          name = "player",
-          type = "player",
-          shape = "rectangle",
-          x = 330.623,
-          y = 672.136,
-          width = 32,
-          height = 48,
-          rotation = 0,
-          gid = 36,
-          visible = true,
-          properties = {}
-        },
-        {
           id = 248,
           name = "",
           type = "",
@@ -5447,19 +5435,87 @@ return {
         },
         {
           id = 386,
-          name = "enemy2",
+          name = "enemy1",
           type = "obsidian_golem",
           shape = "rectangle",
-          x = 190,
-          y = 686,
+          x = 483,
+          y = 664.167,
           width = 48,
           height = 64,
           rotation = 0,
-          gid = 76,
+          gid = 36,
           visible = true,
           properties = {
             ["isGround"] = "false",
             ["isVurnerable"] = "true"
+          }
+        },
+        {
+          id = 389,
+          name = "player",
+          type = "player",
+          shape = "rectangle",
+          x = 1693,
+          y = 411.5,
+          width = 32,
+          height = 48,
+          rotation = 0,
+          gid = 77,
+          visible = true,
+          properties = {}
+        },
+        {
+          id = 390,
+          name = "enemy2",
+          type = "obsidian_golem",
+          shape = "rectangle",
+          x = 1099.09,
+          y = 572.318,
+          width = 48,
+          height = 64,
+          rotation = 0,
+          gid = 36,
+          visible = true,
+          properties = {
+            ["isGround"] = "false",
+            ["isVurnerable"] = "true"
+          }
+        },
+        {
+          id = 391,
+          name = "enemy3",
+          type = "obsidian_golem",
+          shape = "rectangle",
+          x = 1635,
+          y = 419.333,
+          width = 48,
+          height = 64,
+          rotation = 0,
+          gid = 36,
+          visible = true,
+          properties = {
+            ["isGround"] = "false",
+            ["isVurnerable"] = "true"
+          }
+        },
+        {
+          id = 392,
+          name = "teleporter1",
+          type = "teleporter",
+          shape = "rectangle",
+          x = 209.25,
+          y = 688.25,
+          width = 16,
+          height = 16,
+          rotation = 0,
+          gid = 23,
+          visible = true,
+          properties = {
+            ["alpha"] = "0",
+            ["bodyType"] = "static",
+            ["isSensor"] = "true",
+            ["physics:enabled"] = "true",
+            ["text"] = "[\"..Where am I?\", \"...\", \"What happened?\", \"Is this hell?\", \"...\"]"
           }
         }
       }
