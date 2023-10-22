@@ -20,9 +20,9 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5,alpha=1}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.2, yScale = 1.2, alpha=1}     
         else
-            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,alpha=0.5}
+            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.7}
         end
        transition.to(widget.pointer, params)
     end
@@ -38,17 +38,14 @@ local function handleInteraction(event)
     if (event.phase == "ended") then
         local id = event.target.id
         local options = {effect = "fade", time = 400}
+        scene:removeEventListener("interaction", handleInteraction)
         if (id == 'buttonPlay') then
-            scene:removeEventListener("interaction", handleInteraction)
-            lib.scene.show( "resources.scene.menu.savemenu", options )
-            
+            lib.scene.show( "resources.scene.menu.savemenu", options )   
 
         elseif (id == 'buttonSettings') then
-            scene:removeEventListener("interaction", handleInteraction)
             lib.scene.show( "resources.scene.menu.settingsmenu", options )
 
         elseif (id == 'buttonCredits') then
-            scene:removeEventListener("interaction", handleInteraction)
             lib.scene.show( "resources.scene.menu.creditsmenu", options )
         end
     end
@@ -83,14 +80,18 @@ function scene:create( event )
     scene.widgetsTable = {
         [1] = {
             ["creation"] = {
-                x = 420, 
-                y = 180,
-                id = "buttonPlay",
+                id = 'buttonPlay',
+                x = 420,
+                y = 170,
+                width = 180,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
                 label = "Play",
-                onEvent = handleInteraction,
+                onRelease = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 30,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                fontSize = 25,
+                labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonPlay"}, phase="ended"}) end,
             ["navigation"] = {2,3,2,3},
@@ -99,14 +100,18 @@ function scene:create( event )
         },
         [2] = {
             ["creation"] = {
+                id = 'buttonSettings',
                 x = 180,
-                y = 180, 
-                id = "buttonSettings",
+                y = 170,
+                width = 180,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
                 label = "Settings",
-                onEvent = handleInteraction,
+                onRelease = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 30,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                fontSize = 25,
+                labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonSettings"}, phase="ended"}) end,
             ["navigation"] = {1,3,1,3},
@@ -115,20 +120,24 @@ function scene:create( event )
         },
         [3] = {
             ["creation"] = {
+                id = 'buttonCredits',
                 x = 300,
-                y = 260, 
-                id = "buttonCredits",
+                y = 270,
+                width = 180,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
                 label = "Credits",
-                onEvent = handleInteraction,
+                onRelease = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 30,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                fontSize = 25,
+                labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } }
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonCredits"}, phase="ended"}) end,
             ["navigation"] = {1,1,2,1},
             ["pointer"] = {},
             ["type"] = "button",
-        },
+        }
     }
 
     scene:loadUI()

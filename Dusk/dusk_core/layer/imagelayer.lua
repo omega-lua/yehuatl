@@ -33,6 +33,10 @@ function lib_imagelayer.createLayer(map, data, dirTree)
 	layer.props = {}
 	layer._layerType = "image"
 
+	-- Added by myself (6.10.2023)
+	layer.xParallax = data.parallaxx
+	layer.yParallax = data.parallaxy
+
 	local imageDir, filename = getDirectory(dirTree, data.image)
 
 	layer.image = display_newImage(layer, imageDir .. filename)

@@ -52,7 +52,7 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.5}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.3, yScale = 1.3}     
         else
             params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1}
         end
@@ -69,6 +69,10 @@ end
 function scene:loadUI()
     local sceneGroup = scene.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
+    -- Create darkened background
+    local rect = display.newRect( sceneGroup, 300, 200, 1000, 500 )
+    rect:setFillColor(0,0,0,0.7)
 
     -- Create widgets
     for i, object in pairs(scene.widgetsTable) do
@@ -92,9 +96,10 @@ function scene:loadUI()
             scene.widgetsTable[i].pointer = widget.newButton( object.creation )
             sceneGroup:insert(scene.widgetsTable[i].pointer)
 
-        elseif (type == "roundedRectangle") then
-            scene.widgetsTable[i].pointer = display.newRoundedRect(unpack(object.creation))
-            sceneGroup:insert(scene.widgetsTable[i].pointer)
+        elseif (type == "image") then
+            scene.widgetsTable[i].pointer = display.newImageRect(sceneGroup, object.filename, object.width, object.height )
+            scene.widgetsTable[i].pointer.x = object.x
+            scene.widgetsTable[i].pointer.y = object.y
             if object.toBack then
                 scene.widgetsTable[i].pointer:toBack()
             end
@@ -103,6 +108,8 @@ function scene:loadUI()
             print("ERROR: Widget",i,"has no type attribute.")
         end
     end
+
+    rect:toBack()
 end
 
 -- -----------------------------------------------------------------------------------
@@ -113,25 +120,23 @@ end
 function scene:create( event )  
     scene.widgetsTable = {
         [1] = {
-            ["creation"] = {
-                display.contentCenterX,
-                display.contentCenterY, 
-                700, 
-                350,
-                10,
-            },
             ["function"] = nil,
             ["navigation"] = nil,
             ["pointer"] = {},
-            ["type"] = "roundedRectangle",
+            ["type"] = "image",
             ["toBack"] = true,
+            ["filename"] = 'resources/graphics/ui/messageBox.png',
+            ['width'] = 600,
+            ['height'] = 380,
+            ['x'] = 300,
+            ['y'] = 200,
         },
         [2] = {
             ["creation"] = {
                 x = 300, 
-                y = 100,
+                y = 80,
                 id = "textWarning",
-                text = "Settings aren't saved yet. What to do next?",
+                text = "Settings aren't saved.",
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
             },
@@ -144,13 +149,17 @@ function scene:create( event )
         [3] = {
             ["creation"] = {
                 x = 300,
-                y = 200,
+                y = 150,
                 id = "buttonBack",
                 label = "Cancel exit",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 25,
-                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+                fontSize = 20,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } },
+                width = 360,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
             ["navigation"] = {nil,4,nil,5},
@@ -160,13 +169,17 @@ function scene:create( event )
         [4] = {
             ["creation"] = {
                 x = 300,
-                y = 250,
+                y = 220,
                 id = "buttonApply",
                 label = "Save changes and exit",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 25,
-                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+                fontSize = 20,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } },
+                width = 360,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApply"}, phase="ended"}) end,
             ["navigation"] = {nil,5,nil,3},
@@ -176,13 +189,17 @@ function scene:create( event )
         [5] = {
             ["creation"] = {
                 x = 300,
-                y = 300,
+                y = 290,
                 id = "buttonDiscard",
                 label = "Discard changes",
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
-                fontSize = 25,
-                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } }
+                fontSize = 20,
+                labelColor = { default={ 0, 0, 0 }, over={ 0, 0, 0, 0.5 } },
+                width = 360,
+                height = 50,
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonDiscard"}, phase="ended"}) end,
             ["navigation"] = {nil,3,nil,4},

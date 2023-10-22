@@ -25,7 +25,7 @@ function file.doesExist( filename, path )
  
         if not _file then
             -- Error occurred; output the cause
-            print(errorString )
+            -- print( errorString )
         else
             -- File exists!
             results = true
@@ -37,12 +37,13 @@ function file.doesExist( filename, path )
     return results
 end
 
-function file.write(path, contents)
+function file.write(path, dir, contents)
     -- 2. Make new SaveFile
-    local file, errorString = io.open( path, "w+" )
+    local absPath = system.pathForFile(path, dir)
+    local file, errorString = io.open( absPath, "w+" )
     if not file then
         -- Error occurred; output the cause
-        print( "File error: " .. errorString )
+        -- print( "File error: " .. errorString )
     else
         -- Write data to file
         file:write( contents )
@@ -53,14 +54,14 @@ function file.write(path, contents)
     file = nil
 end
 
-function file.read(path)
+function file.read(path, dir)
     local contents = nil
-
-    -- 1. Open savefile
-    local file, errorString = io.open( path, "r" )
+    -- Open savefile
+    local absPath = system.pathForFile(path, dir)
+    local file, errorString = io.open( absPath, "r" )
     if not file then
         -- Error occurred; output the cause
-        print( "File error: " .. errorString )
+        -- print( "File error: " .. errorString )
         file = nil
         return contents, errorString
     else
@@ -75,12 +76,6 @@ end
 
 function file.delete(filename)
     local result, reason = os.remove( system.pathForFile( filename, system.DocumentsDirectory ) )
-  
-    if result then
-        print( "File removed" )
-    else
-        print( "File does not exist:", reason )
-    end
 end
 
 lib.file = file
@@ -90,9 +85,7 @@ lib.file = file
 --------------------------------------------------------------------------------
 
 local savefile = {}
-savefile.current = nil
-local level = {}
-level.current = nil
+savefile.current = {name=nil, data={}}
 
 function savefile.new(filename)
     local contents = nil
@@ -100,74 +93,27 @@ function savefile.new(filename)
     -- Searches for available filename
     if not filename then
         -- Find out which savefiles already exist
-        local saveFile1 = lib.file.doesExist("save1.json", system.DocumentsDirectory)
-        local saveFile2 = lib.file.doesExist("save2.json", system.DocumentsDirectory)
-        local saveFile3 = lib.file.doesExist("save3.json", system.DocumentsDirectory)
+        local saveFile1 = lib.file.doesExist("savefile1.json", system.DocumentsDirectory)
+        local saveFile2 = lib.file.doesExist("savefile2.json", system.DocumentsDirectory)
+        local saveFile3 = lib.file.doesExist("savefile3.json", system.DocumentsDirectory)
         
         -- Give the new savefile a name not already used (1-3)
         if (saveFile1 == false) then
-            filename = "save1.json"
+            filename = "savefile1.json"
         elseif (saveFile2 == false) then
-            filename = "save2.json"
+            filename = "savefile2.json"
         elseif (saveFile3 == false) then
-            filename = "save3.json"
+            filename = "savefile3.json"
         else 
-            print("---Something went wrong while making a new saveslot... All 3 savefiles are present.---")
             return false
         end
     end
 
-    -- Read content from initial.json
-    local path = system.pathForFile( "resources/data/initial.json", system.ResourceDirectory )
-    local contents = lib.file.read(path)
+    -- Read content from default_savefile.json
+    local contents = lib.file.read("resources/data/default_savefile.json", system.ResourceDirectory)
 
     -- Make new savefile
-    local path = system.pathForFile( filename, system.DocumentsDirectory )
-    lib.file.write(path, contents)
-end
-
-function savefile.load(filename)
-    -- handle exception
-    if not filename then
-        print("ERROR: No filename provided in fc(): savefile.load")
-    end
-
-    -- read current savefile
-    local filePath = 'resources.data.'..filename
-    local encoded = lib.file.read( filePath )
-    local data = json.decode( encoded, "_")
-
-    -- find current level
-    local currentLevel = data.levels.current
-
-    -- load level
-    local levelPath = "resources.scene.game."..currentLevel
-    composer.loadScene( levelPath, true)
-
-    -- load map with dusk
-    --local loadedMap = dusk.loadMap()
-
-    -- build map with dusk
-    local map = dusk.buildMap(loadedMap)
-
-    -- load entities
-    local entities = data.levels[currentLevel]
-
-    -- connect entities with classes
-    map.extend(entities) -- ?
-    
-    -- copy informations of player in savefile to variables in player.lib
-
-    -- setup and pause physics
-    scene.setUpPhysics()
-
-    -- camera positioning
-
-    -- start physics
-    physics.start()
-
-    -- show scene
-    lib.scene.show(levelPath) -- Might not work, this fc() uses loadScene aswell.
+    lib.file.write(filename, system.DocumentsDirectory, contents)
 end
 
 lib.savefile = savefile
@@ -179,24 +125,100 @@ lib.savefile = savefile
 local scene = {}
 scene.current = nil
 
-function scene.show(scenePath, options)
+function scene.show( scenePath, options, isOverlay )
     composer.loadScene( scenePath )
 
     local _scene = composer.getScene( scenePath )
     lib.control.setMode(_scene.type)
 
-    composer.gotoScene(scenePath, options)
-end
-
-function scene.setUpPhysics()
-    physics.start() -- physics first startup
-    physics.pause() -- pause physics for setup
-    physics.setDrawMode("hybrid") -- DEBUG
-    physics.setScale( 60 )
-    physics.setGravity( 0, 14 )
+    if isOverlay then
+        composer.showOverlay( scenePath, options )
+    else
+        composer.gotoScene( scenePath, options )
+    end
 end
 
 lib.scene = scene
+
+--------------------------------------------------------------------------------
+-- level functions
+--------------------------------------------------------------------------------
+
+local level = {}
+level.current = nil
+
+function level.setUpPhysics()
+    physics.start() -- physics first startup
+    physics.pause() -- pause physics for setup
+    physics.setScale( 35 )
+    physics.setGravity( 0, 9.81 )
+end
+
+function level.save()
+    local scene = composer.getScene(composer.getSceneName("current"))
+    local savefile = lib.savefile.current.data
+    local map = scene.map
+
+    -- get data of entities
+    local entities = {}
+    for object in map.layer['entities'].objects() do
+        local t = {}
+        t.x, t.y = object.x, object.y
+        t.health = object.health
+        t.isDead = object.isDead
+        t.inventory = object.inventory
+
+        entities[object._name] = t
+    end
+
+    -- get data of player (x and y values are stored in entities, so they are stored in level data.)
+    local player = map.layer["entities"].object['player']
+    local Player = require("resources.lib.player")
+    local p = {}
+    p.isDead = player.isDead or "nil"
+    p.attributes = Player.attributes or {}
+    p.inventory = Player.inventory or {}
+    p.name = Player.name or "nil"
+
+    -- get story progress
+    -- weiss noch nicht wie oder was
+
+    -- store in savefile table
+    local savefile = lib.savefile.current.data
+    local currentLevel = lib.level.current
+    savefile.player = p
+    savefile.levels.current = currentLevel
+    savefile.levels[currentLevel] = {}
+    savefile.levels[currentLevel].entities = e
+
+    -- save table to savefile
+    local name = lib.savefile.current.name
+    local encoded = json.encode(savefile, {indent=true})
+    lib.file.write(name, system.DocumentsDirectory, encoded)
+end
+
+function level.load(level)
+    -- Localize
+    local encoded = file.read(lib.savefile.current.name, system.DocumentsDirectory)
+    local savefile = json.decode(encoded)
+    lib.savefile.current.data = savefile
+
+    -- if no variable is given to the function, load current (-> last used) level again.
+    if not level then
+        local current = savefile.levels.current
+        if (current == "nil") then
+            savefile.levels.current = "level1"
+        end
+        level = savefile.levels.current
+    end
+
+    -- show scene
+    local scenePath = "resources.scene.game."..level..".scene"
+    lib.scene.show(scenePath)
+    lib.level.current = level
+end
+
+lib.level = level
 
 --------------------------------------------------------------------------------
 -- settings functions
@@ -205,14 +227,6 @@ lib.scene = scene
 local settings = {}
 settings.table = {}
 settings.tmpTable = {}
-
-function settings.get(path)
-    -- Read file
-    local data = lib.file.read(path)
-    -- decode data
-    local decoded = json.decode(data, 1, "emptyTable")
-    return decoded
-end
 
 function settings.initiate(table)
     if not table then
@@ -242,8 +256,7 @@ function settings.save(table)
         local encoded = json.encode(table, { indent=true })
 
         -- Write file
-        local path = system.pathForFile( "settings.json", system.DocumentsDirectory )
-        lib.file.write(path, encoded)
+        lib.file.write("settings.json", system.DocumentsDirectory, encoded)
     else
         print("ERROR: No table provided to saveSettings()")
     end
@@ -251,14 +264,14 @@ end
 
 function settings.reset()
     -- Get data from initial_setting.json
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    local data = settings.get(path)
+    local encoded = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
+    local data = json.decode(encoded)
 
     -- Save data
     settings.save(data)
 
     -- Load resetted settings
-    settings.initiate(table)
+    settings.initiate(data)
     return data
 end
 
@@ -266,23 +279,13 @@ function settings.onStartup()
     local data = nil
     local doesExist = lib.file.doesExist("settings.json", system.DocumentsDirectory)
     if doesExist then
-        local path = system.pathForFile( "settings.json" , system.DocumentsDirectory )
-        data = settings.get(path)
+        local encoded = lib.file.read("settings.json", system.DocumentsDirectory)
+        data = json.decode(encoded)
     else
         data = settings.reset()
     end
     settings.table = data
     settings.initiate(data)
-end
-
--- DEBUG
-function settings.setUpInitial()
-    local data = {}
-
-    local encoded = json.encode(data, {indent=true})
-
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    lib.file.write(path, encoded)
 end
 
 lib.settings = settings
@@ -298,16 +301,14 @@ inputdevice.available = {}
 
 function inputdevice.createKeybinds(inputDeviceType)
     -- get default_settings from ResourceDirectory
-    local path = system.pathForFile( "resources/data/default_settings.json", system.ResourceDirectory )
-    local default_settings = lib.settings.get(path)
-    
-    if inputDeviceType == "controller" then
-        keybinds = default_settings.controls.keybinds.controller
-    elseif inputDeviceType == "keyboard" then
-        keybinds = default_settings.controls.keybinds.keyboard
-    elseif inputDeviceType == "touchscreen" then
-        keybinds = default_settings.controls.keybinds.touchscreen
-    else print("ERROR: unkown or unsupported Input Device Type") return end
+    local encoded = lib.file.read("resources/data/default_settings.json", system.ResourceDirectory)
+    local default_settings = json.decode(encoded)
+
+    if inputDeviceType then
+        keybinds = default_settings.controls.keybinds[inputDeviceType]
+    else
+        print("ERROR: No inputdevicetype given.")
+    end
 
     -- Changes are all stored together, so not here.
     return keybinds
@@ -315,14 +316,12 @@ end
 
 function inputdevice.initiateKeybinds(key)
     keybind.jump = key.jump
-    keybind.sneak = key.sneak
     keybind.forward = key.forward
     keybind.backward = key.backward
     keybind.interact = key.interact
     keybind.escape = key.escape
-    keybind.primaryWeapon = key.primaryWeapon
-    keybind.secondaryWeapon = key.secondaryWeapon
-    keybind.inventory = key.inventory
+    keybind.meleeAttack = key.meleeAttack
+    keybind.rangedAttack = key.rangedAttack
     keybind.ability  = key.ability
     keybind.block  = key.block
     keybind.navigateLeft = key.navigateLeft
@@ -529,30 +528,31 @@ lib.keybind = keybind
 --------------------------------------------------------------------------------
 
 local control = {key = {}, touch = {}, mode=nil}
-local moveF, moveB, MoveJ, interact = false, false, false, false
 
 function control.key.menu(event)
     if (event.phase == "up") then
         local keyName = event.keyName
         local next = nil
-        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
-        local widget = scene.widgetsTable[scene.widgetIndex]
+        local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current")) or {}
+        local widgetsTable = scene.widgetsTable or {}
+        local widget = widgetsTable[scene.widgetIndex] or {}
+        local navigation = widget.navigation or {}
         local keybind = lib.keybind
 
         if (keyName == keybind.navigateRight) then
-            next = widget.navigation[1]
+            next = navigation[1]
 
         elseif (keyName == keybind.navigateDown) then
-            next = widget.navigation[2]
+            next = navigation[2]
 
         elseif (keyName == keybind.navigateLeft) then
-            next = widget.navigation[3]
+            next = navigation[3]
 
         elseif (keyName == keybind.navigateUp) then
-            next = widget.navigation[4]
+            next = navigation[4]
 
         elseif (keyName == keybind.interact) then
-            widget["function"]()
+            if widget['function'] then widget["function"]() end
         elseif (keyName == keybind.escape) then
             scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"})
         end
@@ -570,62 +570,59 @@ function control.key.menu(event)
 end
 
 function control.key.game(event)
-    -- Noch checken ob overlay aktiviert ist. (overlaySceneStatus)
-    if (event.phase == "down") then
-        if (event.keyName == keybindJump) then
-            player:Jump()
+    -- Localize
+    local phase = event.phase
+    local keyName = event.keyName
+    local keybind = lib.keybind
+    local scene = composer.getScene( composer.getSceneName( 'current' ))
+    local map = scene.map
+    local player = map.layer["entities"].object['player']
+    
+    if (phase == "down") then
+        if (keyName == keybind.jump) then
+            player.pressingJump = true
+            player:jump()
 
-        elseif (event.keyName == keybindForward) then
-            movF = true
+        elseif (keyName == keybind.forward) then
+            player.pressingForward = true
             
-        elseif (event.keyName == keybindBackward) then
-            movB = true
+        elseif (keyName == keybind.backward) then
+            player.pressingBackward = true
                  
-        elseif (event.keyName == keybindSneak) then
-            player.movement["speed"] = 0.3
+        elseif (keyName == keybind.sneak) then
+            player.isSneaking = true
 
-        elseif (event.keyName == keybindInteract) then
-            player:Interact()
-        elseif (event.keyName == keybindMeleeAttack) then
-            player:MeleeAttack()
-        elseif  (event.keyName == keybindEscape) then
-            -- Problem: Durch diesen Weg wird status immer "pause", egal ob Overlay geöffnet ist oder nicht.
-            handlePauseScreen()
+        elseif (keyName == keybind.interact) then
+            player:interact()
+        elseif (keyName == keybind.meleeAttack) then
+            player:meleeAttack()
+        elseif (keyName == keybind.rangedAttack) then
+            player:rangedAttack()
+        elseif (keyName == keybind.block) then
+            player:block('begin')
+        
+        elseif (keyName == keybind.escape) then
+            scene:pause()
         end
         
-    elseif (event.phase == "up") then
-        if (event.keyName == keybindJump) then
-            --
+    elseif (phase == "up") then
+        if (keyName == keybind.jump) then
+            player.pressingJump = false
 
-        elseif (event.keyName == keybindForward) then
-            movF = false
+        elseif (keyName == keybind.forward) then
+            player.pressingForward = false
 
-        elseif (event.keyName == keybindBackward) then
-            movB = false
+        elseif (keyName == keybind.backward) then
+            player.pressingBackward = false
 
-        elseif (event.keyName == keybindSneak) then
-            player.movement["speed"] = 1
-            
+        elseif (keyName == keybind.sneak) then
+            player.isSneaking = false
+        elseif (keyName == keybind.block) then
+            player:block('cancel')
         end
     end
-        
-    local vx, vy = player:getLinearVelocity()
-    if (movF == movB) then
-        vx = 0
-    elseif (movF == true) then
-        vx = player.movement["speed"]*350
-    elseif (movB == true) then
-        vx = player.movement["speed"]*-350
-    end
-    player:setLinearVelocity(vx, vy)
-        
-    if (overlaySceneStatus == false) then
-        if (vx < 0) then
-            player.xScale = -1
-        elseif (vx > 0) then
-            player.xScale = 1
-        end
-    end
+
+    player:handleMovement()
 end
 
 function control.touch.menu(event)
@@ -633,24 +630,92 @@ function control.touch.menu(event)
 end
 
 function control.touch.game(event)
-    --
+    local target = event.target
+    local command = target.command
+    local phase = event.phase
+
+    -- Cancel unwanted event-phase
+    if phase == 'moved' then return false end
+
+    local scene = composer.getScene( composer.getSceneName( 'current' ) )
+    local map = scene.map
+    local player = map.layer["entities"].object['player']
+
+    if phase == 'began' then
+        -- visual
+        display.getCurrentStage():setFocus( event.target, event.id )
+        target.alpha = 0.5
+        
+        if command == 'jump' then
+            player:jump()
+            player.pressingJump = true
+
+        elseif command == 'pressingBackward' or command == 'pressingForward' then
+            player[command] = true
+            player:handleMovement()
+
+        elseif command == 'meleeAttack' then
+            player:meleeAttack()
+        elseif command == 'rangedAttack' then
+            player:rangedAttack()
+        elseif command == 'block' then
+            player:block('begin')
+        elseif command == 'ability' then
+            player:ability()
+        elseif command == 'pause' then
+            -- doesnt get handled
+        elseif command == 'interact' then
+            player:interact()
+        end
+
+    elseif phase == 'ended' then
+        -- visual
+        display.getCurrentStage():setFocus( event.target, nil )
+        target.alpha = 1
+
+        if command == 'jump' then
+            player.pressingJump = false
+
+        elseif command == 'pressingBackward' or command == 'pressingForward' then
+            target.alpha = 1
+            player[command] = false
+            player:handleMovement()
+
+        elseif command == 'meleeAttack' then
+            -- doesnt get handled
+        elseif command == 'rangedAttack' then
+            -- doesnt get handled
+        elseif command == 'block' then
+            player:block('cancel')
+        elseif command == 'ability' then
+            -- doesnt get handled
+        elseif command == 'interact' then
+            -- doesnt get handled
+        elseif command == 'pause' then
+            scene:pause()
+        end
+    end
 end
 
-function control.setMode(sceneType)
+function control.setMode(sceneType, deactivateControls)
+    print("opened control.setMode")
     -- Localize
     local inputType = lib.inputdevice.current.type
     local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
     
-    -- Rwemove all active Control-Eventlisteners
+    -- Remove all active Control-Eventlisteners
     Runtime:removeEventListener("key", lib.control.key.menu)
     Runtime:removeEventListener("key", lib.control.key.game)
     Runtime:removeEventListener("touch", lib.control.touch.menu)
     Runtime:removeEventListener("touch", lib.control.touch.game)
 
-    -- Error handling
+    if deactivateControls then
+        -- removes all eventListeners, but doesnt add the current. So no controls.
+        return true
+    end
+
     if not sceneType then
-        print("WARNING: control.setMode(): sceneType is nil.")
-        return false
+        sceneType = scene.type
     end
 
     if (inputType == "keyboard") then
@@ -663,12 +728,14 @@ function control.setMode(sceneType)
         end
     
     elseif (inputType == "touchscreen") then
+        system.activate( "multitouch" )
         lib.control.mode = "touch"
         if (sceneType == "menu") then
             --Runtime:addEventListener("touch", lib.control.touch.menu)
 
         elseif (sceneType == "game") then
-            Runtime:addEventListener("touch", lib.control.touch.game)
+            -- We dont need global eventListener for touch-ingame
+            --Runtime:addEventListener("touch", lib.control.touch.game)
         end
     elseif (inputType == "controller") then
         lib.control.mode = "key"
@@ -693,7 +760,7 @@ lib.control = control
 -- DEBUG ------------------------------------------------------------------------------
 
 function lib.print(node)
-    if type(node) == table then
+    if (type(node) == "table") then
         -- To print a table if needed. Source: https://gist.github.com/revolucas/dd1ecccfca32d558fddf70ddb39eb8a6
         local cache, stack, output = {},{},{}
         local depth = 1
@@ -772,7 +839,7 @@ function lib.print(node)
   
         print(output_str)
 
-    elseif type(node) == string or type(node) == number then
+    elseif (type(node) == "string") or (type(node) == "number") then
         print(node)
     end
 end

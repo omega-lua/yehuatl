@@ -1,0 +1,15 @@
+{
+    "player":{
+        "inventory":{},
+        "name":"nil",
+        "attributes":{
+            "statuseffects":{},
+            "health":{"hey":"ho"},
+            "movement":{},
+            "combat":{}
+        }
+    },
+    "levels":{
+        "current":"nil"
+    }
+}

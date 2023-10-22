@@ -72,10 +72,15 @@ function lib_objectlayer.createLayer(map, mapData, data, dataIndex, tileIndex, i
 
 	local layerProps = getProperties(data.properties or {}, "objects", true)
 
+
 	local layer = display_newGroup()
 	layer.props = {}
 	layer._layerType = "object"
 	layer.object = {}
+
+	-- Added by myself (6.10.2023)
+	layer.xParallax = data.parallaxx
+	layer.yParallax = data.parallaxy
 
 	local objListeners = {
 		drawn = {

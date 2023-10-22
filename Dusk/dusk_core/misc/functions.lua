@@ -174,7 +174,6 @@ local function getProperties(data, objPrefix, isLayer)
 
 	for key, value in pairs(data) do
 		local k, v
-
 		local dotMode
 
 		if key:match("^!noDot!") then

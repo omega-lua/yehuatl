@@ -38,30 +38,6 @@ function scene:showToast(message)
     transition.to(toast, params)
 end
 
-local function handleScrollView(i,o)     
-    local x,y = o:localToContent(0,0)
-    -- Upscrolling
-    if (y <= display.contentCenterY - scrollView.height*0.5) then
-        scrollView:scrollToPosition({y=-(o.y-110), time=1000} ) 
-    -- Downscrolling
-    elseif (y+20 >= display.contentCenterY + scrollView.height*0.5) then
-        scrollView:scrollToPosition({y=-(o.y-110), time=1000} )
-    end
-end
-
-function scene:hoverObj()
-    local widgetIndex = scene.widgetIndex
-    for i,widget in pairs(scene.widgetsTable) do
-        local params = {}
-        if (i == widgetIndex) then
-            params = {time = 200, transition = easing.outQuint, xScale = 1.3, yScale = 1.3,alpha=1}     
-        else
-            params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,alpha=0.7}
-        end
-        transition.to(widget.pointer, params)
-    end
-end
-
 local function listener(event)
     if (event.phase == "up" ) then
         -- Set pressed key as new keybind in lib.settings.tmpTable
@@ -128,33 +104,24 @@ local function handleInteraction(event)
             scene.selectedKeybind = {name=id, index=13}
             addListener()
 
-        elseif (id == "sneak") then
+        elseif (id == "meleeAttack") then
             scene.selectedKeybind = {name=id, index=15}
             addListener()
 
-        elseif (id == "primaryWeapon") then
+        elseif (id == "rangedAttack") then
             scene.selectedKeybind = {name=id, index=17}
             addListener()
 
-        elseif (id == "secondaryWeapon") then
+        elseif (id == "block") then
             scene.selectedKeybind = {name=id, index=19}
             addListener()
 
-        elseif (id == "block") then
-            scene.selectedKeybind = {name=id, index=21}
-            addListener()
-
         elseif (id == "ability") then
-            scene.selectedKeybind = {name=id, index=23}
-            addListener()
-
-        elseif (id == "inventory") then
-            scene.selectedKeybind = {name=id, index=25}
+            scene.selectedKeybind = {name=id, index=21}
             addListener()
         end
     end
 end
-
 
 local function handleScrollView()     
     local widget = scene.widgetsTable[scene.widgetIndex]
@@ -175,11 +142,11 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
-            params = {time = 200, transition = easing.outQuint, xScale = 1.5, yScale = 1.8, alpha=1}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.3, yScale = 1.3, alpha=1}     
         else
             -- Excludes "Keybind" and "Current" text objects
             if (i ~= 2) and (i ~= 3) then
-                params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1,alpha=0.7}
+                params = {time = 200, transition = easing.outQuint, xScale = 1, yScale = 1, alpha=0.7}
             end
         end
         transition.to(widget.pointer, params)
@@ -187,7 +154,7 @@ function scene:hoverObj()
 end
 
 function scene:updateUI()
-    if (lib.control.mode == "key") then
+    if (lib.control.mode == "key") and scene.widgetsTable then
         scene:hoverObj()
         handleScrollView()
     end
@@ -251,13 +218,17 @@ function scene:show( event )
         scene.widgetIndex = 5
         scene.widgetsTable = {
             [1] = {
-                ["creation"] = {x=50,y=50,
+                ["creation"] = {x=80,y=50,
                     id = "buttonBack",   
                     label="back",
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonBack"}, phase="ended"}) end,
                 ["navigation"] = {nil,5,nil,25},
@@ -279,20 +250,24 @@ function scene:show( event )
                 ["type"] = "text",
             },
             [4] = {
-                ["creation"] = {x=280,y=150,text="Escape",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=160,text="Escape",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [5] = {
-                ["creation"] = {x=520,y=150,
+                ["creation"] = {x=520,y=160,
                     id="escape",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].escape,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({name="interaction", target={id="escape"}, phase="ended"}) end,
                 ["navigation"] = {nil,7,nil,1},
@@ -300,20 +275,24 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [6] = {
-                ["creation"] = {x=280,y=200,text="Interact",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=220,text="Interact",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [7] = {
-                ["creation"] = {x=520,y=200,
+                ["creation"] = {x=520,y=220,
                     id="interact",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].interact,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({name="interaction", target={id="interact"}, phase="ended"}) end,
                 ["navigation"] = {nil,9,nil,5},
@@ -321,20 +300,24 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [8] = {
-                ["creation"] = {x=280,y=250,text="Forward",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=280,text="Forward",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [9] = {
-                ["creation"] = {x=520,y=250,
+                ["creation"] = {x=520,y=280,
                     id="forward",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].forward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="forward"}, phase="ended"}) end,
                 ["navigation"] = {nil,11,nil,7},
@@ -342,20 +325,24 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [10] = {
-                ["creation"] = {x=280,y=300,text="Backward",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=340,text="Backward",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [11] = {
-                ["creation"] = {x=520,y=300,
+                ["creation"] = {x=520,y=340,
                     id="backward",    
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].backward,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="backward"}, phase="ended"}) end,
                 ["navigation"] = {nil,13,nil,9},
@@ -363,20 +350,24 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [12] = {
-                ["creation"] = {x=280,y=350,text="Jump",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=400,text="Jump",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [13] = {
-                ["creation"] = {x=520,y=350,
+                ["creation"] = {x=520,y=400,
                     id="jump",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].jump,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="jump"}, phase="ended"}) end,
                 ["navigation"] = {nil,15,nil,11},
@@ -384,133 +375,105 @@ function scene:show( event )
                 ["type"] = "button",
             },
             [14] = {
-                ["creation"] = {x=280,y=400,text="Sneak",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=460,text="Melee Attack",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [15] = {
-                ["creation"] = {x=520,y=400,
-                    id="sneak",
-                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].sneak,
+                ["creation"] = {x=520,y=460,
+                    id="meleeAttack",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].meleeAttack,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
-                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
-                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="sneak"}, phase="ended"}) end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="meleeAttack"}, phase="ended"}) end,
                 ["navigation"] = {nil,17,nil,13},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
             [16] = {
-                ["creation"] = {x=280,y=450,text="Primary Weapon",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=520,text="Ranged Attack",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [17] = {
-                ["creation"] = {x=520,y=450,
-                    id="primaryWeapon",
-                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].primaryWeapon,
+                ["creation"] = {x=520,y=520,
+                    id="rangedAttack",
+                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].rangedAttack,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
-                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
-                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="primaryWeapon"}, phase="ended"}) end,
+                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="rangedAttack"}, phase="ended"}) end,
                 ["navigation"] = {nil,19,nil,15},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
             [18] = {
-                ["creation"] = {x=280,y=500,text="Secondary Weapon",font="fonts/BULKYPIX.TTF",fontSize=20},
+                ["creation"] = {x=280,y=580,text="Block",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
             [19] = {
-                ["creation"] = {x=520,y=500,
-                    id="secondaryWeapon",
-                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].secondaryWeapon,
-                    font="fonts/BULKYPIX.TTF",
-                    fontSize=20,
-                    onEvent=handleInteraction,
-                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-                },
-                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="secondaryWeapon"}, phase="ended"}) end,
-                ["navigation"] = {nil,21,nil,17},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [20] = {
-                ["creation"] = {x=280,y=550,text="Block",font="fonts/BULKYPIX.TTF",fontSize=20},
-                ["function"] = nil,
-                ["navigation"] = {nil,nil,nil,nil},
-                ["pointer"] = {},
-                ["type"] = "text",
-            },
-            [21] = {
-                ["creation"] = {x=520,y=550,
+                ["creation"] = {x=520,y=580,
                     id="block",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].block,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="block"}, phase="ended"}) end,
-                ["navigation"] = {nil,23,nil,19},
+                ["navigation"] = {nil,21,nil,17},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
-            [22] = {
-                ["creation"] = {x=280,y=600,text="Ability",font="fonts/BULKYPIX.TTF",fontSize=20},
+            [20] = {
+                ["creation"] = {x=280,y=640,text="Ability",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},
                 ["type"] = "text",
             },
-            [23] = {
-                ["creation"] = {x=520,y=600,
+            [21] = {
+                ["creation"] = {x=520,y=640,
                     id="ability",
                     label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].ability,
                     font="fonts/BULKYPIX.TTF",
                     fontSize=20,
                     onEvent=handleInteraction,
                     labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
+                    defaultFile = 'resources/graphics/ui/buttonShort.png',
+                    overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                    width = 100,
+                    height = 40,
                 },
                 ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="ability"}, phase="ended"}) end,
-                ["navigation"] = {nil,25,nil,21},
+                ["navigation"] = {nil,1,nil,19},
                 ["pointer"] = {},
                 ["type"] = "button",
             },
-            [24] = {
-                ["creation"] = {x=280,y=650,text="Inventory",font="fonts/BULKYPIX.TTF",fontSize=20},
-                ["function"] = nil,
-                ["navigation"] = {nil,nil,nil,nil},
-                ["pointer"] = {},
-                ["type"] = "text",
-            },
-            [25] = {
-                ["creation"] = {x=520,y=650,
-                    id="inventory",
-                    label=lib.settings.tmpTable.controls.keybinds[lib.inputdevice.current.name].inventory,
-                    font="fonts/BULKYPIX.TTF",
-                    fontSize=20,
-                    onEvent=handleInteraction,
-                    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-                },
-                ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="inventory"}, phase="ended"}) end,
-                ["navigation"] = {nil,1,nil,23},
-                ["pointer"] = {},
-                ["type"] = "button",
-            },
-            [26] = {
-                ["creation"] = {x=520,y=750,text="",font="fonts/BULKYPIX.TTF",fontSize=20},
+            [22] = { --filler so scrollView looks nice
+                ["creation"] = {x=520,y=700,text="",font="fonts/BULKYPIX.TTF",fontSize=20},
                 ["function"] = nil,
                 ["navigation"] = {nil,nil,nil,nil},
                 ["pointer"] = {},

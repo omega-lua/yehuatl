@@ -178,7 +178,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 20,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                width = 130,
+                height = 50,
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonApply"}, phase="ended"}) end,
             ["navigation"] = {6,3,6,3},
@@ -193,7 +197,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                defaultFile = 'resources/graphics/ui/buttonShort.png',
+                overFile = 'resources/graphics/ui/buttonShortPressed.png',
+                width = 280,
+                height = 120,
             },
             ["pointer"] = {},
             ["type"] = "button",
@@ -207,7 +215,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
+                width = 250,
+                height = 60,
             },
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonType"}, phase="ended"}) end,
             ["navigation"] = {4,1,4,1},
@@ -251,7 +263,11 @@ function scene:loadUI()
                 onEvent = handleInteraction,
                 font = "fonts/BULKYPIX.TTF",
                 fontSize = 25,
-                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } }
+                labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1, 0.5 } },
+                defaultFile = 'resources/graphics/ui/buttonLong.png',
+                overFile = 'resources/graphics/ui/buttonLongPressed.png',
+                width = 150,
+                height = 50,
             },
             ["navigation"] = {1,4,1,4},
             ["pointer"] = {},
@@ -299,7 +315,7 @@ function scene:hoverObj()
     for i,widget in pairs(scene.widgetsTable) do
         local params = {}
         if (i == widgetIndex) then 
-            params = {time = 200, transition = easing.outQuint, xScale = 1.4, yScale = 1.4, alpha=1}     
+            params = {time = 200, transition = easing.outQuint, xScale = 1.2, yScale = 1.2, alpha=1}     
         else
             if i == 6 then
                 if scene.showForgetButton then
