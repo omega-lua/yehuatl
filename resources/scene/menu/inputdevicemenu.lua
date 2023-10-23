@@ -303,7 +303,7 @@ function scene:loadUI()
                 scene.widgetsTable[i].pointer:toBack()
             end
         elseif (type == nil) then
-            print("ERROR: Widget",i,"has no type attribute.")
+            -- print("ERROR: Widget",i,"has no type attribute.")
         end
 
         sceneGroup:insert(scene.widgetsTable[i].pointer)

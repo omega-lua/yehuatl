@@ -52,8 +52,8 @@
     }
   },
   "sound":{
-    "volumeMusic":1,
-    "volumeSoundEffects":2,
+    "volumeMusic":3,
+    "volumeSoundEffects":3,
     "playStereo":true,
     "vibration":true
   },

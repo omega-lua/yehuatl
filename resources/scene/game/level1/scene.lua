@@ -212,7 +212,7 @@ function scene:build()
     map:scale(3.5, 3.5)
     map.enableFocusTracking(true)
     map.setCameraFocus(player)
-    map.setTrackingLevel(0.05)
+    map.setTrackingLevel(0.1)
 
     -- start physics
     physics.start()
@@ -243,6 +243,14 @@ function scene:show( event )
 
         --show HUD
         scene:showHUD(true)
+
+        -- fade in visual
+        local rectangle = display.newRect( sceneGroup, 300, 200, 1200, 500 )
+        local function fc() rectangle:removeSelf() end
+        rectangle:setFillColor(0,0,0,1)
+        rectangle:toFront()
+
+        transition.to(rectangle, {transition=easing.inOutSine, time=2000, alpha=0, onComplete=fc})
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen

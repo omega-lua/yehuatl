@@ -181,7 +181,7 @@ function level.save()
     p.name = Player.name or "nil"
 
     -- get story progress
-    -- weiss noch nicht wie oder was
+    --
 
     -- store in savefile table
     local savefile = lib.savefile.current.data
@@ -230,12 +230,10 @@ settings.tmpTable = {}
 
 function settings.initiate(table)
     if not table then
-        print("ERROR: No table provided to initiateSettings()")
+        --print("ERROR: No table provided to initiateSettings()")
     else
-        -- Ist zwar globaler Table, wird aber nur einmal bei Startup gemacht.
         settings.table = table
 
-        -- Es werden alle geladen, da ich denke, lieber mehr RAM benutzen als kritische Zeit während des KeyboardControl() vergeuden.
         selectedInputDevice = settings.table.selectedInputDevice
         otherInputDevices = settings.table.otherInputDevices
 
@@ -258,7 +256,7 @@ function settings.save(table)
         -- Write file
         lib.file.write("settings.json", system.DocumentsDirectory, encoded)
     else
-        print("ERROR: No table provided to saveSettings()")
+        --print("ERROR: No table provided to saveSettings()")
     end
 end
 
@@ -307,10 +305,9 @@ function inputdevice.createKeybinds(inputDeviceType)
     if inputDeviceType then
         keybinds = default_settings.controls.keybinds[inputDeviceType]
     else
-        print("ERROR: No inputdevicetype given.")
+        --("ERROR: No inputdevicetype given.")
     end
 
-    -- Changes are all stored together, so not here.
     return keybinds
 end
 
@@ -342,12 +339,12 @@ function inputdevice.getAvailable()
         local displayName = inputDevice.displayName
 
         if (_dir[displayName]) then
-            -- Input Device kommt schon vor
+            -- input device already in _dir
 
             local index = _dir[displayName]
             table.insert(availableInputDevices[index].permanentIds, inputDevice.permanentId)
         else
-            -- Input Device kommt noch nicht vor
+            -- input device not in _dir
 
             -- create subtable
             local array = {}
@@ -394,7 +391,7 @@ function inputdevice.remember(deviceName, deviceType)
 
     -- InputDevice is not saved
     if (deviceType == "unkown") then
-        print("ERROR: device has unkwon type. Origin: lib.lua, l.330")
+        -- print("ERROR: device has unkwon type. Origin: lib.lua, l.330")
         --composer.showOverlay("resources.scene.menu.inputdevicemenu", {isModal=true, effect="fade", time=400})
         return
     else
@@ -447,7 +444,7 @@ function inputdevice.set(deviceName, deviceType)
 
     if isSaved then
         if not keybinds then
-            print("ERROR: No keybinds are stored for this (saved) input device.")
+            --print("ERROR: No keybinds are stored for this (saved) input device.")
             return false
         end
         keybinds = lib.settings.table.controls.keybinds[deviceName]
@@ -494,12 +491,12 @@ function inputdevice.onStartup()
             local lastDevice, lastType = inputdevice.getLastUsed()
 
             if lib.settings.table.controls.inputDevice.alwaysLastUsed then
-                print("INFO: set last used inputdevice")
+                --print("INFO: set last used inputdevice")
                 -- use last used.
                 lib.inputdevice.set(lastDevice, lastType)
                 return false
             else
-                print("INFO: multiple saved AND available")
+                --print("INFO: multiple saved AND available")
 
                 lib.inputdevice.set(lastDevice, lastType)
                 -- show menu.
@@ -515,7 +512,7 @@ function inputdevice.onStartup()
             return true
         end
     else
-        print("ERROR: No available inputdevices.")
+        --print("ERROR: No available inputdevices.")
         return false
     end
 end
@@ -531,6 +528,7 @@ local control = {key = {}, touch = {}, mode=nil}
 
 function control.key.menu(event)
     if (event.phase == "up") then
+        -- Localize
         local keyName = event.keyName
         local next = nil
         local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current")) or {}
@@ -626,7 +624,7 @@ function control.key.game(event)
 end
 
 function control.touch.menu(event)
-    --
+    -- gets handled directly by the buttons and handleInteraction()
 end
 
 function control.touch.game(event)
@@ -698,7 +696,6 @@ function control.touch.game(event)
 end
 
 function control.setMode(sceneType, deactivateControls)
-    print("opened control.setMode")
     -- Localize
     local inputType = lib.inputdevice.current.type
     local scene = composer.getScene(composer.getSceneName("overlay") or composer.getSceneName("current"))
@@ -728,14 +725,13 @@ function control.setMode(sceneType, deactivateControls)
         end
     
     elseif (inputType == "touchscreen") then
-        system.activate( "multitouch" )
         lib.control.mode = "touch"
         if (sceneType == "menu") then
-            --Runtime:addEventListener("touch", lib.control.touch.menu)
+            -- Gets handled directly by the buttons and handleInteraction()
 
         elseif (sceneType == "game") then
-            -- We dont need global eventListener for touch-ingame
-            --Runtime:addEventListener("touch", lib.control.touch.game)
+            -- We dont need global eventListener for ingame-touch, the buttons
+            -- call control.touch.game when touch input occurs.
         end
     elseif (inputType == "controller") then
         lib.control.mode = "key"
@@ -750,99 +746,11 @@ function control.setMode(sceneType, deactivateControls)
         -- inputtype unknown, add all eventListeners.
 
         Runtime:addEventListener("key", lib.control.key.menu)
-        --Runtime:addEventListener("touch", lib.control.touch.menu)
-        --
     end
 end
 
 lib.control = control
 
--- DEBUG ------------------------------------------------------------------------------
-
-function lib.print(node)
-    if (type(node) == "table") then
-        -- To print a table if needed. Source: https://gist.github.com/revolucas/dd1ecccfca32d558fddf70ddb39eb8a6
-        local cache, stack, output = {},{},{}
-        local depth = 1
-        local output_str = "{\n"
-  
-        while true do
-            local size = 0
-            for k,v in pairs(node) do
-                size = size + 1
-            end
-  
-            local cur_index = 1
-            for k,v in pairs(node) do
-                if (cache[node] == nil) or (cur_index >= cache[node]) then
-  
-                    if (string.find(output_str,"}",output_str:len())) then
-                        output_str = output_str .. ",\n"
-                    elseif not (string.find(output_str,"\n",output_str:len())) then
-                        output_str = output_str .. "\n"
-                    end
-  
-                    -- This is necessary for working with HUGE tables otherwise we run out of memory using concat on huge strings
-                    table.insert(output,output_str)
-                    output_str = ""
-  
-                    local key
-                    if (type(k) == "number" or type(k) == "boolean") then
-                        key = "["..tostring(k).."]"
-                    else
-                        key = "['"..tostring(k).."']"
-                    end
-  
-                    if (type(v) == "number" or type(v) == "boolean") then
-                        output_str = output_str .. string.rep('\t',depth) .. key .. " = "..tostring(v)
-                    elseif (type(v) == "table") then
-                        output_str = output_str .. string.rep('\t',depth) .. key .. " = {\n"
-                        table.insert(stack,node)
-                        table.insert(stack,v)
-                        cache[node] = cur_index+1
-                        break
-                    else
-                        output_str = output_str .. string.rep('\t',depth) .. key .. " = '"..tostring(v).."'"
-                    end
-  
-                    if (cur_index == size) then
-                        output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
-                    else
-                        output_str = output_str .. ","
-                    end
-                else
-                    -- close the table
-                    if (cur_index == size) then
-                        output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
-                    end
-                end
-  
-                cur_index = cur_index + 1
-            end
-  
-            if (size == 0) then
-                output_str = output_str .. "\n" .. string.rep('\t',depth-1) .. "}"
-            end
-  
-            if (#stack > 0) then
-                node = stack[#stack]
-                stack[#stack] = nil
-                depth = cache[node] == nil and depth + 1 or depth - 1
-            else
-                break
-            end
-        end
-  
-        -- This is necessary for working with HUGE tables otherwise we run out of memory using concat on huge strings
-        table.insert(output,output_str)
-        output_str = table.concat(output)
-  
-        print(output_str)
-
-    elseif (type(node) == "string") or (type(node) == "number") then
-        print(node)
-    end
-end
 --------------------------------------------------------------------------------
 
 return lib

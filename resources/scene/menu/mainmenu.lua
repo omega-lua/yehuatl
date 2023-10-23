@@ -164,6 +164,15 @@ function scene:show( event )
 
         -- Refresh
         scene:updateUI()
+
+        -- play sound
+        local sound = audio.loadStream('resources/sound/mainmenu.ogg')
+        local musicVolume = lib.settings.table.sound.volumeMusic
+        local volume = (musicVolume - 1) / 4
+        audio.setVolume( volume , {channel=1} )
+        local function callbackListener() audio.dispose( sound ) end
+        local options = {channel = 1, fadein = 2000, onComplete = callbackListener}
+        audio.play( sound, options )
         
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen

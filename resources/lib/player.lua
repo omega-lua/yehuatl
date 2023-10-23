@@ -78,8 +78,6 @@ function M.new( instance, options )
         local interactions = instance.interactionTable
         local map = map
 
-        print("ram used in kb: "..collectgarbage( 'count' ))
-
         local function interactWithEntity(name)
             local entity = map.layer['entities'].object[name]
             entity:onInteraction()
@@ -304,8 +302,10 @@ function M.new( instance, options )
         instance.health.hitpoints = after
 
         -- update HUD from player
-        local hud = composer.getScene( composer.getSceneName( 'overlay' ) )
-        if hud then hud:update() end
+        local overlay = composer.getScene( composer.getSceneName( 'overlay' ) )
+        if overlay and overlay._namne == 'hud' then hud:update() end
+
+        print("player now has "..after.." hitpoints. AMOINT: "..amount)
 
         -- check if dead
         if after <= 0 then
