@@ -6,6 +6,7 @@ function M.new( instance, options )
 
     -- Localize
     local composer = require( 'composer' )
+    local lib = require("resources.lib.lib")
 
     ------------------------------------------------------------------
     -- instance variables
@@ -31,7 +32,7 @@ function M.new( instance, options )
         maxHitpoints = 10
     }
     instance.combat = {
-        strength = 5
+        strength = 2 * lib.settings.table.ingame.difficulty
     }
 
     ------------------------------------------------------------------
@@ -201,7 +202,7 @@ function M.new( instance, options )
                 -- define local function
                 local function f1() instance:meleeAttack() end
                 -- add Loop
-                instance:handleLoop(tag, f1, 2000)
+                instance:handleLoop(tag, f1, 1000)
             else
                 -- stop attack loop
                 instance:handleLoop(tag, nil)
@@ -319,8 +320,7 @@ function M.new( instance, options )
                     local _vx, vy = instance:getLinearVelocity()
                     local vx = math.abs(_vx) 
                     if (vx < 10) then
-                        print("want to jump sideways")
-                        local function f1() instance:applyLinearImpulse(-0.08, nil) end
+                        local function f1() if instance then instance:applyLinearImpulse(-0.08, nil) end end
                         timer.performWithDelay( 200, f1, 1 )
                     end
                 end
@@ -331,7 +331,6 @@ function M.new( instance, options )
                 if instance.pressingForward then
                     local vx, vy = instance:getLinearVelocity()
                     if (vx == 0) then
-                        print("want to jump sideways")
                         local function f1() instance:applyLinearImpulse(0.08, nil) end
                         timer.performWithDelay( 200, f1, 1 )
                     end

@@ -306,7 +306,7 @@ function scene:loadUI()
             scrollView:insert(scene.widgetsTable[i].pointer)
 
         elseif (type == nil) then
-            print("ERROR: Widget",i,"has no type attribute.")
+            -- ("ERROR: Widget",i,"has no type attribute.")
         end
     end
     sceneGroup:insert(scrollView)

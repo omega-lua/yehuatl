@@ -36,14 +36,15 @@ local function onButtonPress(event)
         local currentPage = scene.currentPage
         local pages = scene.pages
         local string = pages[currentPage + 1]
-        local params = scene.params
+        local fc = scene.params.fc
     
         if string then
             -- change text
             local textBox = scene.textBox
             local function changeText()
+                textBox.y = 285
                 textBox.text = string
-                transition.to(textBox, {time=200, transition=easing.inQuad, alpha=1})
+                transition.to(textBox, {time=200, transition=easing.inQuad, alpha=1, y=300})
             end
             transition.to(textBox, {time=200, transition=easing.inQuad, alpha=0, onComplete=changeText})
 
@@ -56,12 +57,14 @@ local function onButtonPress(event)
             local parent = composer.getScene( composer.getSceneName( 'current' ) )
             parent.lastOverlay = 'resources.scene.game.hud'
             parent:_showLastOverlay()
+            
             -- Remove key-EventListener for key-control
             if lib.control.mode == 'key' then
                 Runtime:removeEventListener('key', onButtonPress)
             end
+            
             -- execute function
-            params.fc()
+            if fc then fc() end
         end
     end
 end

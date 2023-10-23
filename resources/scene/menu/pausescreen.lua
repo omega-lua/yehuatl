@@ -135,7 +135,7 @@ function scene:loadUI()
             sceneGroup:insert(scene.widgetsTable[i].pointer)
 
         elseif (type == nil) then
-            print("ERROR: Widget",i,"has no type attribute.")
+            -- print("ERROR: Widget",i,"has no type attribute.")
         end
     end
 end

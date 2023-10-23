@@ -31,17 +31,22 @@ settings =
 		},
 	},
 
-	--
-	-- iOS section
-	--
-	iphone =
+	-- Windows section
+	win32 =
+    {
+        singleInstance = true,
+    },
+
+	window =
 	{
-		xcassets = "Images.xcassets",
-		plist =
-		{
-			UIStatusBarHidden = false,
-			UILaunchStoryboardName = "LaunchScreen",
-		},
+    	defaultMode = "maximized",
+		resizable = false,
+		enableCloseButton = true,
+		enableMinimizeButton = true,
+		enableMaximizeButton = true,
+		minViewWidth = 1500,
+		minViewHeight = 800,
+		titleText = { default = "Yehuatl" },  
 	},
 
 	--
