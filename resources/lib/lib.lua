@@ -494,12 +494,12 @@ function inputdevice.onStartup()
             local lastDevice, lastType = inputdevice.getLastUsed()
 
             if lib.settings.table.controls.inputDevice.alwaysLastUsed then
-                print("INFO: set last used inputdevice")
+                -- print("INFO: set last used inputdevice")
                 -- use last used.
                 lib.inputdevice.set(lastDevice, lastType)
                 return false
             else
-                print("INFO: multiple saved AND available")
+                -- print("INFO: multiple saved AND available")
 
                 lib.inputdevice.set(lastDevice, lastType)
                 -- show menu.
@@ -510,7 +510,6 @@ function inputdevice.onStartup()
             -- no inputdevices (saved AND available)
             -- Show menu
             lib.inputdevice.set("keyboard", "keyboard")
-            -- Controller?
             lib.scene.show("resources.scene.menu.inputdevicemenu", {time=400, effect="fade"})
             return true
         end
