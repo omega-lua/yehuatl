@@ -3,8 +3,8 @@ local lib = require( "resources.lib.lib" )
 -- setup settings
 lib.settings.onStartup()
 
--- setup DEBUGGING
-physics.setDrawMode("hybrid")
+-- add multitouch
+system.activate( "multitouch" )
 
 -- setup inputdevices
 local isInputdevicemenuOpen = lib.inputdevice.onStartup()

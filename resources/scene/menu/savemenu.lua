@@ -176,9 +176,8 @@ function scene:fcButton(t)
         if selected == scene._selected or (lib.control.mode == 'key') then
             if scene.save[selected] then
 
+                Runtime:removeEventListener("interaction", handleInteraction)
                 lib.savefile.current.name = 'savefile'..selected..'.json'
-                print(">> RUN THE GAME <<")
-                Runtime:removeEventListener()
                 lib.level.load()
             end
         else 
@@ -210,6 +209,7 @@ local function handleInteraction(event)
         
         scene:removeEventListener("interaction", handleInteraction )
         if (id == 'buttonBack') then
+            Runtime:removeEventListener("interaction", handleInteraction)
             lib.scene.show("resources.scene.menu.mainmenu", {effect = "fade", time = 400})
 
         elseif (id == 'buttonSave1') then
@@ -222,7 +222,6 @@ local function handleInteraction(event)
             scene:fcButton({selected=3})
 
         elseif (id == 'buttonInteract') then
-
             scene.widgetsTable[5]["function"]()
         end
     end
@@ -357,7 +356,7 @@ function scene:loadUI()
             sceneGroup:insert(scene.widgetsTable[i].pointer)
 
         elseif (type == nil) then
-            print("ERROR: Widget",i,"has no type attribute.")
+            -- print("ERROR: Widget",i,"has no type attribute.")
         end
     end
 end

@@ -105,7 +105,7 @@ function scene:loadUI()
             end
 
         elseif (type == nil) then
-            print("ERROR: Widget",i,"has no type attribute.")
+            -- print("ERROR: Widget",i,"has no type attribute.")
         end
     end
 

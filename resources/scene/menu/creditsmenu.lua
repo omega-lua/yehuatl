@@ -36,7 +36,6 @@ end
 
 local function handleInteraction(event)
     local id = event.target.id
-    print(id)
     if id == 'buttonBack' then
         scene:removeEventListener('interaction', handleInteraction)
         local options = {time=400, effect='fade'}
