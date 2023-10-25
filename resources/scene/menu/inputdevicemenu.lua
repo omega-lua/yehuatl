@@ -274,6 +274,19 @@ function scene:loadUI()
             ["function"] = function() scene:dispatchEvent({ name="interaction", target={id="buttonForget"}, phase="ended"}) end,
             ["type"] = "button",
         },
+        [5] = {
+            ["creation"] = {
+                x = 300,
+                y = 50,
+                width = 800,
+                text = "Choose an input device and type!",
+                align = "center",
+                font = "fonts/BULKYPIX.TTF",
+                fontSize = 20,
+            },
+            ["pointer"] = {},
+            ["type"] = "text",
+        },
 
     }
 
