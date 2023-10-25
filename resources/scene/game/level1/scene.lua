@@ -162,9 +162,8 @@ function scene:build()
     lib.level.setUpPhysics()
 
     -- build map with dusk engine
-    local filePath = "resources/scene/game/level1/map.lua"
     local dusk = require("Dusk.Dusk")
-    -- make map a global variable for easier access?
+    local filePath = "resources/scene/game/level1/map.lua"
     local map = dusk.buildMap( filePath )
     scene.map = map
 

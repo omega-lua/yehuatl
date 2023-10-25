@@ -16,6 +16,7 @@ scene.isSaved = true
 -- Scene functions
 -- -----------------------------------------------------------------------------------
 
+-- from https://lua-users.org/wiki/CopyTable#DeepCopy
 local function deepcopy(orig)
     local orig_type = type(orig)
     local copy
