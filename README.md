@@ -1,6 +1,6 @@
 # yehuatl
 
-## This is the repository for the development of yehuatl.
+This is the repository for the development of yehuatl.
 
 Install on [Windows](https://omega-lua.itch.io/yehuatl) or [Android]().
 
