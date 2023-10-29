@@ -4,6 +4,6 @@
 
 This is the repository containing the source code of the game **Yehuatl**.
 
-Install on [Windows](https://omega-lua.itch.io/yehuatl) or [Android]().
+Install on [Windows](https://omega-lua.itch.io/yehuatl) or [Android](https://omega-lua.itch.io/yehuatl).
 
 Read the privacy policy [here](https://omega-lua.github.io/yehuatl-game/).
